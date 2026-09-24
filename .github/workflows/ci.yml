@@ -25,7 +25,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow
-      JWT_SECRET: ci-test-secret
+      JWT_SECRET: ci-test-secret-at-least-32-bytes-long
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "15"
       WEB_BASE_URL: http://localhost:5173
