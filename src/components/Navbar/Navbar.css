@@ -1,0 +1,107 @@
+nav {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(1400px, calc(100% - 40px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(15px, 3vw, 50px);
+    z-index: 100;
+}
+
+.logo {
+    flex-shrink: 0;
+}
+
+.logo img {
+    width: clamp(55px, 5vw, 80px);
+    height: auto;
+    object-fit: contain;
+}
+
+.nav_content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(15px, 2.2vw, 35px);
+    background: var(--background-green);
+    border-radius: var(--radius);
+    border: 0.5px solid rgb(31 220 129 / 10%);
+    box-shadow: 0 6px 6px rgb(31 220 129 / 10%);
+    backdrop-filter: blur(10px);
+    padding: 15px 30px;
+}
+
+.nav_content a,
+.lang a {
+    text-decoration: none;
+    color: var(--text-darker);
+    font-size: clamp(14px, 1.3vw, 18px);
+    font-family: "Space Grotesk medium";
+    white-space: nowrap;
+}
+
+.nav_content a:hover,
+.lang a:hover {
+    color: var(--green);
+}
+
+.lang {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.lang_current {
+    display: block;
+}
+
+.lang_options {
+    margin-top: 10px;
+    margin-left: -10px;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--background-green);
+    border-radius: var(--radius);
+    border: 0.5px solid rgb(31 220 129 / 10%);
+    box-shadow: 0 6px 6px rgb(31 220 129 / 10%);
+    backdrop-filter: blur(10px);
+    min-width: 70px;
+}
+
+.lang_options.show {
+    display: block;
+}
+
+.lang_options a {
+    display: block;
+    padding: 8px 12px;
+}
+
+.lang_options a:hover {
+    color: var(--green);
+}
+
+.signin_btn {
+    flex-shrink: 0;
+    color: var(--text-darker);
+    font-size: clamp(14px, 1.3vw, 18px);
+    font-family: "Space Grotesk medium";
+    background: var(--background-green);
+    border-radius: var(--radius);
+    border: 0.5px solid rgb(31 220 129 / 10%);
+    box-shadow: 0 6px 6px rgb(31 220 129 / 10%);
+    backdrop-filter: blur(10px);
+    padding: 12px clamp(15px, 2vw, 25px);
+}
+
+.signin_btn:hover {
+    background: rgb(31 220 129 / 50%);
+    box-shadow: 0 6px 6px rgb(31 220 129 / 20%);
+    color: var(--text-main);
+}
