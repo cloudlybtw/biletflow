@@ -4,6 +4,7 @@ from pathlib import Path
 
 import asyncpg
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -92,9 +93,8 @@ async def db_session(
 
 
 @pytest.fixture
-async def client(
-    test_sessionmaker: async_sessionmaker[AsyncSession],
-) -> AsyncGenerator[AsyncClient, None]:
+def app(test_sessionmaker: async_sessionmaker[AsyncSession]) -> FastAPI:
+    """The app wired to the test database; tests may mount extra routes on it."""
     app = create_app()
 
     async def _get_test_session() -> AsyncGenerator[AsyncSession, None]:
@@ -102,7 +102,11 @@ async def client(
             yield session
 
     app.dependency_overrides[get_session] = _get_test_session
+    return app
 
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
