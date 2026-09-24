@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# uv / venv
+.venv/
+
+# Env / secrets
+.env
+*.env.local
+
+# Generated artifacts (never commit real or demo tickets/QRs)
+*.pdf
+!docs/BiletFlow_SRS.pdf
+*.png

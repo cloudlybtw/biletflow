@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: biletflow
+          POSTGRES_PASSWORD: biletflow
+          POSTGRES_DB: biletflow
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U biletflow -d biletflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow
+      JWT_SECRET: ci-test-secret
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+      WEB_BASE_URL: http://localhost:5173
+      SMTP_HOST: localhost
+      SMTP_PORT: "1025"
+      SMTP_FROM: no-reply@biletflow.local
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - run: uv sync --locked
+
+      - run: uv run ruff check .
+
+      - run: uv run ruff format --check .
+
+      - run: uv run pytest
