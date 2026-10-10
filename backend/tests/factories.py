@@ -10,12 +10,13 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import column, insert, table
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, hash_password, new_opaque_token
 from app.modules.auth.models import UserToken, UserTokenPurpose
+from app.modules.events.models import Event
 from app.modules.organizers.models import OrganizerProfile, PayoutAccount, PayoutAccountStatus
+from app.modules.ticketing.models import TicketType
 from app.modules.users.models import StaffAssignment, StaffRole, User
 
 DEFAULT_PASSWORD = "correct-horse-battery"
@@ -92,22 +93,10 @@ async def create_verified_user(session: AsyncSession, **overrides: Any) -> User:
     return await create_user(session, email_verified_at=datetime.now(UTC), **overrides)
 
 
-# Minimal insert until the Event model and its factory land in M2.
-_events = table(
-    "events",
-    column("id"),
-    column("organizer_profile_id"),
-    column("title"),
-    column("slug"),
-    column("starts_at"),
-    column("ends_at"),
-)
-
-
 async def create_event(
     session: AsyncSession, organizer: OrganizerProfile | None = None, **overrides: Any
 ) -> uuid.UUID:
-    """Insert a draft event row and return its id."""
+    """Insert an event row and return its id (keeps M1 permission tests compatible)."""
     if organizer is None:
         organizer = await create_organizer(session)
     starts_at = datetime.now(UTC) + timedelta(days=30)
@@ -119,7 +108,10 @@ async def create_event(
         "ends_at": starts_at + timedelta(hours=3),
     }
     fields.update(overrides)
-    return await session.scalar(insert(_events).values(**fields).returning(_events.c.id))
+    event = Event(**fields)
+    session.add(event)
+    await session.flush()
+    return event.id
 
 
 async def create_staff_assignment(
@@ -146,3 +138,19 @@ async def create_payout_account(
     session.add(account)
     await session.flush()
     return account
+
+
+async def create_ticket_type(
+    session: AsyncSession, event_id: uuid.UUID, **overrides: Any
+) -> TicketType:
+    fields = {
+        "event_id": event_id,
+        "name": f"Standard {unique_suffix()}",
+        "quantity_total": 100,
+        "price_amount": 1000,
+    }
+    fields.update(overrides)
+    ticket = TicketType(**fields)
+    session.add(ticket)
+    await session.flush()
+    return ticket

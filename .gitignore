@@ -40,3 +40,4 @@ __pycache__/
 *.pdf
 !docs/BiletFlow_SRS.pdf
 *.png
+backend/media/

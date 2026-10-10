@@ -1,16 +1,13 @@
 import uuid
 from dataclasses import dataclass
 
-from sqlalchemy import column, select, table
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.events.models import Event
 from app.modules.organizers.models import OrganizerProfile
 from app.modules.users.models import StaffAssignment, StaffRole, User
 from app.modules.users.schemas import UpdateMeRequest
-
-# Just the columns permission checks need, until the Event model lands (M2);
-# then switch to it.
-_events = table("events", column("id"), column("organizer_profile_id"))
 
 
 @dataclass(frozen=True)
@@ -43,9 +40,9 @@ async def get_event_relation(
     """How `user_id` relates to the event, or None if the event doesn't exist."""
     owner_user_id = await session.execute(
         select(OrganizerProfile.user_id)
-        .select_from(_events)
-        .join(OrganizerProfile, OrganizerProfile.id == _events.c.organizer_profile_id)
-        .where(_events.c.id == event_id)
+        .select_from(Event)
+        .join(OrganizerProfile, OrganizerProfile.id == Event.organizer_profile_id)
+        .where(Event.id == event_id, Event.deleted_at.is_(None))
     )
     row = owner_user_id.one_or_none()
     if row is None:

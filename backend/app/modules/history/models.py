@@ -25,9 +25,9 @@ class AuditLog(Base):
     action_type: Mapped[str] = mapped_column(Text)
     entity_type: Mapped[str] = mapped_column(Text)
     entity_id: Mapped[str] = mapped_column(Text)
-    # FK to events(id) is enforced by the database; the ORM ForeignKey is added
-    # once the Event model exists (M2), as for staff_assignments.event_id.
-    event_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    event_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("events.id", ondelete="SET NULL")
+    )
     summary: Mapped[str] = mapped_column(Text)
     # `metadata` is reserved on declarative classes; the column keeps its name.
     metadata_: Mapped[dict[str, Any]] = mapped_column(

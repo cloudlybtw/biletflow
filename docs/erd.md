@@ -1,7 +1,7 @@
 # BiletFlow — Entity Relationship Diagram
 
-Hand-authored from `backend/migrations/0001_init_schema.up.sql` and
-`0002_platform_support.up.sql`. Update this file whenever a migration adds,
+Hand-authored from `backend/migrations/0001_init_schema.up.sql` through
+`0007_activation_moderation.up.sql`. Update this file whenever a migration adds,
 removes or changes a table or relationship. Diagrams are grouped by the same
 numbered sections used in the migration files; only relationships *within*
 each section are drawn — FKs that cross section boundaries are listed once in
@@ -94,6 +94,11 @@ erDiagram
         event_status status
         seating_mode seating_mode
         paid_sales_status paid_sales_status
+        bool is_suspended
+        uuid suspended_by FK "nullable"
+        timestamptz suspended_at
+        text suspension_reason
+        timestamptz deleted_at "soft-deleted draft when non-NULL"
     }
     EVENT_IMAGES {
         uuid id PK
@@ -146,6 +151,7 @@ erDiagram
 erDiagram
     CAMPAIGNS ||--o{ PROMO_CODES : has
     CAMPAIGNS ||--o{ CAMPAIGN_QR_CODES : has
+    PROMO_CODES ||--o{ CAMPAIGN_QR_CODES : links
     CAMPAIGNS ||--o{ CAMPAIGN_TICKET_TYPES : "applies to"
 
     CAMPAIGNS {
@@ -166,6 +172,7 @@ erDiagram
     CAMPAIGN_QR_CODES {
         uuid id PK
         uuid campaign_id FK
+        uuid promo_code_id FK
         text token UK
     }
     CAMPAIGN_TICKET_TYPES {
@@ -182,6 +189,7 @@ erDiagram
     ORDER_ITEMS ||--o{ ATTENDEES : has
     ORDERS ||--o{ PAYMENTS : has
     PAYMENTS ||--o{ REFUNDS : has
+    PAID_SALES_ACTIVATIONS ||--o{ PAYMENTS : "activation fee attempts"
     ORDERS ||--o{ REFUNDS : has
     ORDERS ||--o| PROMO_REDEMPTIONS : has
 
@@ -214,8 +222,9 @@ erDiagram
     PAYMENTS {
         uuid id PK
         uuid order_id FK "nullable"
+        uuid activation_id FK "nullable; activation fees only"
         payment_purpose purpose
-        payment_status status
+        payment_status status "partial UKs: initiated ticket/order; initiated or successful fee/activation"
         bigint amount
         bool is_simulated
     }
@@ -258,7 +267,7 @@ erDiagram
         uuid order_item_id FK
         uuid event_id FK
         uuid ticket_type_id FK
-        uuid attendee_id FK
+        uuid attendee_id FK "UK: one ticket per attendee"
         uuid seat_id FK "nullable, one ticket per seat while valid (partial UK)"
         ticket_status status
     }
@@ -367,6 +376,7 @@ FKs that cross the section boundaries above:
 | `events.organizer_profile_id` | `organizer_profiles.id` |
 | `events.venue_id` | `venues.id` |
 | `events.category_id` | `event_categories.id` |
+| `events.suspended_by` | `users.id` |
 | `staff_assignments.user_id` / `assigned_by` | `users.id` |
 | `ticket_types.event_id` | `events.id` |
 | `event_price_category_ticket_types.price_category_id` | `price_categories.id` |
@@ -388,6 +398,7 @@ FKs that cross the section boundaries above:
 | `paid_sales_activations.event_id` | `events.id` |
 | `paid_sales_activations.organizer_profile_id` | `organizer_profiles.id` |
 | `paid_sales_activations.payout_account_id` | `payout_accounts.id` |
+| `paid_sales_activations.suspended_by` | `users.id` |
 | `paid_sales_activations.fee_payment_id` | `payments.id` |
 | `tickets.order_item_id` | `order_items.id` |
 | `tickets.event_id` | `events.id` |
