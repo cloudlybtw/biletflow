@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,7 @@ class Settings(BaseSettings):
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     smtp_from: str = "no-reply@biletflow.local"
+    smtp_timeout_seconds: float = Field(default=10, ge=1, le=60)
     media_root: Path = Path(__file__).resolve().parents[2] / "media"
     image_max_bytes: int = 5 * 1024 * 1024
 

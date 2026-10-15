@@ -89,9 +89,12 @@ async def test_event_to_campaign_qr_checkout_payment_and_tickets(client, db_sess
     ).status_code == 200
     activated = await client.post(path + "/paid-sales/activate", headers=headers, json={})
     assert activated.status_code == 200, activated.text
+    buyer = await create_verified_user(db_session)
+    await db_session.commit()
+    buyer_headers = auth_headers(buyer)
     order_response = await client.post(
         path + "/orders",
-        headers=headers,
+        headers=buyer_headers,
         json={
             "promo_code": link.json()["promo_code"],
             "items": [{"ticket_type_id": ticket["id"], "quantity": 2}],
@@ -100,17 +103,94 @@ async def test_event_to_campaign_qr_checkout_payment_and_tickets(client, db_sess
     assert order_response.status_code == 201, order_response.text
     order = order_response.json()
     assert order["status"] == "pending" and order["total_amount"] == 5100
-    payment_response = await client.post(f"/api/v1/orders/{order['id']}/pay", headers=headers)
+    payment_response = await client.post(f"/api/v1/orders/{order['id']}/pay", headers=buyer_headers)
     assert payment_response.status_code == 201, payment_response.text
     payment = payment_response.json()
     success = await client.post(
-        f"/api/v1/payments/{payment['id']}/simulate", headers=headers, json={"outcome": "success"}
+        f"/api/v1/payments/{payment['id']}/simulate",
+        headers=buyer_headers,
+        json={"outcome": "success"},
     )
     assert success.status_code == 200 and success.json()["status"] == "succeeded"
-    detail = (await client.get(f"/api/v1/orders/{order['id']}", headers=headers)).json()
+    detail = (await client.get(f"/api/v1/orders/{order['id']}", headers=buyer_headers)).json()
     assert detail["status"] == "completed" and len(detail["ticket_ids"]) == 2
-    ticket_detail = await client.get(f"/api/v1/tickets/{detail['ticket_ids'][0]}", headers=headers)
+    ticket_detail = await client.get(
+        f"/api/v1/tickets/{detail['ticket_ids'][0]}", headers=buyer_headers
+    )
     assert ticket_detail.status_code == 200 and ticket_detail.json()["qr_token"].startswith("bft_")
-    assert (await client.get(ticket_detail.json()["qr_image_url"], headers=headers)).headers[
+    assert (await client.get(ticket_detail.json()["qr_image_url"], headers=buyer_headers)).headers[
         "content-type"
     ] == "image/png"
+    pdf = await client.get(ticket_detail.json()["pdf_url"], headers=buyer_headers)
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    case = await client.post(
+        "/api/v1/support/cases",
+        headers=buyer_headers,
+        json={
+            "ticket_id": detail["ticket_ids"][0],
+            "category": "ticket_delivery",
+            "subject": "Print my ticket",
+            "body": "Where can I download the PDF?",
+        },
+    )
+    assert case.status_code == 201, case.text
+    reply = await client.post(
+        f"/api/v1/support/cases/{case.json()['id']}/messages",
+        headers=headers,
+        json={"body": "Use the PDF download in your tickets."},
+    )
+    assert reply.status_code == 201
+    inbox = await client.get("/api/v1/notifications", headers=buyer_headers)
+    assert inbox.status_code == 200 and inbox.json()["total"] == 1
+    assert (
+        await client.patch(
+            f"/api/v1/support/cases/{case.json()['id']}/status",
+            headers=headers,
+            json={"status": "resolved"},
+        )
+    ).status_code == 200
+    scanned = await client.post(
+        f"/api/v1/checkin/scan?event_id={event['id']}",
+        headers=headers,
+        json={"token": ticket_detail.json()["qr_token"]},
+    )
+    assert scanned.status_code == 201 and scanned.json()["result"] == "valid"
+    rejected = await client.post(
+        f"/api/v1/checkin/scan?event_id={event['id']}", headers=headers, json={"token": qr["token"]}
+    )
+    assert rejected.status_code == 201 and rejected.json()["result"] == "campaign_code_rejected"
+    dashboard = await client.get(path + "/analytics/summary", headers=headers)
+    assert dashboard.status_code == 200, dashboard.text
+    metrics = dashboard.json()
+    assert metrics["sold"] == 2 and metrics["remaining"] == 8
+    assert metrics["gross_amount"] == 6000 and metrics["discount_amount"] == 900
+    assert metrics["net_amount"] == 5100 and metrics["simulated"] is True
+    assert metrics["checked_in"] == 1 and metrics["absent"] == 1
+    campaign_report = await client.get(path + "/analytics/campaigns", headers=headers)
+    assert campaign_report.json()["items"][0]["redemptions"] == 1
+    refund = await client.post(path + f"/orders/{order['id']}/refunds", headers=headers, json={})
+    assert refund.status_code == 201 and refund.json()["simulated"] is True
+    assert refund.json()["amount"] == 5100
+    dashboard = await client.get(path + "/analytics/summary", headers=headers)
+    assert dashboard.json()["refund_amount"] == 5100 and dashboard.json()["net_amount"] == 0
+    assert dashboard.json()["sold"] == dashboard.json()["registered"] == 0
+    timeline = await client.get(path + "/history", headers=headers, params={"limit": 100})
+    assert timeline.status_code == 200
+    assert {
+        "event.published",
+        "promo_code.created",
+        "support.status_changed",
+        "ticket.checked_in",
+        "refund.completed",
+    } <= {row["action_type"] for row in timeline.json()["items"]}
+    assert (await client.get(path + f"/orders/{order['id']}", headers=headers)).json()[
+        "status"
+    ] == "refunded"
+    cancelled = await client.post(path + "/cancel", headers=headers)
+    assert cancelled.status_code == 200 and cancelled.json()["classification"] == "Cancelled"
+    duplicate = await client.post(path + "/duplicate", headers=headers)
+    assert duplicate.status_code == 201
+    copied_orders = await client.get(
+        f"/api/v1/events/{duplicate.json()['id']}/orders", headers=headers
+    )
+    assert copied_orders.json()["total"] == 0

@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.deps import EventAccess
 from app.core.errors import NOT_FOUND, VALIDATION_ERROR, AppError
 from app.core.pagination import Pagination
+from app.db.pagination import read_page
 from app.modules.campaigns.discounts import DiscountLine, calculate_discount
 from app.modules.campaigns.models import (
     Campaign,
@@ -47,6 +48,29 @@ async def get_campaign(
     if campaign is None:
         raise AppError(NOT_FOUND, "Campaign not found.", 404)
     return campaign
+
+
+async def list_qrs(
+    session: AsyncSession, access: EventAccess, campaign_id: uuid.UUID, page: Pagination
+):
+    await get_campaign(session, access.event_id, campaign_id)
+    return await read_page(
+        session,
+        select(CampaignQR)
+        .where(CampaignQR.campaign_id == campaign_id)
+        .order_by(CampaignQR.created_at, CampaignQR.id),
+        page,
+    )
+
+
+async def get_qr(session: AsyncSession, access: EventAccess, campaign_id: uuid.UUID, token: str):
+    await get_campaign(session, access.event_id, campaign_id)
+    qr = await session.scalar(
+        select(CampaignQR).where(CampaignQR.campaign_id == campaign_id, CampaignQR.token == token)
+    )
+    if qr is None:
+        raise AppError(NOT_FOUND, "Campaign QR not found.", 404)
+    return qr
 
 
 async def campaign_outputs(session: AsyncSession, campaigns: list[Campaign]) -> list[CampaignOut]:
@@ -160,6 +184,9 @@ async def create(session: AsyncSession, access: EventAccess, data: CampaignCreat
         ]
     )
     code = await insert_code(session, campaign, data.code)
+    await audit(
+        session, access, "promo_code.created", code, {"code": code.code, "campaign_id": campaign.id}
+    )
     await audit(
         session,
         access,
@@ -281,7 +308,8 @@ async def create_qr(
     campaign_id: uuid.UUID,
     promo_code_id: uuid.UUID | None,
 ) -> CampaignQR:
-    editable(await get_event(session, access.event_id, lock=True))
+    event = await get_event(session, access.event_id, lock=True)
+    editable(event)
     campaign = await get_campaign(session, access.event_id, campaign_id, lock=True)
     if campaign.status in {CampaignStatus.DISABLED, CampaignStatus.EXPIRED}:
         raise AppError(
@@ -293,12 +321,12 @@ async def create_qr(
     code = await session.scalar(query.order_by(PromoCode.created_at, PromoCode.id).limit(1))
     if code is None:
         raise AppError(NOT_FOUND, "Active promo code not found in this campaign.", 404)
-    token = "bfc_" + secrets.token_urlsafe(24)
+    token = "bfc_" + secrets.token_urlsafe(16)
     qr = CampaignQR(
         campaign_id=campaign.id,
         promo_code_id=code.id,
         token=token,
-        target_url=f"{get_settings().web_base_url.rstrip('/')}/campaign-links/{token}",
+        target_url=f"{get_settings().web_base_url.rstrip('/')}/e/{event.slug}?c={token}",
         label="PROMO",
         image_url=f"/api/v1/events/{access.event_id}/campaigns/{campaign.id}/qr/{token}.png",
     )
@@ -326,7 +354,7 @@ def ensure_usable(campaign: Campaign, code: PromoCode, now: datetime) -> None:
         campaign.max_redemptions is not None
         and campaign.redemption_count >= campaign.max_redemptions
     ):
-        raise AppError("PROMO_EXHAUSTED", "This promo has reached its redemption limit.")
+        raise AppError("PROMO_EXHAUSTED", "This promo has reached its redemption limit.", 409)
 
 
 async def public_event(session: AsyncSession, event_id: uuid.UUID) -> Event:

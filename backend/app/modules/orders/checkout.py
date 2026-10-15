@@ -2,13 +2,13 @@ import secrets
 from dataclasses import dataclass
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
 from app.db.settings import checkout_settings
 from app.modules.campaigns.discounts import DiscountLine, calculate_discount
-from app.modules.campaigns.models import Campaign, CampaignTicketType, PromoCode
+from app.modules.campaigns.models import Campaign, CampaignStatus, CampaignTicketType, PromoCode
 from app.modules.campaigns.service import ensure_usable
 from app.modules.events.models import (
     Event,
@@ -19,7 +19,7 @@ from app.modules.events.models import (
 )
 from app.modules.events.service import get_event
 from app.modules.orders import service
-from app.modules.orders.models import Attendee, Order, OrderItem
+from app.modules.orders.models import Attendee, Order, OrderItem, PromoRedemption
 from app.modules.orders.pricing import MAX_AMOUNT, allocate_discount, processing_fee
 from app.modules.orders.schemas import AttendeeInput, CheckoutCreate, OrderDetail
 from app.modules.ticketing.holds import SeatHold, SeatHoldStatus
@@ -125,8 +125,6 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
             raise AppError(
                 "PAID_SALES_INACTIVE", "Paid sales must be active for paid ticket types.", 409
             )
-        if item.quantity > ticket.quantity_total - ticket.quantity_reserved - ticket.quantity_sold:
-            raise AppError("SOLD_OUT", "Not enough tickets remain.", 409)
     hold_ids = [hold for item in data.items for hold in item.seat_hold_ids]
     if event.seating_mode == SeatingMode.ASSIGNED and any(
         not item.seat_hold_ids for item in data.items
@@ -227,7 +225,23 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
         discount = amounts.discount_amount
         # A floor-rounded zero discount does not consume a redemption.
         if discount:
-            campaign.redemption_count += 1
+            claimed = await session.scalar(
+                update(Campaign)
+                .where(
+                    Campaign.id == campaign.id,
+                    Campaign.status == CampaignStatus.ACTIVE,
+                    or_(
+                        Campaign.max_redemptions.is_(None),
+                        Campaign.redemption_count < Campaign.max_redemptions,
+                    ),
+                )
+                .values(redemption_count=Campaign.redemption_count + 1)
+                .returning(Campaign.id)
+            )
+            if claimed is None:
+                raise AppError(
+                    "PROMO_EXHAUSTED", "This promo has reached its redemption limit.", 409
+                )
     fee = processing_fee(subtotal - discount, fee_percent)
     order = Order(
         order_number="BF-" + secrets.token_hex(8).upper(),
@@ -247,6 +261,16 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
     )
     session.add(order)
     await session.flush()
+    if discount:
+        session.add(
+            PromoRedemption(
+                promo_code_id=code.id,
+                campaign_id=campaign.id,
+                order_id=order.id,
+                user_id=user.id,
+                discount_amount=discount,
+            )
+        )
     allocations = allocate_discount(
         [line.subtotal for line in lines],
         [not applicable or line.ticket_type.id in applicable for line in lines],
@@ -280,7 +304,19 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
             line.hold.order_id = order.id
             line.hold.expires_at = expires_at
     for ticket in types:
-        ticket.quantity_reserved += requested[ticket.id].quantity
+        quantity = requested[ticket.id].quantity
+        reserved = await session.scalar(
+            update(TicketType)
+            .where(
+                TicketType.id == ticket.id,
+                TicketType.quantity_reserved + TicketType.quantity_sold + quantity
+                <= TicketType.quantity_total,
+            )
+            .values(quantity_reserved=TicketType.quantity_reserved + quantity)
+            .returning(TicketType.id)
+        )
+        if reserved is None:
+            raise AppError("SOLD_OUT", "Not enough tickets remain.", 409)
     await service.audit(session, order, "order.placed")
     if order.total_amount == 0:
         await service.complete_locked(session, event, order)

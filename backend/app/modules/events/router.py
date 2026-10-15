@@ -3,16 +3,20 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Form, Query, Response, UploadFile
 from fastapi.responses import FileResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import EventAccess, current_user, require_event_role, require_verified
+from app.core.deps import (
+    EventAccess,
+    current_user,
+    optional_current_user,
+    require_event_role,
+    require_verified,
+)
 from app.core.errors import AppError
 from app.core.pagination import Page, Pagination, pagination
 from app.db.session import get_session
 from app.modules.events import images, service
-from app.modules.events.models import EventCategory, EventImage, EventStatus, EventVisibility
+from app.modules.events.models import EventStatus
 from app.modules.events.schemas import (
     CategoryOut,
     EventCreate,
@@ -24,10 +28,8 @@ from app.modules.events.schemas import (
     StaffOut,
 )
 from app.modules.ticketing import service as ticket_service
-from app.modules.ticketing.models import TicketType
 from app.modules.ticketing.schemas import TicketTypeCreate, TicketTypeOut, TicketTypeUpdate
-from app.modules.users import service as users_service
-from app.modules.users.models import StaffAssignment, StaffRole, User
+from app.modules.users.models import StaffRole, User
 
 router = APIRouter(tags=["events"])
 owner = require_event_role()
@@ -35,13 +37,12 @@ editor = require_event_role(StaffRole.CO_ORGANIZER)
 reader = require_event_role(StaffRole.EVENT_ADMIN, StaffRole.CO_ORGANIZER, StaffRole.SUPPORT_AGENT)
 
 
-@router.get("/event-categories", response_model=list[CategoryOut])
-async def categories(session: AsyncSession = Depends(get_session)):
-    return (
-        await session.scalars(
-            select(EventCategory).order_by(EventCategory.display_order, EventCategory.slug)
-        )
-    ).all()
+@router.get("/event-categories", response_model=Page[CategoryOut])
+async def categories(
+    page: Pagination = Depends(pagination), session: AsyncSession = Depends(get_session)
+):
+    items, total = await service.list_categories(session, page)
+    return Page(items=items, total=total)
 
 
 @router.get("/events", response_model=Page[EventOut])
@@ -158,7 +159,8 @@ async def unpublish(
 @router.post(
     "/events/{event_id}/cancel",
     response_model=EventOut,
-    description="Cancels events without orders. Cancellation/refund cascades for populated events are delivered in M7.",
+    summary="Cancel an event and reverse its orders atomically",
+    description="Owner only, including suspended events. Cancels free registrations, fully refunds completed paid orders (simulated), expires unpaid orders and releases their reservations. Queues buyer notifications and increments the calendar sequence once. Repeated cancellation returns the existing cancelled event.",
 )
 async def cancel(
     event_id: uuid.UUID,
@@ -177,45 +179,15 @@ async def duplicate(
     return service.event_out(await service.duplicate(session, access))
 
 
-async def visible_event(
-    event_id: uuid.UUID, session: AsyncSession, credentials: HTTPAuthorizationCredentials | None
-):
-    event = await service.get_event(session, event_id)
-    if (
-        not event.is_suspended
-        and event.status == EventStatus.PUBLISHED
-        and event.visibility != EventVisibility.PRIVATE
-    ):
-        return event, False
-    # Reuse token authentication and role checks for private/draft image and ticket access.
-    if credentials is None:
-        raise service.not_found()
-    user = await current_user(credentials, session)
-    relation = await users_service.get_event_relation(session, event_id, user.id)
-    if relation is None or not (relation.is_owner or relation.staff_roles):
-        raise service.not_found()
-    return event, True
-
-
-optional_bearer = HTTPBearer(auto_error=False)
-
-
-@router.get("/events/{event_id}/ticket-types", response_model=list[TicketTypeOut])
+@router.get("/events/{event_id}/ticket-types", response_model=Page[TicketTypeOut])
 async def ticket_types(
     event_id: uuid.UUID,
-    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    page: Pagination = Depends(pagination),
+    user: User | None = Depends(optional_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    _, privileged = await visible_event(event_id, session, credentials)
-    # Public events still show hidden inventory to authorized staff when authenticated.
-    if credentials and not privileged:
-        user = await current_user(credentials, session)
-        relation = await users_service.get_event_relation(session, event_id, user.id)
-        privileged = bool(relation and (relation.is_owner or relation.staff_roles))
-    query = select(TicketType).where(TicketType.event_id == event_id)
-    if not privileged:
-        query = query.where(~TicketType.is_hidden)
-    return (await session.scalars(query.order_by(TicketType.display_order, TicketType.id))).all()
+    items, total = await service.list_ticket_types(session, event_id, user, page)
+    return Page(items=items, total=total)
 
 
 @router.post("/events/{event_id}/ticket-types", response_model=TicketTypeOut, status_code=201)
@@ -239,19 +211,15 @@ async def update_ticket_type(
     return await ticket_service.save(session, access, data, ticket_id)
 
 
-@router.get("/events/{event_id}/staff", response_model=list[StaffOut])
+@router.get("/events/{event_id}/staff", response_model=Page[StaffOut])
 async def list_staff(
     event_id: uuid.UUID,
+    page: Pagination = Depends(pagination),
     access: EventAccess = Depends(owner),
     session: AsyncSession = Depends(get_session),
 ):
-    return (
-        await session.scalars(
-            select(StaffAssignment)
-            .where(StaffAssignment.event_id == access.event_id)
-            .order_by(StaffAssignment.created_at, StaffAssignment.id)
-        )
-    ).all()
+    items, total = await service.list_staff(session, access, page)
+    return Page(items=items, total=total)
 
 
 @router.post("/events/{event_id}/staff", response_model=StaffOut, status_code=201)
@@ -275,20 +243,15 @@ async def revoke_staff(
     return Response(status_code=204)
 
 
-@router.get("/events/{event_id}/images", response_model=list[ImageOut])
+@router.get("/events/{event_id}/images", response_model=Page[ImageOut])
 async def list_images(
     event_id: uuid.UUID,
-    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    page: Pagination = Depends(pagination),
+    user: User | None = Depends(optional_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    await visible_event(event_id, session, credentials)
-    return (
-        await session.scalars(
-            select(EventImage)
-            .where(EventImage.event_id == event_id)
-            .order_by(EventImage.sort_order, EventImage.id)
-        )
-    ).all()
+    items, total = await service.list_images(session, event_id, user, page)
+    return Page(items=items, total=total)
 
 
 @router.post("/events/{event_id}/images", response_model=ImageOut, status_code=201)
@@ -333,10 +296,10 @@ async def delete_image(
 async def image_file(
     event_id: uuid.UUID,
     image_id: uuid.UUID,
-    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    user: User | None = Depends(optional_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    await visible_event(event_id, session, credentials)
+    await service.visible_event(session, event_id, user)
     image = await images.get_image(session, event_id, image_id)
     path = images.image_path(image)
     if not path.is_file():

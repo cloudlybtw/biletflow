@@ -11,7 +11,7 @@ inventory constraints and promo-code uniqueness consistent across requests.
 cp .env.example .env
 docker compose up -d db mailpit
 docker compose run --rm migrate up
-docker compose up -d api order-expiry
+docker compose up -d api
 docker compose exec api uv run python -m app.scripts.seed_demo
 ```
 
@@ -63,10 +63,24 @@ M4 adds checkout, atomic inventory/promo reservations, simulated payments,
 expiry cleanup, ticket issuance, and buyer order/ticket/QR endpoints.
 M5 adds per-event activation checklists, terms, simulated activation-fee
 payments, activation, and admin event/paid-sales suspension controls.
-PDF/check-in is M6; refund/support flows are M7.
+Print-optimized ticket PDFs and online QR/manual check-in with reversal and
+attendance counters are implemented in M6. M7.1 adds organizer/co-organizer
+cancellation of free registrations and full simulated refunds, with atomic
+ticket invalidation, inventory returns, audits, and queued notifications.
+M7.2 adds atomic event cancellation cascades, including unpaid reservation
+cleanup and one event-cancellation notice per affected buyer. M7.3–M7.7 add
+SMTP delivery with PDF tickets, a private in-app inbox, and support cases with
+polling, staff notes, assignments, statuses, notifications and audit history.
+M8 adds exact simulated sales/campaign/attendance reports, retained event orders,
+tickets/refunds/scan history, the chronological audit timeline, admin operational
+search, user suspension, atomic settings edits, and protected CSV exports.
 
 See the [M2/M3 integration guide](docs/api-m2-m3.md),
-[M4 checkout guide](docs/api-m4.md),
+[M4 checkout and M7.1 refunds guide](docs/api-m4.md),
 [M5 activation/moderation guide](docs/api-m5.md),
+[M6 PDF/Flutter check-in guide](docs/api-m6.md),
+[M7 notifications/support guide](docs/api-m7.md),
+[M8 analytics/history/admin guide](docs/api-m8.md),
+[backend demo and SRS acceptance map](docs/demo-flow.md),
 [implementation status](docs/milestones.md), [ERD](docs/erd.md), and
 [generated OpenAPI contract](docs/openapi.json).

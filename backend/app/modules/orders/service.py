@@ -8,9 +8,11 @@ import secrets
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.deps import EventAccess
 from app.core.errors import NOT_FOUND, AppError
 from app.core.pagination import Pagination
 from app.modules.campaigns.models import Campaign
@@ -52,7 +54,10 @@ async def lock_order(
     event = await session.scalar(
         select(Event)
         .where(Event.id == event_id)
-        .with_for_update(skip_locked=skip_busy)
+        # NO KEY UPDATE still serializes lifecycle changes, while allowing the
+        # FK KEY SHARE taken by a scan's audit insert. FOR UPDATE deadlocks if
+        # that scan owns a ticket which a concurrent refund needs to invalidate.
+        .with_for_update(skip_locked=skip_busy, key_share=True)
         .execution_options(populate_existing=True)
     )
     if event is None and skip_busy:
@@ -65,11 +70,18 @@ async def lock_order(
     return event, order
 
 
-async def audit(session: AsyncSession, order: Order, action: str) -> None:
+async def audit(
+    session: AsyncSession,
+    order: Order,
+    action: str,
+    *,
+    access: EventAccess | None = None,
+    reason: str | None = None,
+) -> None:
     await history.record(
         session,
-        actor_user_id=order.buyer_user_id,
-        actor_role="attendee",
+        actor_user_id=access.user.id if access else order.buyer_user_id,
+        actor_role=access.actor_role if access else "attendee",
         action_type=action,
         entity_type="orders",
         entity_id=order.id,
@@ -79,6 +91,7 @@ async def audit(session: AsyncSession, order: Order, action: str) -> None:
             "order_number": order.order_number,
             "total_amount": order.total_amount,
             "simulated": True,
+            **({"reason": reason} if reason is not None else {}),
         },
     )
 
@@ -135,29 +148,111 @@ async def claimed_campaign(session: AsyncSession, order: Order) -> Campaign | No
 async def expire_locked(session: AsyncSession, order: Order, now: datetime) -> bool:
     if order.status not in PAYABLE_STATUSES or order.expires_at is None or order.expires_at > now:
         return False
+    return await release_pending_locked(session, order, now)
+
+
+async def release_pending_locked(
+    session: AsyncSession,
+    order: Order,
+    now: datetime,
+    *,
+    cancelled_by: EventAccess | None = None,
+) -> bool:
+    """Release an unpaid order under event/order locks, without changing its deadline.
+
+    The expiry path checks the deadline first; event cancellation releases even
+    live reservations. All counters/claims/holds/payment attempts commit together.
+    """
+    changed = await session.scalar(
+        update(Order)
+        .where(Order.id == order.id, Order.status.in_(PAYABLE_STATUSES))
+        .values(status=OrderStatus.EXPIRED)
+        .returning(Order)
+        .execution_options(populate_existing=True)
+    )
+    if changed is None:
+        return False
     campaign = await claimed_campaign(session, order)
     _, types, quantities = await inventory(session, order)
     for ticket in types:
-        ticket.quantity_reserved -= quantities[ticket.id]
+        await adjust_inventory(session, ticket.id, reserved=-quantities[ticket.id])
     if campaign is not None:
-        campaign.redemption_count -= 1
+        released = await session.scalar(
+            update(Campaign)
+            .where(Campaign.id == campaign.id, Campaign.redemption_count > 0)
+            .values(redemption_count=Campaign.redemption_count - 1)
+            .returning(Campaign.id)
+        )
+        if released is None:
+            raise AppError(
+                "RESERVATION_STATE_INVALID", "Order promotion reservation is inconsistent.", 409
+            )
+        await session.execute(delete(PromoRedemption).where(PromoRedemption.order_id == order.id))
     await session.execute(
         update(SeatHold)
         .where(SeatHold.order_id == order.id, SeatHold.status == SeatHoldStatus.ACTIVE)
-        .values(status=SeatHoldStatus.EXPIRED)
+        .values(status=SeatHoldStatus.RELEASED if cancelled_by else SeatHoldStatus.EXPIRED)
     )
-    await session.execute(
+    cancelled_payments = await session.scalars(
         update(Payment)
         .where(Payment.order_id == order.id, Payment.status == PaymentStatus.INITIATED)
         .values(
             status=PaymentStatus.CANCELLED,
             processed_at=now,
-            failure_reason="Order expired before payment completed.",
+            failure_reason="Event cancelled before payment completed."
+            if cancelled_by
+            else "Order expired before payment completed.",
         )
+        .returning(Payment.id)
     )
-    order.status = OrderStatus.EXPIRED
-    await audit(session, order, "order.expired")
+    for payment_id in cancelled_payments:
+        await history.record(
+            session,
+            actor_user_id=cancelled_by.user.id if cancelled_by else None,
+            actor_role=cancelled_by.actor_role if cancelled_by else "system",
+            action_type="payment.cancelled",
+            entity_type="payments",
+            entity_id=payment_id,
+            event_id=order.event_id,
+            summary="Simulated payment attempt cancelled",
+            metadata={
+                "order_id": str(order.id),
+                "simulated": True,
+                "reason": "event_cancelled" if cancelled_by else "order_expired",
+            },
+        )
+    await audit(
+        session,
+        order,
+        "order.expired",
+        access=cancelled_by,
+        reason="event_cancelled" if cancelled_by else None,
+    )
     return True
+
+
+async def adjust_inventory(
+    session: AsyncSession, ticket_type_id: uuid.UUID, *, reserved: int, sold: int = 0
+) -> None:
+    changed = await session.scalar(
+        update(TicketType)
+        .where(
+            TicketType.id == ticket_type_id,
+            TicketType.quantity_reserved + reserved >= 0,
+            TicketType.quantity_sold + sold >= 0,
+            TicketType.quantity_reserved + reserved + TicketType.quantity_sold + sold
+            <= TicketType.quantity_total,
+        )
+        .values(
+            quantity_reserved=TicketType.quantity_reserved + reserved,
+            quantity_sold=TicketType.quantity_sold + sold,
+        )
+        .returning(TicketType.id)
+    )
+    if changed is None:
+        raise AppError(
+            "RESERVATION_STATE_INVALID", "Order inventory reservation is inconsistent.", 409
+        )
 
 
 async def expire_event_locked(session: AsyncSession, event_id: uuid.UUID, now: datetime) -> int:
@@ -220,7 +315,7 @@ async def complete_locked(session: AsyncSession, event: Event, order: Order) -> 
             ticket = Ticket(
                 id=uuid.uuid4(),
                 ticket_code="BF-" + "".join(secrets.choice(CODE_ALPHABET) for _ in range(10)),
-                qr_token="bft_" + secrets.token_urlsafe(24),
+                qr_token="bft_" + secrets.token_urlsafe(32),
                 order_item_id=item.id,
                 event_id=order.event_id,
                 ticket_type_id=item.ticket_type_id,
@@ -236,22 +331,30 @@ async def complete_locked(session: AsyncSession, event: Event, order: Order) -> 
             session.add(ticket)
             issued.append(ticket)
     for ticket_type in types:
-        ticket_type.quantity_reserved -= quantities[ticket_type.id]
-        ticket_type.quantity_sold += quantities[ticket_type.id]
+        await adjust_inventory(
+            session,
+            ticket_type.id,
+            reserved=-quantities[ticket_type.id],
+            sold=quantities[ticket_type.id],
+        )
     await session.execute(
         update(SeatHold)
         .where(SeatHold.order_id == order.id, SeatHold.status == SeatHoldStatus.ACTIVE)
         .values(status=SeatHoldStatus.CONVERTED)
     )
     if campaign is not None:
-        session.add(
-            PromoRedemption(
+        # Orders reserved before immediate redemption rows were introduced
+        # still need their existing claim recorded when they complete.
+        await session.execute(
+            insert(PromoRedemption)
+            .values(
                 promo_code_id=order.promo_code_id,
                 campaign_id=campaign.id,
                 order_id=order.id,
                 user_id=order.buyer_user_id,
                 discount_amount=order.discount_amount,
             )
+            .on_conflict_do_nothing(index_elements=[PromoRedemption.order_id])
         )
     order.status = OrderStatus.COMPLETED
     buyer = await session.get(User, order.buyer_user_id)
@@ -391,4 +494,15 @@ async def sweep_expired(session: AsyncSession, *, batch_size: int = 100) -> int:
         if locked is not None:
             count += await expire_locked(session, locked[1], now_utc())
         await session.commit()
+    # Unattached holds have no order deadline to drive their cleanup.
+    await session.execute(
+        update(SeatHold)
+        .where(
+            SeatHold.order_id.is_(None),
+            SeatHold.status == SeatHoldStatus.ACTIVE,
+            SeatHold.expires_at <= now_utc(),
+        )
+        .values(status=SeatHoldStatus.EXPIRED)
+    )
+    await session.commit()
     return count

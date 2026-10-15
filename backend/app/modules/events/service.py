@@ -13,24 +13,88 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import EventAccess
 from app.core.errors import NOT_FOUND, VALIDATION_ERROR, AppError
 from app.core.pagination import Pagination
+from app.db.pagination import read_page
+from app.modules.events import cancellation
 from app.modules.events.models import (
     Event,
     EventCategory,
+    EventImage,
     EventStatus,
     EventVisibility,
     PaidSalesStatus,
 )
 from app.modules.events.schemas import EventCreate, EventFields, EventOut, EventUpdate, StaffCreate
 from app.modules.history import service as history
+from app.modules.notifications import service as notifications
+from app.modules.notifications.models import NotificationChannel, NotificationType
+from app.modules.orders.models import Order, OrderStatus
 from app.modules.organizers import service as organizers
 from app.modules.ticketing.models import TicketType
 from app.modules.ticketing.schemas import TicketTypeCreate
+from app.modules.users import service as users_service
 from app.modules.users.models import StaffAssignment, StaffRole, User, UserStatus
 from app.modules.venues.models import Venue
 
 
 def not_found() -> AppError:
     return AppError(NOT_FOUND, "Event not found.", status.HTTP_404_NOT_FOUND)
+
+
+async def list_categories(session: AsyncSession, page: Pagination):
+    return await read_page(
+        session,
+        select(EventCategory).order_by(EventCategory.display_order, EventCategory.slug),
+        page,
+    )
+
+
+async def visible_event(session: AsyncSession, event_id: uuid.UUID, user: User | None):
+    event = await get_event(session, event_id)
+    relation = await users_service.get_event_relation(session, event_id, user.id) if user else None
+    privileged = bool(relation and (relation.is_owner or relation.staff_roles))
+    if (
+        not (
+            not event.is_suspended
+            and event.status == EventStatus.PUBLISHED
+            and event.visibility != EventVisibility.PRIVATE
+        )
+        and not privileged
+    ):
+        raise not_found()
+    return event, privileged
+
+
+async def list_ticket_types(
+    session: AsyncSession, event_id: uuid.UUID, user: User | None, page: Pagination
+):
+    _, privileged = await visible_event(session, event_id, user)
+    query = select(TicketType).where(TicketType.event_id == event_id)
+    if not privileged:
+        query = query.where(~TicketType.is_hidden)
+    return await read_page(session, query.order_by(TicketType.display_order, TicketType.id), page)
+
+
+async def list_staff(session: AsyncSession, access: EventAccess, page: Pagination):
+    return await read_page(
+        session,
+        select(StaffAssignment)
+        .where(StaffAssignment.event_id == access.event_id)
+        .order_by(StaffAssignment.created_at, StaffAssignment.id),
+        page,
+    )
+
+
+async def list_images(
+    session: AsyncSession, event_id: uuid.UUID, user: User | None, page: Pagination
+):
+    await visible_event(session, event_id, user)
+    return await read_page(
+        session,
+        select(EventImage)
+        .where(EventImage.event_id == event_id)
+        .order_by(EventImage.sort_order, EventImage.id),
+        page,
+    )
 
 
 def slug_for(title: str) -> str:
@@ -69,7 +133,9 @@ async def audit(session: AsyncSession, access: EventAccess, action: str, entity,
 async def get_event(session: AsyncSession, event_id: uuid.UUID, *, lock=False) -> Event:
     query = select(Event).where(Event.id == event_id, Event.deleted_at.is_(None))
     if lock:
-        query = query.with_for_update().execution_options(populate_existing=True)
+        # Serialize event changes while allowing FK checks from ticket scans
+        # which may already own a ticket needed by a cancellation cascade.
+        query = query.with_for_update(key_share=True).execution_options(populate_existing=True)
     event = await session.scalar(query)
     if event is None:
         raise not_found()
@@ -146,13 +212,50 @@ async def update_event(session: AsyncSession, access: EventAccess, data: EventUp
     for key in changes:
         setattr(event, key, getattr(merged, key))
     await audit(session, access, "event.updated", event, {"before": before, "after": changes})
+    changed_fields = [key for key in changes if before[key] != getattr(merged, key)]
+    if changed_fields:
+        buyers = (
+            await session.scalars(
+                select(User)
+                .join(Order, Order.buyer_user_id == User.id)
+                .where(
+                    Order.event_id == event.id,
+                    Order.status.in_(
+                        (OrderStatus.COMPLETED, OrderStatus.PENDING, OrderStatus.AWAITING_PAYMENT)
+                    ),
+                    User.status == UserStatus.ACTIVE,
+                )
+                .distinct()
+            )
+        ).all()
+        for buyer in buyers:
+            await notifications.enqueue(
+                session,
+                user_id=buyer.id,
+                type=NotificationType.EVENT_UPDATE,
+                channel=NotificationChannel.EMAIL,
+                template_key=f"event_update.{buyer.locale}",
+                related_entity_type="event",
+                related_entity_id=str(event.id),
+                payload={
+                    "event_title": event.title,
+                    "event_id": str(event.id),
+                    "status": event.status.value,
+                    "changed_fields": changed_fields,
+                    "to_email": buyer.email,
+                },
+            )
     await session.commit()
     return event
 
 
 async def transition(session: AsyncSession, access: EventAccess, target: EventStatus) -> Event:
     event = await get_event(session, access.event_id, lock=True)
-    editable(event)
+    if target == EventStatus.CANCELLED and event.status == EventStatus.CANCELLED:
+        await session.commit()
+        return event
+    if target != EventStatus.CANCELLED:
+        editable(event)
     allowed = {
         EventStatus.PUBLISHED: {EventStatus.DRAFT, EventStatus.UNPUBLISHED},
         EventStatus.UNPUBLISHED: {EventStatus.PUBLISHED},
@@ -179,24 +282,15 @@ async def transition(session: AsyncSession, access: EventAccess, target: EventSt
                 "EVENT_HAS_NO_TICKETS", "Add a visible ticket type before publishing.", 409
             )
         event.published_at = datetime.now(UTC)
+    changes = None
     if target == EventStatus.CANCELLED:
-        # M7 implements cancellation/refund cascades. Do not cancel populated events partially.
-        from sqlalchemy import text
-
-        has_orders = await session.scalar(
-            text("SELECT EXISTS (SELECT 1 FROM orders WHERE event_id = :id)"), {"id": event.id}
-        )
-        if has_orders:
-            raise AppError(
-                "EVENT_CANCELLATION_REQUIRES_REFUNDS",
-                "Order cancellation and refunds require M7.",
-                409,
-            )
         event.cancelled_at = datetime.now(UTC)
         event.ics_sequence += 1
         event.paid_sales_status = PaidSalesStatus.DISABLED
+        event.status = target
+        changes = await cancellation.cascade_locked(session, access, event)
     event.status = target
-    await audit(session, access, f"event.{target.value}", event)
+    await audit(session, access, f"event.{target.value}", event, changes)
     await session.commit()
     return event
 

@@ -8,10 +8,34 @@ from app.core.deps import current_user
 from app.core.pagination import Page, Pagination, pagination
 from app.db.session import get_session
 from app.modules.tickets import service
+from app.modules.tickets.pdf import render as render_pdf
 from app.modules.tickets.schemas import TicketOut
 from app.modules.users.models import User
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
+
+
+@router.get(
+    "/{ticket_id}/pdf",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+    summary="Download my print-optimized A4 ticket",
+)
+async def pdf(
+    ticket_id: uuid.UUID,
+    user: User = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    ticket = await service.detail(session, user, ticket_id)
+    data = await asyncio.to_thread(render_pdf, ticket)
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": f'attachment; filename="{ticket.ticket_code}.pdf"',
+        },
+    )
 
 
 @router.get("", response_model=Page[TicketOut], summary="My purchased tickets")

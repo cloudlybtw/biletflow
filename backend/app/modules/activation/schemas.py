@@ -31,7 +31,7 @@ class ActivationChecklist(BaseModel):
     fee_amount: int
     fee_payment_id: uuid.UUID | None
     currency: Literal["KZT"] = "KZT"
-    is_simulated: Literal[True] = True
+    simulated: Literal[True] = True
     terms_accepted: bool
     terms_accepted_at: datetime | None
     activated_at: datetime | None

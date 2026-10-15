@@ -59,18 +59,5 @@ services:
       - "1025:1025"
       - "${MAILPIT_WEB_PORT}:8025"
 
-  order-expiry:
-    build: ./backend
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    volumes:
-      - ./backend:/app
-      - /app/.venv
-    command: ["uv", "run", "python", "-m", "app.jobs.expire_orders", "--interval-seconds", "60"]
-    depends_on:
-      db:
-        condition: service_healthy
-
 volumes:
   pgdata:

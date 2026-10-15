@@ -2,15 +2,13 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, Response
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import EventAccess, require_event_role
-from app.core.errors import NOT_FOUND, AppError
 from app.core.pagination import Page, Pagination, pagination
 from app.db.session import get_session
 from app.modules.campaigns import service
-from app.modules.campaigns.models import CampaignQR, CampaignStatus
+from app.modules.campaigns.models import CampaignStatus
 from app.modules.campaigns.qr import promo_png
 from app.modules.campaigns.schemas import (
     CampaignCreate,
@@ -133,21 +131,16 @@ async def create_qr(
     return await service.create_qr(session, access, campaign_id, data.promo_code_id)
 
 
-@router.get("/events/{event_id}/campaigns/{campaign_id}/qr", response_model=list[QROut])
+@router.get("/events/{event_id}/campaigns/{campaign_id}/qr", response_model=Page[QROut])
 async def list_qrs(
     event_id: uuid.UUID,
     campaign_id: uuid.UUID,
+    page: Pagination = Depends(pagination),
     access: EventAccess = Depends(manager),
     session: AsyncSession = Depends(get_session),
 ):
-    await service.get_campaign(session, access.event_id, campaign_id)
-    return (
-        await session.scalars(
-            select(CampaignQR)
-            .where(CampaignQR.campaign_id == campaign_id)
-            .order_by(CampaignQR.created_at, CampaignQR.id)
-        )
-    ).all()
+    items, total = await service.list_qrs(session, access, campaign_id, page)
+    return Page(items=items, total=total)
 
 
 @router.get(
@@ -163,12 +156,7 @@ async def qr_image(
     access: EventAccess = Depends(manager),
     session: AsyncSession = Depends(get_session),
 ):
-    await service.get_campaign(session, access.event_id, campaign_id)
-    qr = await session.scalar(
-        select(CampaignQR).where(CampaignQR.campaign_id == campaign_id, CampaignQR.token == token)
-    )
-    if qr is None:
-        raise AppError(NOT_FOUND, "Campaign QR not found.", 404)
+    qr = await service.get_qr(session, access, campaign_id, token)
     data = await asyncio.to_thread(promo_png, qr.target_url)
     return Response(
         content=data,

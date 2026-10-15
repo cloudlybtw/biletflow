@@ -46,6 +46,7 @@ def output(row) -> TicketOut:
         ticket_code=ticket.ticket_code,
         qr_token=ticket.qr_token,
         qr_image_url=f"/api/v1/tickets/{ticket.id}/qr.png",
+        pdf_url=f"/api/v1/tickets/{ticket.id}/pdf",
         ticket_type_id=ticket.ticket_type_id,
         ticket_type_name=type_name,
         attendee_id=attendee.id,

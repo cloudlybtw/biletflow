@@ -23,6 +23,7 @@ class TicketOut(BaseModel):
     ticket_code: str
     qr_token: str
     qr_image_url: str
+    pdf_url: str
     ticket_type_id: uuid.UUID
     ticket_type_name: str
     attendee_id: uuid.UUID

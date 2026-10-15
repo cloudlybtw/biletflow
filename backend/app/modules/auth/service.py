@@ -125,6 +125,15 @@ async def login(session: AsyncSession, email: str, password: str) -> TokenRespon
         raise _invalid_credentials()
     if not await run_in_threadpool(verify_password, user.password_hash, password):
         raise _invalid_credentials()
+    # Serialize session issuance with admin suspension, then reload account state.
+    user = await session.scalar(
+        select(User)
+        .where(User.id == user.id)
+        .with_for_update(key_share=True)
+        .execution_options(populate_existing=True)
+    )
+    if user is None or user.status == UserStatus.DELETED:
+        raise _invalid_credentials()
     # Checked after the password so account state is revealed only to its owner.
     if user.status == UserStatus.SUSPENDED:
         raise _account_suspended()
@@ -137,6 +146,16 @@ async def login(session: AsyncSession, email: str, password: str) -> TokenRespon
 
 async def refresh(session: AsyncSession, raw_token: str) -> TokenResponse:
     """Rotate a refresh token: the presented one is used up and a new pair issued."""
+    token = await _find_token(session, raw_token, UserTokenPurpose.REFRESH)
+    if token is not None:
+        # Lock user before token, matching moderation. A refresh which wins first
+        # commits before suspension revokes its newly issued token as well.
+        await session.execute(
+            select(User)
+            .where(User.id == token.user_id)
+            .with_for_update(key_share=True)
+            .execution_options(populate_existing=True)
+        )
     user_id = await _claim_token(session, raw_token, UserTokenPurpose.REFRESH)
     if user_id is None:
         await session.rollback()

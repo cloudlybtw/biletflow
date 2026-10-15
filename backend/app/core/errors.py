@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Any
 
 from fastapi import FastAPI, Request, status
@@ -56,6 +57,25 @@ ORGANIZER_PROFILE_NOT_FOUND = "ORGANIZER_PROFILE_NOT_FOUND"
 PAYOUT_ACCOUNT_EXISTS = "PAYOUT_ACCOUNT_EXISTS"
 PAYOUT_ACCOUNT_NOT_ACTIVE = "PAYOUT_ACCOUNT_NOT_ACTIVE"
 
+# check-in
+CHECKIN_NOT_REVERSIBLE = "CHECKIN_NOT_REVERSIBLE"
+
+# refunds
+ORDER_NOT_COMPLETED = "ORDER_NOT_COMPLETED"
+ORDER_NOT_FREE = "ORDER_NOT_FREE"
+ORDER_NOT_PAID = "ORDER_NOT_PAID"
+REFUND_STATE_INVALID = "REFUND_STATE_INVALID"
+EVENT_CANCELLATION_STATE_INVALID = "EVENT_CANCELLATION_STATE_INVALID"
+
+# support
+SUPPORT_ASSIGNEE_INVALID = "SUPPORT_ASSIGNEE_INVALID"
+SUPPORT_CONTEXT_INVALID = "SUPPORT_CONTEXT_INVALID"
+
+# reporting / administration
+EXPORT_TOO_LARGE = "EXPORT_TOO_LARGE"
+ADMIN_SELF_SUSPENSION = "ADMIN_SELF_SUSPENSION"
+USER_STATE_INVALID = "USER_STATE_INVALID"
+
 _STATUS_CODES = {
     status.HTTP_404_NOT_FOUND: NOT_FOUND,
     status.HTTP_401_UNAUTHORIZED: UNAUTHORIZED,
@@ -66,6 +86,17 @@ _STATUS_CODES = {
 
 def _envelope(code: str, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
     return {"error": {"code": code, "message": message, "details": details or {}}}
+
+
+def _finite_json(value):
+    """Python's JSON parser accepts NaN/Infinity; error responses must remain JSON."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, dict):
+        return {key: _finite_json(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_finite_json(item) for item in value]
+    return value
 
 
 def register_exception_handlers(app: FastAPI) -> None:
@@ -85,7 +116,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             content=_envelope(
                 VALIDATION_ERROR,
                 "Request validation failed.",
-                {"errors": jsonable_encoder(exc.errors())},
+                {"errors": _finite_json(jsonable_encoder(exc.errors()))},
             ),
         )
 

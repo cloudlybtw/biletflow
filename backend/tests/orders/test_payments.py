@@ -23,6 +23,10 @@ async def test_success_issues_tickets_once_and_confirms_claim(client, db_session
     responses = await asyncio.gather(*[simulate(client, context, payment["id"]) for _ in range(5)])
     assert all(response.status_code == 200 for response in responses), [r.text for r in responses]
     assert all(response.json()["status"] == "succeeded" for response in responses)
+    assert all(
+        response.json()["simulated"] is True and "is_simulated" not in response.json()
+        for response in responses
+    )
     assert await db_session.scalar(select(func.count()).select_from(Ticket)) == 2
     assert await db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 1
     assert await db_session.scalar(select(func.count()).select_from(Notification)) == 2

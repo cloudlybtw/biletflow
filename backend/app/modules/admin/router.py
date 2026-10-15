@@ -26,7 +26,11 @@ async def suspend_event(
     return await service.moderate_event(session, event_id, user, suspend=True, reason=data.reason)
 
 
-@router.post("/unsuspend", response_model=EventModerationOut)
+@router.post(
+    "/unsuspend",
+    response_model=EventModerationOut,
+    summary="Restore event registrations after moderation",
+)
 async def unsuspend_event(
     event_id: uuid.UUID,
     user: User = Depends(require_platform_admin),
@@ -51,7 +55,11 @@ async def suspend_paid_sales(
     )
 
 
-@router.post("/paid-sales/unsuspend", response_model=EventModerationOut)
+@router.post(
+    "/paid-sales/unsuspend",
+    response_model=EventModerationOut,
+    summary="Restore paid sales after checking activation requirements",
+)
 async def unsuspend_paid_sales(
     event_id: uuid.UUID,
     user: User = Depends(require_platform_admin),

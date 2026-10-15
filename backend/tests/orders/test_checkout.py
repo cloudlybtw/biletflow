@@ -42,7 +42,12 @@ async def test_free_checkout_is_atomic_and_queues_ticket_and_confirmation(
     assert all(n.payload["order_id"] == order["id"] for n in notifications)
     assert await db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 0
     tickets = (await db_session.scalars(select(Ticket))).all()
-    assert all(t.qr_token.startswith("bft_") and t.ticket_code.startswith("BF-") for t in tickets)
+    assert all(
+        t.qr_token.startswith("bft_")
+        and len(t.qr_token[4:]) == 43
+        and t.ticket_code.startswith("BF-")
+        for t in tickets
+    )
     assert len({t.qr_token for t in tickets}) == 2
     assert (
         await client.post(f"/api/v1/orders/{order['id']}/pay", headers=auth_headers(context.buyer))
@@ -75,7 +80,7 @@ async def test_paid_order_uses_promo_fee_settings_and_price_snapshots(client, db
     assert order["items"][0]["line_total"] == 1700
     assert await db_session.scalar(select(func.count()).select_from(Attendee)) == 2
     assert await db_session.scalar(select(func.count()).select_from(Ticket)) == 0
-    assert await db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 0
+    assert await db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 1
     campaign = await db_session.get(Campaign, campaign.id, populate_existing=True)
     assert campaign.redemption_count == 1
     ticket = await db_session.get(TicketType, context.ticket_type.id, populate_existing=True)

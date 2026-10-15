@@ -116,3 +116,10 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def reporting_context(db_session):
+    from tests.factories import create_reporting_context
+
+    return await create_reporting_context(db_session)

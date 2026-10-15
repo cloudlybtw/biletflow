@@ -20,6 +20,7 @@ async def test_buyer_only_order_ticket_and_qr_access(client, db_session, context
         f"/api/v1/orders/{order['id']}",
         f"/api/v1/tickets/{ticket_id}",
         f"/api/v1/tickets/{ticket_id}/qr.png",
+        f"/api/v1/tickets/{ticket_id}/pdf",
     ]:
         assert (await client.get(path)).status_code == 401
         assert (

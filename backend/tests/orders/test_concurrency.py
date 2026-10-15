@@ -39,8 +39,8 @@ async def test_last_promo_claim_race_has_exactly_one_claim(client, db_session, c
         checkout(client, context, promo_code="CHECKOUT15"),
         checkout(client, context, buyer=context.other_buyer, promo_code="CHECKOUT15"),
     )
-    assert sorted(r.status_code for r in results) == [201, 400], [r.text for r in results]
-    failed = next(r for r in results if r.status_code == 400)
+    assert sorted(r.status_code for r in results) == [201, 409], [r.text for r in results]
+    failed = next(r for r in results if r.status_code == 409)
     assert failed.json()["error"]["code"] == "PROMO_EXHAUSTED"
     assert await db_session.scalar(select(func.count()).select_from(Order)) == 1
     assert (

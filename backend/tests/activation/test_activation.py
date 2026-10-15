@@ -57,7 +57,7 @@ async def test_checklist_is_read_only_and_reports_each_requirement(client, db_se
     assert result.status_code == 200, result.text
     data = result.json()
     assert data["has_paid_ticket_type"]
-    assert data["fee_amount"] == 5000 and data["currency"] == "KZT" and data["is_simulated"]
+    assert data["fee_amount"] == 5000 and data["currency"] == "KZT" and data["simulated"]
     assert all(
         not data[key]
         for key in [

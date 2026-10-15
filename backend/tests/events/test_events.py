@@ -11,10 +11,12 @@ from app.core.config import get_settings
 from app.modules.events.models import Event, EventImage, EventStatus
 from app.modules.history.models import AuditLog
 from app.modules.ticketing.models import TicketType
+from app.modules.users.models import StaffRole
 from tests.factories import (
     auth_headers,
     create_event,
     create_organizer,
+    create_staff_assignment,
     create_user,
     create_verified_user,
 )
@@ -57,13 +59,43 @@ async def add_type(client, owner, event, **overrides):
 
 
 async def test_seeded_catalog_and_venue_layout(client):
-    categories = (await client.get("/api/v1/event-categories")).json()
+    categories = (await client.get("/api/v1/event-categories")).json()["items"]
     assert len(categories) == 4
     assert all(c["name_kk"] and c["name_ru"] and c["name_en"] for c in categories)
+    page = (await client.get("/api/v1/event-categories?limit=1&offset=1")).json()
+    assert page == {"items": categories[1:2], "total": 4}
+    assert (await client.get("/api/v1/event-categories?limit=101")).status_code == 422
     venue = (await client.get("/api/v1/venues/20000000-0000-0000-0000-000000000001")).json()
     assert len(venue["price_categories"]) == 2
     assert len(venue["sections"][0]["rows"]) == 2
     assert sum(len(r["seats"]) for r in venue["sections"][0]["rows"]) == 20
+
+
+async def test_ticket_type_and_staff_pages_preserve_visibility(client, db_session, owner):
+    event = await new_event(client, owner)
+    await add_type(client, owner, event)
+    await add_type(client, owner, event, name="Hidden", is_hidden=True)
+    await add_type(client, owner, event, name="Second visible")
+    event_id = uuid.UUID(event["id"])
+    staff = await create_verified_user(db_session)
+    await create_staff_assignment(db_session, event_id, staff, StaffRole.EVENT_ADMIN)
+    await create_staff_assignment(db_session, event_id, staff, StaffRole.SUPPORT_AGENT)
+    await db_session.commit()
+    path = f"/api/v1/events/{event_id}"
+    assert (await client.post(path + "/publish", headers=auth_headers(owner[0]))).status_code == 200
+    public = (await client.get(path + "/ticket-types")).json()
+    assert public["total"] == 2 and all(not item["is_hidden"] for item in public["items"])
+    page = (await client.get(path + "/ticket-types?limit=1&offset=1")).json()
+    assert page == {"items": public["items"][1:2], "total": 2}
+    private = (await client.get(path + "/ticket-types", headers=auth_headers(owner[0]))).json()
+    assert private["total"] == 3
+    staff_page = (
+        await client.get(path + "/staff?limit=1&offset=1", headers=auth_headers(owner[0]))
+    ).json()
+    assert staff_page["total"] == 2 and len(staff_page["items"]) == 1
+    assert (
+        await client.get(path + "/staff?limit=1", headers=auth_headers(staff))
+    ).status_code == 403
 
 
 async def test_draft_edit_preview_publish_unpublish_cancel_audited(client, db_session, owner):
@@ -316,7 +348,7 @@ async def test_duplicate_resets_inventory_and_private_fields(client, db_session,
         await client.get(
             f"/api/v1/events/{duplicate['id']}/ticket-types", headers=auth_headers(owner[0])
         )
-    ).json()
+    ).json()["items"]
     assert types[0]["quantity_sold"] == types[0]["quantity_reserved"] == 0
     assert types[0]["price_amount"] == 2500
     original = await db_session.get(Event, uuid.UUID(event["id"]))
@@ -369,6 +401,10 @@ async def test_images_cover_safety_visibility_and_deletion(
         )
         assert response.status_code == 201, response.text
         uploads.append(response.json())
+    page = await client.get(url + "?limit=1&offset=1", headers=auth_headers(owner[0]))
+    assert page.status_code == 200 and page.json()["total"] == 2
+    assert len(page.json()["items"]) == 1
+    assert (await client.get(url + "?limit=1&offset=1")).status_code == 404
     assert (
         await db_session.scalar(
             select(func.count()).select_from(EventImage).where(EventImage.is_cover)

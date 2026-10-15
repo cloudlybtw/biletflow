@@ -192,7 +192,7 @@ async def test_preview_error_states(client, db_session, context, state, expected
         )
     await db_session.commit()
     response = await validate(client, context, camp)
-    assert response.status_code == 400, response.text
+    assert response.status_code == (409 if state == "exhausted" else 400), response.text
     assert response.json()["error"]["code"] == expected
 
 
@@ -234,7 +234,9 @@ async def test_multiple_codes_qr_resolution_and_atomic_scan_counts(client, db_se
     assert created.status_code == 201, created.text
     qr = created.json()
     assert qr["token"].startswith("bfc_") and qr["label"] == "PROMO"
-    assert qr["target_url"].endswith(f"/campaign-links/{qr['token']}")
+    event = await db_session.get(Event, context[1])
+    assert qr["target_url"].endswith(f"/e/{event.slug}?c={qr['token']}")
+    assert len(qr["token"].removeprefix("bfc_")) == 22
     responses = await asyncio.gather(
         *[client.get(f"/api/v1/campaign-links/{qr['token']}") for _ in range(10)]
     )
@@ -243,7 +245,10 @@ async def test_multiple_codes_qr_resolution_and_atomic_scan_counts(client, db_se
     stored = await db_session.get(CampaignQR, uuid.UUID(qr["id"]))
     assert stored.scan_count == 10
     listed = await client.get(path + "/qr", headers=auth_headers(context[0]))
-    assert listed.json()[0]["scan_count"] == 10
+    assert listed.json()["items"][0]["scan_count"] == 10
+    beyond = await client.get(path + "/qr?limit=1&offset=1", headers=auth_headers(context[0]))
+    assert beyond.json() == {"items": [], "total": 1}
+    assert (await client.get(path + "/qr?limit=1&offset=1")).status_code == 401
     image = await client.get(qr["image_url"], headers=auth_headers(context[0]))
     assert image.status_code == 200, image.text
     assert image.headers["content-type"] == "image/png"

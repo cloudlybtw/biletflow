@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 
 from app.modules.events.models import Event
 from app.modules.orders.models import Order
+from app.modules.orders.service import sweep_expired
 from app.modules.ticketing.holds import SeatHold
 from app.modules.ticketing.models import TicketType
 from app.modules.venues.models import Seat, VenueRow
@@ -52,6 +53,20 @@ def seated_cart(context, holds):
     data["items"][0]["seat_hold_ids"] = [str(hold.id) for hold in holds]
     data["items"][0]["attendees"] = [{"full_name": f"Guest {i + 1}"} for i, _ in enumerate(holds)]
     return data
+
+
+async def test_sweeper_expires_unattached_holds_and_retains_live_holds(db_session, seated):
+    await db_session.execute(
+        update(SeatHold)
+        .where(SeatHold.id == seated[0].id)
+        .values(expires_at=datetime.now(UTC) - timedelta(seconds=1))
+    )
+    await db_session.commit()
+    assert await sweep_expired(db_session) == 0
+    assert (
+        await db_session.get(SeatHold, seated[0].id, populate_existing=True)
+    ).status == "expired"
+    assert (await db_session.get(SeatHold, seated[1].id, populate_existing=True)).status == "active"
 
 
 async def test_owned_seat_holds_attach_and_issue_snapshot_labels(

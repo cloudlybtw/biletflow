@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.modules.payments.models import PaymentPurpose, PaymentStatus
 
@@ -23,7 +23,7 @@ class PaymentOut(BaseModel):
     status: PaymentStatus
     amount: int
     currency: str
-    is_simulated: bool
+    simulated: Literal[True] = Field(validation_alias="is_simulated")
     failure_reason: str | None
     processed_at: datetime | None
     created_at: datetime
