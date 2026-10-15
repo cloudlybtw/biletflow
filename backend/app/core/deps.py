@@ -64,6 +64,13 @@ async def require_verified(user: User = Depends(current_user)) -> User:
     return user
 
 
+async def optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    session: AsyncSession = Depends(get_session),
+) -> User | None:
+    return await current_user(credentials, session) if credentials else None
+
+
 async def require_platform_admin(user: User = Depends(current_user)) -> User:
     if user.platform_role != PlatformRole.PLATFORM_ADMIN:
         raise AppError(FORBIDDEN, "Platform admin access required.", status.HTTP_403_FORBIDDEN)
@@ -130,3 +137,13 @@ def require_event_role(
         raise AppError(NOT_FOUND, "Event not found.", status.HTTP_404_NOT_FOUND)
 
     return dependency
+
+
+async def require_support_case(
+    case_id: uuid.UUID,
+    user: User = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    from app.modules.support.service import access_case
+
+    return await access_case(session, user, case_id)

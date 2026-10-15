@@ -60,9 +60,9 @@ class StaffAssignment(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    # FK to events(id) is enforced by the database; the ORM ForeignKey is added
-    # once the Event model exists (M2), since it can't resolve an unmapped table.
-    event_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    event_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("events.id", ondelete="CASCADE")
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )

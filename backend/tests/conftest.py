@@ -16,9 +16,9 @@ from app.main import create_app
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
 TEST_DB_NAME = "biletflow_test"
 
-# Tables whose rows are seeded by a migration (not test setup) and should
-# survive the per-test truncate so every test sees them by default.
-SEED_TABLES = {"platform_settings"}
+# TRUNCATE CASCADE also clears catalog/settings tables through their user FKs.
+# Restore the migration seed rows after each test's reset.
+SEED_MIGRATIONS = ("0002_platform_support.up.sql", "0004_event_catalog.up.sql")
 
 
 def _asyncpg_dsn(database_url: str, database: str | None = None) -> str:
@@ -77,10 +77,16 @@ async def _truncate_tables(test_sessionmaker: async_sessionmaker[AsyncSession]) 
         result = await session.execute(
             text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
         )
-        tables = [row[0] for row in result.all() if row[0] not in SEED_TABLES]
+        tables = [row[0] for row in result.all()]
         if tables:
             table_list = ", ".join(f'"{table}"' for table in tables)
             await session.execute(text(f"TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE"))
+            for filename in SEED_MIGRATIONS:
+                source = (MIGRATIONS_DIR / filename).read_text()
+                inserts = source[source.index("INSERT INTO") : source.rindex("COMMIT;")]
+                for statement in inserts.split(";"):
+                    if statement.strip():
+                        await session.execute(text(statement))
             await session.commit()
 
 
@@ -110,3 +116,10 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def reporting_context(db_session):
+    from tests.factories import create_reporting_context
+
+    return await create_reporting_context(db_session)

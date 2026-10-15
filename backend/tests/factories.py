@@ -10,12 +10,17 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import column, insert, table
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, hash_password, new_opaque_token
 from app.modules.auth.models import UserToken, UserTokenPurpose
+from app.modules.events.models import Event
+from app.modules.notifications.models import Notification, NotificationChannel, NotificationType
+from app.modules.orders.models import Attendee, Order, OrderItem, OrderStatus
 from app.modules.organizers.models import OrganizerProfile, PayoutAccount, PayoutAccountStatus
+from app.modules.ticketing.holds import SeatHold
+from app.modules.ticketing.models import TicketType
+from app.modules.tickets.models import Ticket
 from app.modules.users.models import StaffAssignment, StaffRole, User
 
 DEFAULT_PASSWORD = "correct-horse-battery"
@@ -42,6 +47,21 @@ async def create_user(session: AsyncSession, **overrides: Any) -> User:
     session.add(user)
     await session.flush()
     return user
+
+
+async def create_notification(session: AsyncSession, user: User, **overrides: Any) -> Notification:
+    fields = {
+        "user_id": user.id,
+        "type": NotificationType.EVENT_UPDATE,
+        "channel": NotificationChannel.IN_APP,
+        "template_key": "event_update.en",
+        "payload": {"event_title": "Demo event"},
+    }
+    fields.update(overrides)
+    row = Notification(**fields)
+    session.add(row)
+    await session.flush()
+    return row
 
 
 async def create_organizer(
@@ -92,22 +112,10 @@ async def create_verified_user(session: AsyncSession, **overrides: Any) -> User:
     return await create_user(session, email_verified_at=datetime.now(UTC), **overrides)
 
 
-# Minimal insert until the Event model and its factory land in M2.
-_events = table(
-    "events",
-    column("id"),
-    column("organizer_profile_id"),
-    column("title"),
-    column("slug"),
-    column("starts_at"),
-    column("ends_at"),
-)
-
-
 async def create_event(
     session: AsyncSession, organizer: OrganizerProfile | None = None, **overrides: Any
 ) -> uuid.UUID:
-    """Insert a draft event row and return its id."""
+    """Insert an event row and return its id (keeps M1 permission tests compatible)."""
     if organizer is None:
         organizer = await create_organizer(session)
     starts_at = datetime.now(UTC) + timedelta(days=30)
@@ -119,7 +127,10 @@ async def create_event(
         "ends_at": starts_at + timedelta(hours=3),
     }
     fields.update(overrides)
-    return await session.scalar(insert(_events).values(**fields).returning(_events.c.id))
+    event = Event(**fields)
+    session.add(event)
+    await session.flush()
+    return event.id
 
 
 async def create_staff_assignment(
@@ -146,3 +157,150 @@ async def create_payout_account(
     session.add(account)
     await session.flush()
     return account
+
+
+async def create_ticket_type(
+    session: AsyncSession, event_id: uuid.UUID, **overrides: Any
+) -> TicketType:
+    fields = {
+        "event_id": event_id,
+        "name": f"Standard {unique_suffix()}",
+        "quantity_total": 100,
+        "price_amount": 1000,
+    }
+    fields.update(overrides)
+    ticket = TicketType(**fields)
+    session.add(ticket)
+    await session.flush()
+    return ticket
+
+
+async def create_seat_hold(
+    session: AsyncSession,
+    event_id: uuid.UUID,
+    seat_id: uuid.UUID,
+    ticket_type_id: uuid.UUID,
+    user: User,
+    **overrides: Any,
+) -> SeatHold:
+    fields: dict[str, Any] = {
+        "event_id": event_id,
+        "seat_id": seat_id,
+        "ticket_type_id": ticket_type_id,
+        "held_by_user_id": user.id,
+        "session_token": f"test-{unique_suffix()}",
+        "expires_at": datetime.now(UTC) + timedelta(minutes=10),
+    }
+    fields.update(overrides)
+    hold = SeatHold(**fields)
+    session.add(hold)
+    await session.flush()
+    return hold
+
+
+async def create_issued_ticket(
+    session: AsyncSession,
+    event_id: uuid.UUID,
+    buyer: User,
+    *,
+    ticket_type: TicketType | None = None,
+    attendee_name: str | None = None,
+    attendee_email: str | None = None,
+    **overrides: Any,
+) -> Ticket:
+    """A canonical ticket for a completed free registration, with linked attendee/order."""
+    if ticket_type is None:
+        ticket_type = await create_ticket_type(session, event_id, price_amount=0)
+    order = Order(
+        event_id=event_id,
+        buyer_user_id=buyer.id,
+        buyer_email=buyer.email,
+        buyer_name=buyer.full_name,
+        order_number=f"TEST-{unique_suffix()}",
+        status=OrderStatus.COMPLETED,
+        placed_at=datetime.now(UTC),
+    )
+    session.add(order)
+    await session.flush()
+    item = OrderItem(
+        order_id=order.id,
+        ticket_type_id=ticket_type.id,
+        quantity=1,
+        unit_price_amount=0,
+        line_total=0,
+    )
+    session.add(item)
+    await session.flush()
+    attendee = Attendee(
+        order_item_id=item.id,
+        user_id=buyer.id,
+        full_name=attendee_name or buyer.full_name,
+        email=attendee_email or buyer.email,
+    )
+    session.add(attendee)
+    await session.flush()
+    fields = {
+        "ticket_code": f"BFT-{unique_suffix().upper()}",
+        "qr_token": "bft_" + secrets.token_urlsafe(32),
+        "event_id": event_id,
+        "order_item_id": item.id,
+        "ticket_type_id": ticket_type.id,
+        "attendee_id": attendee.id,
+    }
+    fields.update(overrides)
+    ticket = Ticket(**fields)
+    session.add(ticket)
+    ticket_type.quantity_sold += 1
+    await session.flush()
+    return ticket
+
+
+async def create_reporting_context(session):
+    """Published event and role matrix shared by analytics/history/admin tests."""
+    from types import SimpleNamespace
+
+    from app.modules.events.models import EventStatus, PaidSalesStatus
+    from app.modules.users.models import PlatformRole
+
+    owner = await create_verified_user(session)
+    profile = await create_organizer(session, owner)
+    event_id = await create_event(
+        session, profile, status=EventStatus.PUBLISHED, paid_sales_status=PaidSalesStatus.ACTIVE
+    )
+    ticket_type = await create_ticket_type(session, event_id, price_amount=1000, name="Standard")
+    buyer = await create_verified_user(session)
+    co = await create_verified_user(session)
+    assignment = await create_staff_assignment(session, event_id, co, StaffRole.CO_ORGANIZER)
+    event_admin = await create_verified_user(session)
+    await create_staff_assignment(session, event_id, event_admin, StaffRole.EVENT_ADMIN)
+    support = await create_verified_user(session)
+    await create_staff_assignment(session, event_id, support, StaffRole.SUPPORT_AGENT)
+    admin = await create_verified_user(session, platform_role=PlatformRole.PLATFORM_ADMIN)
+    await session.commit()
+    return SimpleNamespace(
+        owner=owner,
+        profile=profile,
+        event_id=event_id,
+        ticket_type=ticket_type,
+        buyer=buyer,
+        co=co,
+        assignment=assignment,
+        event_admin=event_admin,
+        support=support,
+        admin=admin,
+    )
+
+
+async def complete_purchase(client, context, **checkout_options):
+    from tests.orders.helpers import pay, placed_order, simulate
+
+    order = await placed_order(client, context, **checkout_options)
+    if order["total_amount"]:
+        payment = await pay(client, context, order["id"])
+        result = await simulate(client, context, payment["id"])
+        assert result.status_code == 200, result.text
+    response = await client.get(
+        f"/api/v1/orders/{order['id']}", headers=auth_headers(context.buyer)
+    )
+    assert response.status_code == 200, response.text
+    return response.json()

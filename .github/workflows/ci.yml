@@ -50,3 +50,7 @@ jobs:
       - run: uv run ruff format --check .
 
       - run: uv run pytest
+
+      - run: uv run python -m app.scripts.export_openapi
+
+      - run: git diff --exit-code -- ../docs/openapi.json
