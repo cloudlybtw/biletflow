@@ -28,7 +28,8 @@ npm ci
 npm run dev
 ```
 
-The frontend currently contains an initial home page and navbar.
+The frontend includes a responsive, three-language discovery homepage with
+shared filters and the BiletFlow API adapter.
 
 ## Backend development and checks
 

@@ -1,13 +1,4 @@
-import { useState } from 'react'
-import Navbar from './components/Navbar/Navbar';
-import Home from './pages/Home/Home';
-
-function App() {
-    return (
-        <>
-            <Navbar />
-            <Home />
-        </>
-    );
+import Home from "./pages/Home/Home";
+export default function App() {
+  return <Home />;
 }
-export default App;
