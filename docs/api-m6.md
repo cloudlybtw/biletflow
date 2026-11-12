@@ -92,7 +92,8 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
 Use the host's LAN IP on a real phone. A camera/printed-ticket rehearsal on the
-Docker deployment remains a separate F11 acceptance check in `FIX_PLAN.md`.
+Docker deployment remains a deferred acceptance check; follow `docs/demo-flow.md`
+when a device is available and record the device and results.
 
 Flutter 3.50 reports existing Material imports as informational deprecations.
 `--no-fatal-infos` preserves these diagnostics; analyzer errors and warnings

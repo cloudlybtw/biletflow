@@ -36,6 +36,9 @@ __pycache__/
 .env
 *.env.local
 
+# Local planning notes
+/FIX_PLAN.md
+
 # Generated artifacts (never commit real or demo tickets/QRs)
 *.pdf
 !docs/BiletFlow_SRS.pdf
