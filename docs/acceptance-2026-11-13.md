@@ -36,6 +36,11 @@ external font/style origin was allowlisted to accommodate injected resources.
 
 ## Still requires access or hardware
 
+Implementation and review fixes are published in
+[draft PR #6](https://github.com/cloudlybtw/biletflow/pull/6). Remote CI checks
+are attached there. Initial CI found an expired ORM ID in notification-test
+polling; retaining its scalar identity fixes the rollback race.
+
 - Physical Flutter camera/printed-ticket acceptance. `flutter devices --machine`
   found macOS and Chrome only; there is no configured phone/simulator target.
 - Jira board setup requires the Atlassian connection and destination project.

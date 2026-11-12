@@ -94,8 +94,9 @@ Final automated evidence:
 - **17 Flutter tests passed** against the final OpenAPI contract.
 - Backend Ruff lint/format, frontend lint and production build passed.
 - Generated OpenAPI matches current code: **121 paths**.
-- Docker backend and production web builds passed. New CI jobs cover web and
-  Flutter; remote CI acceptance requires committing/pushing these local changes.
+- Docker backend and production web builds passed. CI covers backend, web and
+  Flutter; published checks are attached to
+  [PR #6](https://github.com/cloudlybtw/biletflow/pull/6).
 - Preview: http://localhost:55173 ; API: http://localhost:58000 ; Mailpit:
   http://localhost:58025 . Dedicated Compose project: `biletflow-rehearsal`;
   database: `biletflow_demo`. Ignored `.env` holds the local port configuration.
@@ -114,7 +115,12 @@ Final automated evidence:
 - Jira triage board: requires the team's project/access. A local integration bug
   template is ready at `.github/ISSUE_TEMPLATE/integration_bug.yml`; no external
   project, board, messages or issues were created.
-- Review branch publication and remote CI verification are in progress.
+- Published `codex/complete-fix-plan` as draft
+  [PR #6](https://github.com/cloudlybtw/biletflow/pull/6). Initial remote web and
+  Flutter checks passed. Backend CI exposed a notification test polling race:
+  rollback expires ORM IDs, so polling now keeps a scalar ID before rollback.
+  The 50 notification tests pass locally; final remote checks are tracked on
+  the PR.
 
 ## Completion rules
 

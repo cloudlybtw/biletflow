@@ -1,8 +1,9 @@
 # Implementation status — 2026-11-13
 
 The detailed work/verification ledger is [FIX_PLAN.md](../FIX_PLAN.md). The API
-contract is [openapi.json](openapi.json). These statuses describe this checkout;
-local changes still require commit/push and remote CI acceptance.
+contract is [openapi.json](openapi.json). Implementation is published in
+[draft PR #6](https://github.com/cloudlybtw/biletflow/pull/6), which records remote
+CI checks. The remaining hardware/access acceptance is listed below.
 
 | Milestone | Current implementation                                                                                                                        |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
