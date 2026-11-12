@@ -1,5 +1,209 @@
-import { useState } from 'react';
-import { money, Link, Shell, Stat, Table, Badge, EventCard, shortEvents } from './app-shared';
-import { attendeeOrders as orders } from '../data/attendee-workspace';
-function Account({path}) { const [tab,setTab]=useState('Upcoming');let title=path==='/account'?'Your overview':path.includes('tickets')?'My tickets':path.includes('orders')?'My orders':path.includes('support')?'Support':path.includes('settings')?'Profile settings':'Your ticket';return <Shell path={path} title={title} subtitle="Your BiletFlow account, all in one place."><div className="bf-welcome"><div><span className="bf-kicker">THURSDAY, NOVEMBER 12</span><h2>Good afternoon, Malika <span>✦</span></h2><p>Your next great experience is just around the corner.</p></div><Link to="/events" className="bf-button">Discover events <span>→</span></Link></div>{path==='/account'&&<><div className="bf-stats"><Stat label="Upcoming events" value="3" delta="Your next one is in 2 days" icon="◷"/><Stat label="Tickets owned" value="8" delta="Across 5 events" icon="▣"/><Stat label="Orders" value="6" delta="All up to date" icon="▤"/></div><div className="bf-section-title"><div><h2>Coming up</h2><p>Good things on your calendar</p></div><Link to="/account/tickets">All tickets →</Link></div><div className="bf-event-grid attendee-grid">{shortEvents.slice(0,3).map((e,i)=><EventCard key={e.id} event={e} i={i}/>)}</div><div className="bf-section-title"><h2>Recent orders</h2><Link to="/account/orders">View all →</Link></div><Table headers={['ORDER','EVENT','DATE','TOTAL','STATUS','']} rows={orders.slice(0,2).map(r=>[r[0],r[1],r[2],money(r[3]),<Badge>{r[4]}</Badge>,<Link to="/account/orders">View →</Link>])}/></>}{path.includes('tickets')&&<><div className="bf-tabs">{['Upcoming','Past','Cancelled / Refunded'].map(t=><button onClick={()=>setTab(t)} className={tab===t?'active':''}>{t}</button>)}</div><div className="bf-ticket-list">{shortEvents.slice(0,4).map((e,i)=><div className="bf-ticket-row"><img src={e.image}/><div><small>{new Date(e.startsAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</small><h3>{e.title}</h3><p>General admission · 1 ticket</p></div><Badge>Confirmed</Badge><Link className="bf-outline-button" to={`/account/tickets/${i}`}>View ticket ↗</Link></div>)}</div>{path.split('/').length>3&&<div className="bf-modalish"><div className="bf-qr">▦<small>SCAN AT ENTRY</small></div><div><span className="bf-kicker">DIGITAL ADMISSION</span><h2>{shortEvents[Number(path.split('/').pop())%shortEvents.length]?.title}</h2><p>Ticket ID · BF-8A42-19D7</p><p>Malika S. · General admission</p><button className="bf-button" onClick={()=>window.print()}>Download / Print ticket →</button></div></div>}</>}{path.includes('orders')&&<><div className="bf-tabs"><button className="active">All orders</button><button>Paid</button><button>Refunded</button></div><Table headers={['ORDER ID','EVENT','ORDER DATE','TOTAL','STATUS','ACTION']} rows={orders.map(r=>[r[0],r[1],r[2],money(r[3]),<Badge>{r[4]}</Badge>,<button className="bf-text-button">Details →</button>])}/></>}{path.includes('support')&&<div className="bf-two-col"><div className="bf-panel"><div className="bf-panel-head"><div><h2>Your support cases</h2><p>We’re here to help</p></div><button className="bf-button" onClick={()=>location.hash='#/account/support/new'}>+ New request</button></div>{['Ticket delivery · #SC-1082','Payment question · #SC-1074','Event details · #SC-1051'].map((x,i)=><div className="bf-case" onClick={()=>location.hash=`#/account/support/${1082-i*8}`}><div><b>{x}</b><small>{i===0?'Today, 10:42':'Nov 08, 2026'} · Latest reply: Support team</small></div><Badge>{i===0?'In Progress':'Resolved'}</Badge></div>)}</div><div className="bf-panel bf-help"><span>✦</span><h3>Need a hand?</h3><p>Most questions are answered within one business day.</p><a href="mailto:support@biletflow.kz">Contact support ↗</a></div>{path.includes('/new')&&<div className="bf-panel bf-form"><h2>Tell us what happened</h2><label>Issue category<select><option>Ticket delivery</option><option>Payment</option><option>Refund</option><option>Seating</option><option>Event information</option><option>Check-in</option><option>Account</option><option>Technical problem</option></select></label><label>Related order (optional)<select><option>Select an order</option>{orders.map(r=><option>{r[0]}</option>)}</select></label><label>Message<textarea placeholder="Describe how we can help" rows="4"/></label><button className="bf-button" onClick={e=>e.currentTarget.textContent='Request submitted ✓'}>Submit request →</button></div>}{path.split('/').length>3&&!path.endsWith('new')&&<div className="bf-panel bf-chat"><h2>Case #SC-{path.split('/').pop()}</h2><Badge>In Progress</Badge><div className="bf-bubble">Hi Malika, we’re checking your ticket delivery now.<small>Support team · 10:42</small></div><div className="bf-bubble mine">Thanks! I’ll keep an eye out.<small>You · 10:51</small></div><div className="bf-compose"><input placeholder="Write a message..."/><button>Send →</button></div></div>}</div>}{path.includes('settings')&&<div className="bf-panel bf-form"><h2>Personal information</h2><div className="bf-form-grid"><label>Full name<input defaultValue="Malika S."/></label><label>Email address<input defaultValue="malika@example.com"/></label><label>Phone number<input placeholder="+7 (___) ___-__-__"/></label><label>Preferred language<select><option>English</option><option>Русский</option><option>Қазақша</option></select></label></div><hr/><h2>Password & security</h2><button className="bf-outline-button">Change password →</button><hr/><button className="bf-text-button" onClick={()=>location.hash='#/'}>Log out</button><button className="bf-button" onClick={e=>e.currentTarget.textContent='Changes saved ✓'}>Save changes</button></div>}</Shell> }
-export default function AttendeeApp({path}) { return <Account path={path}/> }
+import { useSession } from "../lib/session-context";
+import { api, apiPath, download } from "../lib/client";
+import { useResource } from "../lib/use-resource";
+import { Shell, Link, Stat } from "./app-shared";
+import {
+  State,
+  RemoteTable,
+  Form,
+  Action,
+  SecureImage,
+  OrderSummary,
+  Details,
+} from "./live-shared";
+import SupportPanel from "./SupportPanel";
+import { Payment } from "./PublicPages";
+const orderColumns = [
+  ["order_number", "Order"],
+  ["status", "Status"],
+  ["total_amount", "Total (KZT)"],
+  ["created_at", "Created"],
+];
+function Order({ id }) {
+  const resource = useResource(`/orders/${id}`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <>
+          <OrderSummary order={resource.data} />
+          {["pending", "awaiting_payment"].includes(resource.data.status) && (
+            <Payment
+              key={resource.data.updated_at}
+              order={resource.data}
+              done={resource.reload}
+            />
+          )}
+        </>
+      )}
+    </State>
+  );
+}
+function Ticket({ id }) {
+  const resource = useResource(`/tickets/${id}`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <>
+          <h2>{resource.data.event.title}</h2>
+          <Details
+            value={resource.data}
+            fields={[
+              ["ticket_code", "Ticket code"],
+              ["attendee_name", "Attendee"],
+              ["ticket_type_name", "Ticket type"],
+              ["status", "Status"],
+              ["seat_section_label", "Section"],
+              ["seat_row_label", "Row"],
+              ["seat_number_label", "Seat"],
+            ]}
+          />
+          <SecureImage
+            path={apiPath(resource.data.qr_image_url)}
+            alt="Ticket admission QR"
+          />
+          <Action
+            perform={() =>
+              download(
+                apiPath(resource.data.pdf_url),
+                `${resource.data.ticket_code}.pdf`,
+              )
+            }
+          >
+            Download A4 ticket
+          </Action>
+        </>
+      )}
+    </State>
+  );
+}
+function Profile() {
+  const { user } = useSession();
+  return (
+    <>
+      <Form
+        initial={user}
+        fields={[
+          {
+            name: "full_name",
+            label: "Full name",
+            required: true,
+            maxLength: 200,
+          },
+          { name: "phone", label: "Phone", nullable: true },
+          {
+            name: "locale",
+            label: "Language",
+            required: true,
+            options: [
+              ["en", "English"],
+              ["ru", "Русский"],
+              ["kk", "Қазақша"],
+            ],
+          },
+        ]}
+        submit={(body) => api("/me", { method: "PATCH", body })}
+        done={() => window.dispatchEvent(new Event("biletflow-session"))}
+      />
+      <Link to="/forgot-password">Change password</Link>
+      {!user.email_verified && (
+        <Link to="/verify-email">Verify email to book tickets</Link>
+      )}
+    </>
+  );
+}
+function Overview() {
+  const orders = useResource("/orders", true);
+  const tickets = useResource("/tickets", true);
+  const { user } = useSession();
+  return (
+    <>
+      <h2>Welcome, {user.full_name}</h2>
+      <div className="bf-stats">
+        <Stat label="Orders" value={orders.data?.length ?? "…"} />
+        <Stat label="Tickets" value={tickets.data?.length ?? "…"} />
+      </div>
+      <State resource={orders} />
+      <State resource={tickets} />
+      <Link className="bf-button" to="/events">
+        Browse events
+      </Link>
+    </>
+  );
+}
+export default function AttendeeApp({ path }) {
+  const section = path.split("/")[2] || "";
+  const id = path.split("/")[3];
+  return (
+    <Shell
+      path={path}
+      title={
+        {
+          tickets: "My tickets",
+          orders: "My orders",
+          support: "Support",
+          settings: "Profile settings",
+          notifications: "Notifications",
+        }[section] || "Your account"
+      }
+    >
+      {section === "orders" ? (
+        id ? (
+          <Order id={id} />
+        ) : (
+          <RemoteTable
+            path="/orders"
+            columns={orderColumns}
+            actions={(row) => (
+              <Link to={`/account/orders/${row.id}`}>View order</Link>
+            )}
+          />
+        )
+      ) : section === "tickets" ? (
+        id ? (
+          <Ticket id={id} />
+        ) : (
+          <RemoteTable
+            path="/tickets"
+            columns={[
+              ["ticket_code", "Ticket"],
+              ["attendee_name", "Attendee"],
+              ["ticket_type_name", "Type"],
+              ["status", "Status"],
+            ]}
+            actions={(row) => (
+              <Link to={`/account/tickets/${row.id}`}>View ticket</Link>
+            )}
+          />
+        )
+      ) : section === "notifications" ? (
+        <RemoteTable
+          poll={15000}
+          path="/notifications"
+          columns={[
+            ["title", "Notification"],
+            ["body", "Message"],
+            ["read_at", "Read"],
+          ]}
+          actions={(row, reload) =>
+            !row.read_at && (
+              <Action
+                perform={() =>
+                  api(`/notifications/${row.id}/read`, { method: "POST" })
+                }
+                done={reload}
+              >
+                Mark read
+              </Action>
+            )
+          }
+        />
+      ) : section === "support" ? (
+        <SupportPanel />
+      ) : section === "settings" ? (
+        <Profile />
+      ) : (
+        <Overview />
+      )}
+    </Shell>
+  );
+}

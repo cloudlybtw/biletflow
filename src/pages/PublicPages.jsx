@@ -1,9 +1,616 @@
-import { useMemo, useState } from 'react';
-import { money, Topbar, Link, EventCard, shortEvents } from './app-shared';
-function Events() { const [query,setQuery]=useState('');const [category,setCategory]=useState('All events');const filtered=useMemo(()=>shortEvents.filter(e=>(e.title+' '+e.city).toLowerCase().includes(query.toLowerCase())&&(category==='All events'||e.category===category.toLowerCase())),[query,category]);return <><Topbar/><main className="bf-public"><section className="bf-explore-hero"><div><span className="bf-kicker">YOUR CITY, YOUR MOMENT</span><h1>Find your next<br/><em>great experience.</em></h1><p>Discover events worth going out for, all across Kazakhstan.</p></div><div className="bf-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search events, artists, venues..."/><button>Search</button></div></section><div className="bf-filter-row"><div className="bf-pills">{['All events','music','culture','comedy','workshop','campus','sport'].map(x=><button onClick={()=>setCategory(x==='All events'?x:x)} className={category===x?'selected':''} key={x}>{x==='All events'?x:x[0].toUpperCase()+x.slice(1)}</button>)}</div><select aria-label="Location"><option>All Kazakhstan</option><option>Almaty</option><option>Astana</option></select><select aria-label="Date"><option>Any date</option><option>This week</option><option>This month</option></select></div><div className="bf-results-head"><div><h2>Events for you</h2><p>{filtered.length} experiences to explore</p></div><select aria-label="Sort events"><option>Recommended</option><option>Upcoming</option><option>Recently added</option></select></div><div className="bf-event-grid">{filtered.map((e,i)=><EventCard event={e} i={i} key={e.id}/>)}</div>{!filtered.length&&<div className="bf-empty"><h3>No events match your search</h3><p>Try another name or category.</p></div>}</main></> }
-function EventDetail({path}) { const e=shortEvents[Number(path.split('/').pop())%shortEvents.length]||shortEvents[0]; const [qty,setQty]=useState(1);return <><Topbar/><main className="bf-public bf-detail"><Link to="/events" className="bf-back">← Back to events</Link><img className="bf-detail-cover" src={e.image} alt=""/><div className="bf-detail-layout"><section><span className="bf-tag">{e.category}</span><h1>{e.title}</h1><p className="bf-lead">A special night of ideas, people and experiences in the heart of {e.city}.</p><div className="bf-detail-facts"><span>◷ &nbsp;{new Date(e.startsAt).toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'})}</span><span>⌖ &nbsp;{e.venue||'Venue details shared after registration'}, {e.city}</span></div><hr/><h2>About this event</h2><p className="bf-copy">Come together for an unforgettable experience. Meet the community, discover something new and enjoy an evening curated for curious minds. Your ticket includes admission for one guest.</p><h2>Location</h2><div className="bf-map">⌖ &nbsp;{e.venue||e.city}<small>Venue location</small></div></section><aside className="bf-book-card"><h3>Get your tickets</h3><p>Choose a ticket type</p><div className="bf-ticket-option"><span><b>General admission</b><small>Standard entry</small></span><strong>{e.price?money(e.price):'Free'}</strong></div><div className="bf-qty"><span>Quantity</span><div><button onClick={()=>setQty(Math.max(1,qty-1))}>−</button>{qty}<button onClick={()=>setQty(Math.min(6,qty+1))}>+</button></div></div><div className="bf-total"><span>Total</span><b>{money((e.price||0)*qty)}</b></div><Link to={`/checkout/${e.id}`} className="bf-button full">{e.price?'Continue to checkout':'Register for free'} <span>→</span></Link><small className="bf-secure">Secure checkout · Instant confirmation</small></aside></div></main></> }
-function AuthPage({path}) { const type=path.slice(1);const isLogin=type==='login';const isReset=type.includes('password');const title=isLogin?'Welcome back':isReset?'Reset your password':'Create your account';return <div className="bf-auth"><a href="/" className="bf-brand">biletflow<span>.</span></a><div className="bf-auth-card"><div className="bf-auth-mark">✦</div><h1>{title}</h1><p>{isLogin?'Sign in to pick up where you left off.':'Join a community that goes places.'}</p><form onSubmit={e=>{e.preventDefault();location.hash=isLogin?'#/account':'#/verify-email'}}>{!isLogin&&!isReset&&<label>Full name<input required placeholder="Your name"/></label>}<label>Email address<input required type="email" placeholder="you@example.com"/></label>{!isReset&&<label>Password<input required type="password" minLength="8" placeholder="At least 8 characters"/></label>}{!isLogin&&!isReset&&<label className="bf-check"><input type="checkbox" required/> I agree to the Terms of Service and Privacy Policy</label>}<button className="bf-button full">{isLogin?'Sign in':isReset?'Send reset link':'Create account'} <span>→</span></button></form>{isLogin&&<Link to="/forgot-password" className="bf-forgot">Forgot password?</Link>}<div className="bf-auth-switch">{isLogin?<>New to BiletFlow? <Link to="/register">Create account</Link></>:<>Already have an account? <Link to="/login">Sign in</Link></>}</div><div className="bf-auth-roles"><Link to="/organizer">Organizer workspace →</Link><Link to="/admin">Admin preview →</Link></div></div><span className="bf-auth-note">By continuing, you agree to our Terms and Privacy Policy.</span></div> }
-function Checkout({path}) {const e=shortEvents[0];const [done,setDone]=useState(false);return <><Topbar/><main className="bf-checkout"><Link to={`/events/${e.id}`} className="bf-back">← Back to event</Link><div className="bf-checkout-layout"><section><span className="bf-kicker">SECURE CHECKOUT</span><h1>{done?'You’re all set!':'Complete your order'}</h1><p>{done?'Your tickets are ready in your account.':'Just a few details and these tickets are yours.'}</p>{done?<div className="bf-success"><b>✓</b><h2>Order confirmed</h2><p>Confirmation sent to malika@example.com</p><Link className="bf-button" to="/account/tickets">View my tickets →</Link></div>:<><div className="bf-panel bf-form"><h2>Attendee information</h2><div className="bf-form-grid"><label>First name<input defaultValue="Malika"/></label><label>Last name<input placeholder="Last name"/></label></div><label>Email address<input type="email" defaultValue="malika@example.com"/></label><label>Promo code<div className="bf-promo-input"><input placeholder="Enter code"/><button>Apply</button></div></label><h2>Payment method</h2><div className="bf-pay-option">◉ &nbsp; Card payment <span>VISA · Mastercard</span></div><div className="bf-pay-option">○ &nbsp; Kaspi QR <span>Coming soon</span></div><label className="bf-check"><input type="checkbox"/> I agree to the event terms and refund policy</label></div><button className="bf-button" onClick={()=>setDone(true)}>Pay {money(e.price||6000)} →</button></>}</section><aside className="bf-panel bf-order-summary"><span className="bf-kicker">ORDER SUMMARY</span><h2>{e.title}</h2><p>Nov 12, 2026 · Almaty</p><hr/><div className="bf-total"><span>General admission × 1</span><b>{money(e.price||6000)}</b></div><div className="bf-total"><span>Service fee</span><b>₸0</b></div><hr/><div className="bf-total grand"><span>Total due</span><b>{money(e.price||6000)}</b></div><small>Payment processing will be connected to your payment provider.</small></aside></div></main></> }
-function VerifyEmail() {return <div className="bf-auth"><a href="/" className="bf-brand">biletflow<span>.</span></a><div className="bf-auth-card"><div className="bf-auth-mark">✉</div><h1>Check your inbox</h1><p>We sent a verification link to your email address. Open it to activate your BiletFlow account.</p><button className="bf-button full" onClick={e=>e.currentTarget.textContent='Verification email resent ✓'}>Resend verification email</button><div className="bf-auth-switch"><Link to="/login">Back to sign in</Link></div></div></div>}
+import { useState } from "react";
+import { api, apiPath, download, login, query } from "../lib/client";
+import { useResource } from "../lib/use-resource";
+import { useSession } from "../lib/session-context";
+import { Topbar, Link, EventCard } from "./app-shared";
+import { Form, State, Action, OrderSummary, SecureImage } from "./live-shared";
+import { money } from "./app-data";
 
-export default function PublicPages({path}) { if(path==='/events') return <Events/>; if(path.startsWith('/events/')) return <EventDetail path={path}/>; if(['/login','/register','/forgot-password','/reset-password'].includes(path)) return <AuthPage path={path}/>; if(path==='/verify-email') return <VerifyEmail/>; if(path.startsWith('/checkout')) return <Checkout path={path}/>; return <Events/> }
+function AuthPage({ path, params }) {
+  const next = params.get("next");
+  const safeNext =
+    next?.startsWith("/") && !next.startsWith("//") ? next : "/account";
+  const [message, setMessage] = useState("");
+  const loginPage = path === "/login";
+  const register = path === "/register";
+  const verify = path === "/verify-email";
+  const reset = path === "/reset-password";
+  const token = params.get("token") || "";
+  const fields = verify
+    ? token
+      ? []
+      : [{ name: "token", label: "Verification token", required: true }]
+    : [
+        ...(register
+          ? [
+              {
+                name: "full_name",
+                label: "Full name",
+                required: true,
+                maxLength: 200,
+              },
+              {
+                name: "locale",
+                label: "Language",
+                options: [
+                  ["en", "English"],
+                  ["kk", "Қазақша"],
+                  ["ru", "Русский"],
+                ],
+                default: "en",
+                required: true,
+              },
+            ]
+          : []),
+        ...(!reset
+          ? [{ name: "email", label: "Email", type: "email", required: true }]
+          : []),
+        ...(loginPage || register || reset
+          ? [
+              {
+                name: reset ? "new_password" : "password",
+                label: reset ? "New password" : "Password",
+                type: "password",
+                required: true,
+                minLength: loginPage ? 1 : 8,
+                maxLength: 128,
+              },
+            ]
+          : []),
+      ];
+  const title = loginPage
+    ? "Welcome back"
+    : register
+      ? "Create your account"
+      : verify
+        ? "Verify your email"
+        : "Reset your password";
+  return (
+    <main className="bf-auth">
+      <Link to="/events">BiletFlow</Link>
+      <div className="bf-auth-card">
+        <h1>{title}</h1>
+        {message && <p role="status">{message}</p>}
+        <Form
+          fields={fields}
+          label={title}
+          submit={async (body) => {
+            if (loginPage) {
+              await login(body.email, body.password);
+              location.hash = safeNext;
+              return;
+            }
+            if (register) {
+              await api("/auth/register", {
+                method: "POST",
+                auth: false,
+                body,
+              });
+              setMessage(
+                "Account created. Check your email for the verification link, then sign in.",
+              );
+              return;
+            }
+            if (verify) {
+              await api("/auth/verify-email", {
+                method: "POST",
+                auth: false,
+                body: { token: token || body.token },
+              });
+              window.dispatchEvent(new Event("biletflow-session"));
+              setMessage("Email verified. You can now book tickets.");
+              return;
+            }
+            if (reset) {
+              await api("/auth/password/reset", {
+                method: "POST",
+                auth: false,
+                body: { ...body, token },
+              });
+              history.replaceState(null, "", "/#/login");
+              window.dispatchEvent(new Event("hashchange"));
+              return;
+            }
+            await api("/auth/password/forgot", {
+              method: "POST",
+              auth: false,
+              body,
+            });
+            setMessage("If an account exists, a reset link has been sent.");
+          }}
+        />
+        {verify && (
+          <Form
+            fields={[
+              { name: "email", label: "Email", type: "email", required: true },
+            ]}
+            label="Resend verification"
+            submit={(body) =>
+              api("/auth/verify-email/resend", {
+                method: "POST",
+                auth: false,
+                body,
+              })
+            }
+          />
+        )}
+        <div className="bf-bridge-links">
+          <Link to="/login">Sign in</Link>
+          <Link to="/register">Register</Link>
+          <Link to="/forgot-password">Forgot password?</Link>
+          <Link to="/verify-email">Verify email</Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+function Events() {
+  const [filters, setFilters] = useState({});
+  const path = "/events?" + query(filters);
+  const resource = useResource(path, true);
+  const categories = useResource("/event-categories", true);
+  return (
+    <>
+      <h1>Events for you</h1>
+      <form
+        className="bf-filter-row"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const values = Object.fromEntries(new FormData(event.currentTarget));
+          for (const key of ["date_from", "date_to"])
+            if (values[key]) values[key] = new Date(values[key]).toISOString();
+          setFilters(values);
+        }}
+      >
+        <input name="q" aria-label="Search" placeholder="Search events" />
+        <input name="city" aria-label="City" placeholder="City" />
+        <select name="category_id" aria-label="Category">
+          <option value="">All categories</option>
+          {categories.data?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name_en}
+            </option>
+          ))}
+        </select>
+        <label>
+          From
+          <input name="date_from" type="datetime-local" />
+        </label>
+        <label>
+          Until
+          <input name="date_to" type="datetime-local" />
+        </label>
+        <button className="bf-button">Search</button>
+      </form>
+      <State resource={resource}>
+        <div className="bf-event-grid">
+          {resource.data?.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
+        {resource.data?.length === 0 && <p>No upcoming events found.</p>}
+      </State>
+    </>
+  );
+}
+function EventDetail({ slug, id, promo }) {
+  const resource = useResource(
+    id ? `/events/${id}` : `/events/by-slug/${encodeURIComponent(slug)}`,
+  );
+  const event = resource.data;
+  return (
+    <State resource={resource}>
+      {event && (
+        <>
+          <h1>{event.title}</h1>
+          <p>{event.description}</p>
+          <p>
+            {new Date(event.starts_at).toLocaleString(undefined, {
+              timeZone: event.timezone,
+            })}{" "}
+            · {event.timezone}
+          </p>
+          <EventImages id={event.id} />
+          <TicketChoices event={event} promo={promo} />
+          <CalendarLinks id={event.id} />
+        </>
+      )}
+    </State>
+  );
+}
+function CalendarLinks({ id }) {
+  const resource = useResource(`/events/${id}/calendar-links`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <div className="bf-panel">
+          <h2>Add to calendar</h2>
+          <Action
+            perform={() => download(`/events/${id}/calendar.ics`, "event.ics")}
+          >
+            Download calendar file
+          </Action>
+          <a
+            className="bf-outline-button"
+            href={resource.data.google}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Google Calendar
+          </a>
+          <a
+            className="bf-outline-button"
+            href={resource.data.outlook}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Outlook
+          </a>
+        </div>
+      )}
+    </State>
+  );
+}
+function EventImages({ id }) {
+  const images = useResource(`/events/${id}/images`, true);
+  return (
+    <div className="bf-event-grid">
+      {images.data?.map((image) => (
+        <SecureImage
+          key={image.id}
+          path={apiPath(image.url)}
+          alt={image.alt_text || "Event image"}
+        />
+      ))}
+    </div>
+  );
+}
+function TicketChoices({ event, promo }) {
+  const tickets = useResource(`/events/${event.id}/ticket-types`, true);
+  return (
+    <State resource={tickets}>
+      <div className="bf-panel">
+        <h2>Ticket types</h2>
+        {tickets.data
+          ?.filter((t) => !t.is_hidden)
+          .map((t) => (
+            <div className="bf-ticket-type" key={t.id}>
+              <span>
+                {t.name} · {money(t.price_amount)} ·{" "}
+                {Math.max(
+                  0,
+                  t.quantity_total - t.quantity_sold - t.quantity_reserved,
+                )}{" "}
+                available
+              </span>
+              {event.status === "published" ? (
+                <Link
+                  className="bf-button"
+                  to={`/checkout/${event.id}?ticket=${t.id}&promo=${encodeURIComponent(promo || "")}`}
+                >
+                  Choose tickets
+                </Link>
+              ) : (
+                <span>Preview only — registration is not open.</span>
+              )}
+            </div>
+          ))}
+      </div>
+    </State>
+  );
+}
+function Campaign({ token }) {
+  const resource = useResource(`/campaign-links/${encodeURIComponent(token)}`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <>
+          <p role="status">Promotion applied: {resource.data.promo_code}</p>
+          <EventDetail
+            slug={resource.data.event_slug}
+            promo={resource.data.promo_code}
+          />
+        </>
+      )}
+    </State>
+  );
+}
+function Checkout({ id, params }) {
+  const tickets = useResource(`/events/${id}/ticket-types`, true);
+  const event = useResource(`/events/${id}`);
+  const assigned = event.data?.seating_mode === "assigned";
+  const holds = useResource(
+    assigned ? `/events/${id}/seat-holds` : null,
+    true,
+    10000,
+  );
+  const seats = useResource(
+    assigned ? `/events/${id}/seats` : null,
+    true,
+    10000,
+  );
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [cart, setCart] = useState({
+    ticket_type_id: params.get("ticket") || "",
+    quantity: 1,
+    code: params.get("promo") || "",
+  });
+  const [preview, setPreview] = useState(null);
+  const [order, setOrder] = useState(null);
+  const { user } = useSession();
+  const fields = [
+    {
+      name: "full_name",
+      label: "Attendee name",
+      default: user.full_name,
+      required: true,
+    },
+    {
+      name: "email",
+      label: "Attendee email",
+      type: "email",
+      default: user.email,
+      required: true,
+    },
+  ];
+  const owned = (holds.data || []).filter(
+    (hold) => hold.ticket_type_id === cart.ticket_type_id,
+  );
+  const items = [
+    {
+      ticket_type_id: cart.ticket_type_id,
+      quantity: assigned ? owned.length : Number(cart.quantity),
+      ...(assigned ? { seat_hold_ids: owned.map((hold) => hold.id) } : {}),
+    },
+  ];
+  if (order)
+    return (
+      <>
+        <h1>Order {order.order_number}</h1>
+        <OrderSummary order={order} />
+        {["pending", "awaiting_payment"].includes(order.status) && (
+          <Payment order={order} done={setOrder} />
+        )}
+      </>
+    );
+  return (
+    <>
+      <h1>Checkout</h1>
+      <p>
+        Payments are simulated. No real money moves. The final total includes
+        any processing fee calculated by the server.
+      </p>
+      {!user.email_verified && (
+        <p role="alert">
+          Verify your email before booking.{" "}
+          <Link to="/verify-email">Verify email</Link>
+        </p>
+      )}
+      <State resource={tickets}>
+        <div className="bf-panel bf-form">
+          <label>
+            Ticket type
+            <select
+              value={cart.ticket_type_id}
+              onChange={(e) => {
+                setCart({ ...cart, ticket_type_id: e.target.value });
+                setPreview(null);
+              }}
+            >
+              <option value="">Choose…</option>
+              {tickets.data
+                ?.filter((t) => !t.is_hidden)
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} · {money(t.price_amount)}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label>
+            Quantity
+            <input
+              type="number"
+              min="1"
+              max="1000"
+              disabled={assigned}
+              value={assigned ? owned.length : cart.quantity}
+              onChange={(e) => {
+                setCart({ ...cart, quantity: e.target.value });
+                setPreview(null);
+              }}
+            />
+          </label>
+          <label>
+            Promo code
+            <input
+              value={cart.code}
+              onChange={(e) => {
+                setCart({ ...cart, code: e.target.value });
+                setPreview(null);
+              }}
+            />
+          </label>
+          <Action
+            perform={async () =>
+              setPreview(
+                await api(`/events/${id}/promo/validate`, {
+                  method: "POST",
+                  auth: false,
+                  body: { code: cart.code, items },
+                }),
+              )
+            }
+          >
+            Check discount
+          </Action>
+          {preview && (
+            <p role="status">
+              Discount {money(preview.discount_amount)} · Before fees{" "}
+              {money(preview.total_amount)}
+            </p>
+          )}
+        </div>
+        {assigned && (
+          <div className="bf-panel">
+            <h2>Select your seats</h2>
+            <State resource={seats}>
+              <div className="bf-seat-map">
+                {seats.data?.map((seat) => (
+                  <label key={seat.id}>
+                    <input
+                      type="checkbox"
+                      disabled={seat.status !== "available"}
+                      checked={selectedSeats.includes(seat.id)}
+                      onChange={(e) =>
+                        setSelectedSeats(
+                          e.target.checked
+                            ? [...selectedSeats, seat.id]
+                            : selectedSeats.filter((id) => id !== seat.id),
+                        )
+                      }
+                    />
+                    {seat.section} {seat.row}
+                    {seat.number} · {seat.status}
+                    {seat.accessible ? " · accessible" : ""}
+                  </label>
+                ))}
+              </div>
+            </State>
+            <Action
+              perform={() =>
+                api(`/events/${id}/seat-holds`, {
+                  method: "POST",
+                  body: {
+                    ticket_type_id: cart.ticket_type_id,
+                    seat_ids: selectedSeats,
+                  },
+                })
+              }
+              done={() => {
+                holds.reload();
+                seats.reload();
+                setSelectedSeats([]);
+              }}
+            >
+              Hold selected seats
+            </Action>
+            <State resource={holds}>
+              {owned.map((hold) => (
+                <div key={hold.id}>
+                  Held until {new Date(hold.expires_at).toLocaleTimeString()}{" "}
+                  <Action
+                    perform={() =>
+                      api(`/events/${id}/seat-holds/${hold.id}`, {
+                        method: "DELETE",
+                      })
+                    }
+                    done={() => {
+                      holds.reload();
+                      seats.reload();
+                    }}
+                  >
+                    Release
+                  </Action>
+                </div>
+              ))}
+            </State>
+          </div>
+        )}
+        <Form
+          fields={fields}
+          label="Reserve tickets"
+          submit={(body) =>
+            api(`/events/${id}/orders`, {
+              method: "POST",
+              body: {
+                items: items.map((item) => ({
+                  ...item,
+                  attendees: Array.from({ length: item.quantity }, () => body),
+                })),
+                ...(cart.code ? { promo_code: cart.code } : {}),
+              },
+            })
+          }
+          done={(result) => {
+            location.hash = `/account/orders/${result.id}`;
+          }}
+        />
+      </State>
+    </>
+  );
+}
+export function Payment({ order, done }) {
+  const [payment, setPayment] = useState(
+    order.payments?.find((p) => p.status === "initiated") || null,
+  );
+  return (
+    <div className="bf-panel">
+      <h2>Simulated payment</h2>
+      <p>
+        Payable total: {money(order.total_amount)}. Reservation expires:{" "}
+        {order.expires_at ? new Date(order.expires_at).toLocaleString() : "—"}
+      </p>
+      {!payment || payment.status === "failed" ? (
+        <Action
+          perform={async () =>
+            setPayment(await api(`/orders/${order.id}/pay`, { method: "POST" }))
+          }
+        >
+          Start payment
+        </Action>
+      ) : (
+        ["success", "failure"].map((outcome) => (
+          <Action
+            key={outcome}
+            perform={async () => {
+              const result = await api(`/payments/${payment.id}/simulate`, {
+                method: "POST",
+                body: { outcome },
+              });
+              setPayment(result);
+              done(await api(`/orders/${order.id}`));
+            }}
+          >
+            Simulate {outcome}
+          </Action>
+        ))
+      )}
+    </div>
+  );
+}
+export default function PublicPages({ route, path }) {
+  const params = new URLSearchParams(route.split("?")[1] || "");
+  if (
+    [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/verify-email",
+    ].includes(path)
+  )
+    return <AuthPage path={path} params={params} />;
+  const campaign = params.get("c");
+  return (
+    <>
+      <Topbar />
+      <main className="bf-public">
+        {path.startsWith("/checkout/") ? (
+          <Checkout id={path.split("/")[2]} params={params} />
+        ) : campaign ? (
+          <Campaign token={campaign} />
+        ) : path.startsWith("/preview/") ? (
+          <EventDetail id={path.split("/")[2]} />
+        ) : path.startsWith("/events/") || path.startsWith("/e/") ? (
+          <EventDetail
+            slug={decodeURIComponent(path.split("/")[2])}
+            promo={params.get("promo")}
+          />
+        ) : (
+          <Events />
+        )}
+      </main>
+    </>
+  );
+}

@@ -172,10 +172,10 @@ white, preserving the quiet zone. Campaign QR tokens retain their distinct
 Ticket details include attendee, event/timezone, venue, ticket type, status, seat
 labels, and `qr_image_url`. QR downloads require the buyer's Bearer header and
 use `Cache-Control: private, no-store`; fetch the image as an authorized blob in
-the web client. PDF generation and check-in are M6.
+the web client. PDF generation and check-in are implemented in M6; see api-m6.md.
 
 Confirmation/delivery/failure notification rows are queued in the outbox. The
-SMTP sender and templates are M7; queueing does not imply an email was sent.
+SMTP sender and templates are implemented in M7; queueing does not imply an email was sent.
 
 ## Validation and migrations
 

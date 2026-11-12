@@ -22,15 +22,18 @@ final class AuthSignedIn extends AuthState {
   final StaffUser user;
 }
 
-final authControllerProvider =
-    NotifierProvider<AuthController, AuthState>(AuthController.new);
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);
 
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
     ref.listen<int>(sessionExpiredProvider, (previous, next) {
       if (state is AuthSignedIn) {
-        state = const AuthSignedOut(notice: 'Your session expired. Please sign in again.');
+        state = const AuthSignedOut(
+          notice: 'Your session expired. Please sign in again.',
+        );
       }
     });
     Future.microtask(_restore);
@@ -47,18 +50,29 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> signIn({required String email, required String password}) async {
-    final user = await ref.read(signInProvider).call(email: email, password: password);
+    final user = await ref
+        .read(signInProvider)
+        .call(email: email, password: password);
     state = AuthSignedIn(user);
   }
 
   Future<void> signOut() async {
-    await ref.read(signOutProvider).call();
-    state = const AuthSignedOut();
+    try {
+      await ref.read(signOutProvider).call();
+      state = const AuthSignedOut();
+    } on Failure {
+      state = const AuthSignedOut(
+        notice:
+            'Signed out on this device. Server logout could not be confirmed.',
+      );
+    }
   }
 }
 
 final loginControllerProvider =
-    NotifierProvider.autoDispose<LoginController, AsyncValue<void>>(LoginController.new);
+    NotifierProvider.autoDispose<LoginController, AsyncValue<void>>(
+      LoginController.new,
+    );
 
 class LoginController extends Notifier<AsyncValue<void>> {
   @override
@@ -68,7 +82,9 @@ class LoginController extends Notifier<AsyncValue<void>> {
     if (state.isLoading) return;
     state = const AsyncLoading();
     final result = await AsyncValue.guard(
-      () => ref.read(authControllerProvider.notifier).signIn(email: email, password: password),
+      () => ref
+          .read(authControllerProvider.notifier)
+          .signIn(email: email, password: password),
     );
     if (ref.mounted) state = result;
   }

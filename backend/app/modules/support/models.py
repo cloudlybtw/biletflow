@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, FetchedValue, ForeignKey, Text, text
+from sqlalchemy import BigInteger, Boolean, FetchedValue, ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -89,6 +89,23 @@ class SupportMessage(Base):
     body: Mapped[str] = mapped_column(Text)
     is_internal_note: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     read_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()")
+    )
+
+
+class SupportAttachment(Base):
+    __tablename__ = "support_attachments"
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    message_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("support_messages.id", ondelete="CASCADE")
+    )
+    file_url: Mapped[str] = mapped_column(Text)
+    filename: Mapped[str] = mapped_column(Text)
+    mime_type: Mapped[str] = mapped_column(Text)
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()")
     )

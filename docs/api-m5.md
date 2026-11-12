@@ -56,7 +56,7 @@ Repeated pay requests reuse an initiated or successful payment. Failed payments
 may be retried with a new ID; previous attempts remain available in the database.
 Repeated callbacks with the same final outcome have no additional effects;
 changing an outcome returns `PAYMENT_ALREADY_PROCESSED`. Failure queues one
-`payment_failed` notification per attempt; M7 delivers it. Activation can be
+`payment_failed` notification per attempt; the M7 outbox worker delivers it. Activation can be
 repeated without another fee. The selected payout account cannot change after
 activation (`ACTIVATION_PAYOUT_LOCKED`).
 
@@ -109,6 +109,6 @@ same transaction. Audit/validation failure rolls back the change. Migration:
 
 The API integration test now covers event creation, campaign QR resolution,
 promo validation, identity/payout setup, terms, fee payment, activation, ticket
-checkout/payment and QR issuance without SQL activation. M6 adds PDF/check-in;
-M7 adds notification delivery/refunds/support; M8 adds admin search/settings,
+checkout/payment and QR issuance without SQL activation. M6 implements PDF/check-in;
+M7 implements notification delivery/refunds/support; M8 implements admin search/settings,
 reports and the activity timeline. Client screens remain part of integration.

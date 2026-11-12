@@ -485,6 +485,52 @@
         "title": "AssignmentUpdate",
         "type": "object"
       },
+      "AttachmentOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "file_url": {
+            "title": "File Url",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "mime_type": {
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "message_id",
+          "file_url",
+          "filename",
+          "mime_type",
+          "size_bytes",
+          "created_at"
+        ],
+        "title": "AttachmentOut",
+        "type": "object"
+      },
       "AttendanceOut": {
         "properties": {
           "absent": {
@@ -600,6 +646,20 @@
           "phone"
         ],
         "title": "AttendeeOut",
+        "type": "object"
+      },
+      "Body_upload_api_v1_support_cases__case_id__messages__message_id__attachments_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_api_v1_support_cases__case_id__messages__message_id__attachments_post",
         "type": "object"
       },
       "Body_upload_image_api_v1_events__event_id__images_post": {
@@ -2569,6 +2629,68 @@
         "title": "HistoryOut",
         "type": "object"
       },
+      "HoldCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "seat_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Seat Ids",
+            "type": "array"
+          },
+          "ticket_type_id": {
+            "format": "uuid",
+            "title": "Ticket Type Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_type_id",
+          "seat_ids"
+        ],
+        "title": "HoldCreate",
+        "type": "object"
+      },
+      "HoldOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "seat_id": {
+            "format": "uuid",
+            "title": "Seat Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SeatHoldStatus"
+          },
+          "ticket_type_id": {
+            "format": "uuid",
+            "title": "Ticket Type Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seat_id",
+          "ticket_type_id",
+          "expires_at",
+          "status"
+        ],
+        "title": "HoldOut",
+        "type": "object"
+      },
       "IdentityVerificationOut": {
         "properties": {
           "simulated": {
@@ -4124,6 +4246,27 @@
         "title": "Page[AdminUserOut]",
         "type": "object"
       },
+      "Page_AttachmentOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[AttachmentOut]",
+        "type": "object"
+      },
       "Page_CampaignOut_": {
         "properties": {
           "items": {
@@ -4290,6 +4433,27 @@
           "total"
         ],
         "title": "Page[HistoryOut]",
+        "type": "object"
+      },
+      "Page_HoldOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HoldOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[HoldOut]",
         "type": "object"
       },
       "Page_ImageOut_": {
@@ -4542,6 +4706,27 @@
           "total"
         ],
         "title": "Page[RefundOut]",
+        "type": "object"
+      },
+      "Page_SeatOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/app__modules__ticketing__seating__SeatOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[SeatOut]",
         "type": "object"
       },
       "Page_SettingOut_": {
@@ -5474,7 +5659,7 @@
           },
           "seats": {
             "items": {
-              "$ref": "#/components/schemas/SeatOut"
+              "$ref": "#/components/schemas/app__modules__venues__schemas__SeatOut"
             },
             "title": "Seats",
             "type": "array"
@@ -5533,54 +5718,15 @@
         "title": "ScanIn",
         "type": "object"
       },
-      "SeatOut": {
-        "properties": {
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "is_accessible": {
-            "title": "Is Accessible",
-            "type": "boolean"
-          },
-          "position_x": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Position X",
-            "type": "string"
-          },
-          "position_y": {
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Position Y",
-            "type": "string"
-          },
-          "price_category_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price Category Id"
-          },
-          "seat_number": {
-            "title": "Seat Number",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "seat_number",
-          "price_category_id",
-          "is_accessible",
-          "position_x",
-          "position_y"
+      "SeatHoldStatus": {
+        "enum": [
+          "active",
+          "converted",
+          "released",
+          "expired"
         ],
-        "title": "SeatOut",
-        "type": "object"
+        "title": "SeatHoldStatus",
+        "type": "string"
       },
       "SeatingMode": {
         "enum": [
@@ -7077,6 +7223,109 @@
           "token"
         ],
         "title": "VerifyEmailRequest",
+        "type": "object"
+      },
+      "app__modules__ticketing__seating__SeatOut": {
+        "properties": {
+          "accessible": {
+            "title": "Accessible",
+            "type": "boolean"
+          },
+          "held_by_me": {
+            "title": "Held By Me",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "row": {
+            "title": "Row",
+            "type": "string"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "section",
+          "row",
+          "number",
+          "accessible",
+          "x",
+          "y",
+          "status",
+          "held_by_me"
+        ],
+        "title": "SeatOut",
+        "type": "object"
+      },
+      "app__modules__venues__schemas__SeatOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_accessible": {
+            "title": "Is Accessible",
+            "type": "boolean"
+          },
+          "position_x": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Position X",
+            "type": "string"
+          },
+          "position_y": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Position Y",
+            "type": "string"
+          },
+          "price_category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Category Id"
+          },
+          "seat_number": {
+            "title": "Seat Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seat_number",
+          "price_category_id",
+          "is_accessible",
+          "position_x",
+          "position_y"
+        ],
+        "title": "SeatOut",
         "type": "object"
       }
     },
@@ -12169,6 +12418,99 @@
         ]
       }
     },
+    "/api/v1/events/{event_id}/calendar-links": {
+      "get": {
+        "operationId": "links_api_v1_events__event_id__calendar_links_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Links Api V1 Events  Event Id  Calendar Links Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Links",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/v1/events/{event_id}/calendar.ics": {
+      "get": {
+        "operationId": "calendar_api_v1_events__event_id__calendar_ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Calendar",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
     "/api/v1/events/{event_id}/campaigns": {
       "get": {
         "operationId": "list_campaigns_api_v1_events__event_id__campaigns_get",
@@ -14616,6 +14958,267 @@
         ]
       }
     },
+    "/api/v1/events/{event_id}/seat-holds": {
+      "get": {
+        "operationId": "my_holds_api_v1_events__event_id__seat_holds_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size (max 100).",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Page size (max 100).",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Items to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_HoldOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Holds",
+        "tags": [
+          "assigned seating"
+        ]
+      },
+      "post": {
+        "operationId": "create_holds_api_v1_events__event_id__seat_holds_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HoldOut"
+                  },
+                  "title": "Response Create Holds Api V1 Events  Event Id  Seat Holds Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Holds",
+        "tags": [
+          "assigned seating"
+        ]
+      }
+    },
+    "/api/v1/events/{event_id}/seat-holds/{hold_id}": {
+      "delete": {
+        "operationId": "release_api_v1_events__event_id__seat_holds__hold_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Hold Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Release",
+        "tags": [
+          "assigned seating"
+        ]
+      }
+    },
+    "/api/v1/events/{event_id}/seats": {
+      "get": {
+        "operationId": "seat_map_api_v1_events__event_id__seats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size (max 100).",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Page size (max 100).",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Items to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SeatOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Seat Map",
+        "tags": [
+          "assigned seating"
+        ]
+      }
+    },
     "/api/v1/events/{event_id}/staff": {
       "get": {
         "operationId": "list_staff_api_v1_events__event_id__staff_get",
@@ -16305,6 +16908,132 @@
         ]
       }
     },
+    "/api/v1/support/cases/{case_id}/attachments": {
+      "get": {
+        "operationId": "attachments_api_v1_support_cases__case_id__attachments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size (max 100).",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Page size (max 100).",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Items to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AttachmentOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Attachments",
+        "tags": [
+          "support attachments"
+        ]
+      }
+    },
+    "/api/v1/support/cases/{case_id}/attachments/{attachment_id}": {
+      "get": {
+        "operationId": "download_api_v1_support_cases__case_id__attachments__attachment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download",
+        "tags": [
+          "support attachments"
+        ]
+      }
+    },
     "/api/v1/support/cases/{case_id}/messages": {
       "get": {
         "operationId": "messages_api_v1_support_cases__case_id__messages_get",
@@ -16450,6 +17179,74 @@
         "summary": "Add a public reply or staff-only internal note",
         "tags": [
           "support"
+        ]
+      }
+    },
+    "/api/v1/support/cases/{case_id}/messages/{message_id}/attachments": {
+      "post": {
+        "operationId": "upload_api_v1_support_cases__case_id__messages__message_id__attachments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_v1_support_cases__case_id__messages__message_id__attachments_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload",
+        "tags": [
+          "support attachments"
         ]
       }
     },

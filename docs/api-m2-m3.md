@@ -89,7 +89,7 @@ and display the resulting blob URL. Public files can be loaded directly.
 
 Cancellation handles events with no orders. Events with orders return
 `EVENT_CANCELLATION_REQUIRES_REFUNDS`; the transactional ticket/refund/
-notification cascade belongs to M7. Draft deletion retains its database row and
+notification cascade is implemented in M7 (see api-m7.md). Draft deletion retains its database row and
 immutable audit records but removes it from reads and permission checks.
 
 ## Campaigns (M3)

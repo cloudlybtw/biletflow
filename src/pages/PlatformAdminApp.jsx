@@ -1,4 +1,275 @@
-import { money, Shell, Stat, Table, Badge, Link } from './app-shared';
-function Admin({path}) {const title=path==='/admin'?'Platform overview':path.includes('users')?'User management':path.includes('events')?'Event moderation':path.includes('activations')?'Paid sales activations':path.includes('payments')?'Payments & refunds':path.includes('support')?'Support cases':path.includes('campaigns')?'Campaign monitoring':'Reports & settings';return <Shell role="admin" path={path} title={title} subtitle="Platform operations and trust & safety.">{path==='/admin'&&<><div className="bf-stats"><Stat label="Registered users" value="18,492" delta="↑ 12.4% this month"/><Stat label="Published events" value="1,204" delta="32 pending review"/><Stat label="Gross ticket volume" value="₸42.8m" delta="This month" icon="₸"/><Stat label="Open support cases" value="28" delta="8 need attention" icon="✉"/></div><div className="bf-dash-grid"><div className="bf-panel"><div className="bf-panel-head"><div><h2>Needs your attention</h2><p>Items waiting for review</p></div></div><div className="bf-quick"><Link to="/admin/events"><i>◇</i><span><b>Event moderation queue</b><small>12 events are waiting for review</small></span>→</Link><Link to="/admin/activations"><i>₸</i><span><b>Paid sales applications</b><small>5 organizers need activation review</small></span>→</Link><Link to="/admin/support"><i>✉</i><span><b>Escalated support cases</b><small>3 cases need a response</small></span>→</Link></div></div><div className="bf-panel"><h2>Platform health</h2><div className="bf-health"><span>Payments <b>Operational</b></span><span>Ticket issuance <b>Operational</b></span><span>Email delivery <b>Operational</b></span><span>API response <b>142 ms</b></span></div></div></div><div className="bf-panel"><div className="bf-panel-head"><div><h2>Recent activity</h2><p>Latest platform actions</p></div><Link to="/admin/reports">View reports →</Link></div><Table headers={['ACTION','USER','DATE','STATUS']} rows={ [['Event published: “Night at the museum”','Malika S.','Today, 12:04',<Badge>Approved</Badge>],['Paid sales activation submitted','Nomad Events','Today, 11:38',<Badge>In Progress</Badge>],['Refund request received · #BF-2042','Sara M.','Today, 10:52',<Badge>Open</Badge>]]}/></div></>}{path!='/admin'&&<AdminTable path={path} title={title}/>}</Shell> }
-function AdminTable({path,title}) {const map=path.includes('users')?['USER','ROLE','JOINED','EVENTS / ORDERS','STATUS','']:path.includes('events')?['EVENT','ORGANIZER','SUBMITTED','CATEGORY','STATUS','']:path.includes('activations')?['ORGANIZER','EVENT','FEE','VERIFICATION','SUBMITTED','STATUS']:path.includes('payments')?['TRANSACTION','ORDER','USER','AMOUNT','DATE','STATUS','']:path.includes('support')?['CASE','USER','CATEGORY','RELATED TO','UPDATED','STATUS','']:path.includes('campaigns')?['CAMPAIGN','ORGANIZER','EVENT','REDEMPTIONS','DISCOUNT','STATUS']:['REPORT','PERIOD','GENERATED',''];const rows=path.includes('users')?[['Aigerim T. · aig@example.kz','Attendee','Nov 2','4 orders',<Badge>Active</Badge>,'View'],['Malika S. · malika@example.kz','Organizer','Oct 18','12 events',<Badge>Active</Badge>,'View'],['Daniyar K. · dk@example.kz','Attendee','Oct 14','2 orders',<Badge>Suspended</Badge>,'Review']]:path.includes('events')?[['Night at the museum','Malika Events','Today','Culture',<Badge>Pending</Badge>,<button>Review →</button>],['City cycling weekend','Urban Sports','Yesterday','Sport',<Badge>Pending</Badge>,<button>Review →</button>],['Open mic: New voices','Alma Comedy','Nov 10','Comedy',<Badge>Flagged</Badge>,<button>Review →</button>]]:path.includes('activations')?[['Nomad Events','Astana Product Days','₸25,000','Identity pending','Today',<Badge>In Progress</Badge>],['Malika Events','Night at the museum','₸25,000','Verified','Nov 4',<Badge>Active</Badge>]]:path.includes('payments')?[['TXN-84291','#BF-2048','Aigerim T.',money(12000),'Today',<Badge>Paid</Badge>,<button>Details</button>],['RF-02102','#BF-2038','Sara M.',money(5000),'Nov 11',<Badge>Refunded</Badge>,<button>Details</button>]]:path.includes('support')?[['#SC-1082','Malika S.','Ticket delivery','Night at museum','Today',<Badge>Open</Badge>,<button>Assign</button>],['#SC-1074','Daniyar K.','Payment','Product Camp','Yesterday',<Badge>Escalated</Badge>,<button>Assign</button>]]:path.includes('campaigns')?[['Almaty launch','Malika Events','Night at museum','86',money(48000),<Badge>Active</Badge>],['Student community','Campus Group','Product Camp','74',money(32000),<Badge>Active</Badge>]]:[['Ticket sales summary','Oct 2026','Nov 1, 2026','Download ↓'],['Refunds & disputes','Oct 2026','Nov 1, 2026','Download ↓'],['Campaign activity','Q3 2026','Oct 1, 2026','Download ↓']];return <><div className="bf-filter-row"><input placeholder={`Search ${title.toLowerCase()}...`}/><select><option>All statuses</option><option>Pending</option><option>Active</option></select><select><option>All dates</option><option>Last 30 days</option></select><button className="bf-outline-button">Export ↓</button></div><div className="bf-panel"><Table headers={map} rows={rows}/></div>{path.includes('events')&&<div className="bf-panel bf-review"><div><span className="bf-kicker">SELECTED FOR REVIEW</span><h2>Night at the museum</h2><p>Submitted by Malika Events · Culture · Almaty</p><p>Review event content, venue details and platform policy compliance before approval.</p></div><div><button className="bf-outline-button">Request changes</button><button className="bf-button" onClick={e=>e.currentTarget.textContent='Event approved ✓'}>Approve event →</button></div></div>}</>}
-export default function PlatformAdminApp({path}) { return <Admin path={path}/> }
+import { useState } from "react";
+import { api, query } from "../lib/client";
+import { useResource } from "../lib/use-resource";
+import { Shell, Link } from "./app-shared";
+import { State, Form, Action, DataTable, Details, Export } from "./live-shared";
+import SupportPanel from "./SupportPanel";
+const columns = {
+  users: [
+    ["full_name", "Name"],
+    ["email", "Email"],
+    ["platform_role", "Role"],
+    ["status", "Status"],
+  ],
+  events: [
+    ["title", "Event"],
+    ["status", "Status"],
+    ["paid_sales_status", "Paid sales"],
+    ["is_suspended", "Suspended"],
+  ],
+  orders: [
+    ["order_number", "Order"],
+    ["buyer_name", "Buyer"],
+    ["total_amount", "Total (KZT)"],
+    ["status", "Status"],
+  ],
+  payments: [
+    ["purpose", "Purpose"],
+    ["amount", "Amount (KZT)"],
+    ["status", "Status"],
+    ["failure_reason", "Failure"],
+  ],
+  refunds: [
+    ["order_id", "Order"],
+    ["amount", "Refund (KZT)"],
+    ["status", "Status"],
+    ["reason", "Reason"],
+  ],
+  activations: [
+    ["event_id", "Event"],
+    ["status", "Status"],
+    ["fee_amount", "Fee (KZT)"],
+    ["activated_at", "Activated"],
+  ],
+};
+function Settings() {
+  const resource = useResource("/admin/settings");
+  const fields = [
+    {
+      name: "activation_fee_kzt",
+      label: "Activation fee (whole KZT)",
+      type: "integer",
+      min: 0,
+      required: true,
+    },
+    {
+      name: "processing_fee_percent",
+      label: "Processing fee (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+      required: true,
+    },
+    {
+      name: "order_hold_minutes",
+      label: "Order hold (minutes)",
+      type: "integer",
+      min: 1,
+      max: 10080,
+      required: true,
+    },
+    {
+      name: "seat_hold_minutes",
+      label: "Seat hold (minutes)",
+      type: "integer",
+      min: 1,
+      max: 10080,
+      required: true,
+    },
+  ];
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <Form
+          fields={fields}
+          initial={Object.fromEntries(
+            resource.data.map((row) => [row.key, row.value]),
+          )}
+          submit={(body) => api("/admin/settings", { method: "PATCH", body })}
+          done={resource.reload}
+        />
+      )}
+    </State>
+  );
+}
+function Resource({ kind }) {
+  const [filters, setFilters] = useState({});
+  const [selected, setSelected] = useState(null);
+  const path = `/admin/${kind}?${query(filters)}`;
+  const resource = useResource(path, true);
+  const detail = useResource(selected ? `/admin/${kind}/${selected}` : null);
+  return (
+    <>
+      <p>Financial amounts are simulated KZT.</p>
+      <Form
+        fields={[
+          { name: "q", label: "Search" },
+          { name: "status", label: "Status" },
+          {
+            name: "date_from",
+            label: "From (local time)",
+            type: "datetime-local",
+          },
+          {
+            name: "date_to",
+            label: "Until (local time)",
+            type: "datetime-local",
+          },
+          ...(kind === "payments"
+            ? [
+                {
+                  name: "purpose",
+                  label: "Payment purpose",
+                  options: [
+                    ["ticket_purchase", "Ticket order"],
+                    ["activation_fee", "Activation fee"],
+                  ],
+                },
+              ]
+            : []),
+        ]}
+        label="Search"
+        submit={async (body) => setFilters(body)}
+      />
+      <Export
+        path={`/admin/${kind}/export.csv?${query(filters)}`}
+        name={`${kind}.csv`}
+      />
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={columns[kind]}
+          actions={(row) => (
+            <button
+              className="bf-outline-button"
+              onClick={() => setSelected(row.id)}
+            >
+              Details
+            </button>
+          )}
+        />
+      </State>
+      {selected && (
+        <State resource={detail}>
+          {detail.data && (
+            <>
+              <Details
+                value={detail.data}
+                fields={[
+                  ["id", "Reference"],
+                  ...columns[kind],
+                  ...(["users", "events"].includes(kind)
+                    ? []
+                    : [
+                        ["created_at", "Created"],
+                        ["processed_at", "Processed"],
+                      ]),
+                ]}
+              />
+              {["users", "events"].includes(kind) && (
+                <Moderation
+                  kind={kind}
+                  record={detail.data}
+                  done={() => {
+                    detail.reload();
+                    resource.reload();
+                  }}
+                />
+              )}
+              {kind === "activations" && (
+                <Moderation
+                  kind="events"
+                  record={{ id: detail.data.event_id }}
+                  done={detail.reload}
+                />
+              )}
+            </>
+          )}
+        </State>
+      )}
+    </>
+  );
+}
+function Moderation({ kind, record, done }) {
+  const [reason, setReason] = useState("");
+  const base = `/admin/${kind}/${record.id}`;
+  return (
+    <div className="bf-panel bf-form">
+      <label>
+        Moderation reason
+        <input
+          required
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          maxLength="1000"
+        />
+      </label>
+      <Action
+        confirm="Suspend this account or event? This stops the affected actions."
+        perform={() =>
+          api(`${base}/suspend`, { method: "POST", body: { reason } })
+        }
+        done={done}
+      >
+        Suspend
+      </Action>
+      <Action
+        perform={() => api(`${base}/unsuspend`, { method: "POST" })}
+        done={done}
+      >
+        Restore
+      </Action>
+      {kind === "events" && (
+        <>
+          <Action
+            confirm="Suspend paid ticket sales?"
+            perform={() =>
+              api(`${base}/paid-sales/suspend`, {
+                method: "POST",
+                body: { reason },
+              })
+            }
+            done={done}
+          >
+            Suspend paid sales
+          </Action>
+          <Action
+            perform={() =>
+              api(`${base}/paid-sales/unsuspend`, { method: "POST" })
+            }
+            done={done}
+          >
+            Restore paid sales
+          </Action>
+        </>
+      )}
+    </div>
+  );
+}
+export default function PlatformAdminApp({ path }) {
+  const kind = path.split("/")[2];
+  return (
+    <Shell role="admin" path={path} title="Platform administration">
+      {kind === "settings" || kind === "reports" ? (
+        <Settings />
+      ) : kind === "support" ? (
+        <SupportPanel inbox="/admin/support/cases" staff />
+      ) : columns[kind] ? (
+        <Resource key={kind} kind={kind} />
+      ) : (
+        <div className="bf-panel">
+          <h2>Operations</h2>
+          <p>
+            Search retained records, moderate events and users, and manage
+            platform settings.
+          </p>
+          {Object.keys(columns).map((k) => (
+            <p key={k}>
+              <Link to={`/admin/${k}`}>{k}</Link>
+            </p>
+          ))}
+        </div>
+      )}
+    </Shell>
+  );
+}

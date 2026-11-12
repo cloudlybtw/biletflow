@@ -1,6 +1,1079 @@
-import { useState } from 'react';
-import { money, Link, Shell, Stat, Table, Badge } from './app-shared';
-import { organizerEvents as ownedEvents } from '../data/organizer-workspace';
-function Organizer({path}) {const [tab,setTab]=useState('All events');let title=path==='/organizer'?'Good afternoon, Malika':path.includes('/new')?'Create an event':path.includes('events/')?'Manage event':path.includes('/events')?'My events':path.includes('analytics')?'Analytics':path.includes('campaigns')?'Campaigns':path.includes('attendees')?'Attendees':path.includes('orders')?'Orders':path.includes('support')?'Support inbox':'Organizer settings';const isOverview=path==='/organizer';const detail=path.match(/events\/(\d+)/);return <Shell role="organizer" path={path} title={title} subtitle={isOverview?'Here’s what’s happening with your events.':'Manage your events and keep everything moving.'}>{isOverview&&<><div className="bf-welcome compact"><div><span className="bf-kicker">ORGANIZER WORKSPACE</span><h2>Your events are gaining momentum.</h2></div><Link to="/organizer/events/new" className="bf-button">+ Create event</Link></div><div className="bf-stats"><Stat label="Total events" value="12" delta="3 upcoming" icon="▦"/><Stat label="Tickets sold" value="1,284" delta="↑ 18% this month"/><Stat label="Gross revenue" value="₸8.42m" delta="Across active events" icon="₸"/><Stat label="Attendees" value="1,042" delta="68% checked in" icon="♧"/></div><div className="bf-dash-grid"><div className="bf-panel"><div className="bf-panel-head"><div><h2>Sales overview</h2><p>Ticket sales over the last 7 days</p></div><select><option>Last 7 days</option><option>Last 30 days</option></select></div><div className="bf-chart"><div className="bf-ylabels"><span>300</span><span>200</span><span>100</span><span>0</span></div><svg viewBox="0 0 700 200" preserveAspectRatio="none"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8550ce" stopOpacity=".2"/><stop offset="1" stopColor="#8550ce" stopOpacity="0"/></linearGradient></defs><path d="M0 160 C60 143 74 166 120 130 S185 106 230 126 S286 70 345 94 S405 120 455 74 S525 58 575 76 S645 24 700 32 L700 200 L0 200Z" fill="url(#fill)"/><path d="M0 160 C60 143 74 166 120 130 S185 106 230 126 S286 70 345 94 S405 120 455 74 S525 58 575 76 S645 24 700 32" fill="none" stroke="#8050c6" strokeWidth="3"/></svg><div className="bf-xlabels"><span>Nov 6</span><span>Nov 7</span><span>Nov 8</span><span>Nov 9</span><span>Nov 10</span><span>Nov 11</span><span>Nov 12</span></div></div></div><div className="bf-panel"><div className="bf-panel-head"><div><h2>Quick actions</h2><p>Keep the momentum going</p></div></div><div className="bf-quick"><Link to="/organizer/events/new"><i>＋</i><span><b>Create event</b><small>Start a new event</small></span>→</Link><Link to="/organizer/events"><i>▦</i><span><b>Manage events</b><small>Review your listings</small></span>→</Link><Link to="/organizer/analytics"><i>⌁</i><span><b>View analytics</b><small>Understand your audience</small></span>→</Link><Link to="/organizer/campaigns"><i>◉</i><span><b>Promote an event</b><small>Campaigns & promo codes</small></span>→</Link></div></div></div><div className="bf-section-title"><div><h2>Your events</h2><p>Keep track of what’s coming up</p></div><Link to="/organizer/events">See all →</Link></div><div className="bf-panel"><Table headers={['EVENT','STATUS','SOLD','REMAINING','']} rows={ownedEvents.map((e,i)=>[<span className="bf-event-cell"><img src={`/images/${e[5]}.jpg`}/><span><b>{e[0]}</b><small>{e[1]}</small></span></span>,<Badge>{e[2]}</Badge>,e[3],e[4],<Link to={`/organizer/events/${i}`}>Manage →</Link>])}/></div></>}{!isOverview&&path.includes('/events/new')&&<><div className="bf-stepper">{['Details','Tickets','Preview'].map((x,i)=><div className={i===0?'active':''}><b>{i+1}</b>{x}</div>)}</div><div className="bf-create-grid"><div className="bf-panel bf-form"><h2>Tell people about your event</h2><p>Start with the details attendees need to know.</p><label>Event name<input placeholder="e.g. Design for Tomorrow"/></label><label>Description<textarea rows="5" placeholder="What makes your event special?"/></label><div className="bf-form-grid"><label>Category<select><option>Select a category</option><option>Music</option><option>Culture</option><option>Workshop</option><option>Sport</option><option>Campus</option></select></label><label>Event image<div className="bf-upload">＋ &nbsp; Upload a cover image</div></label><label>Start date<input type="datetime-local"/></label><label>End date<input type="datetime-local"/></label><label>Venue name<input placeholder="Venue or location name"/></label><label>City<select><option>Almaty</option><option>Astana</option><option>Shymkent</option></select></label></div><label>Visibility<select><option>Public — listed on BiletFlow</option><option>Private — invite link only</option></select></label><div className="bf-ticket-type"><div><b>General admission</b><small>Ticket type 1 · Set price and quantity</small></div><button>Configure →</button></div><div className="bf-form-actions"><button className="bf-outline-button">Save draft</button><button className="bf-button" onClick={e=>e.currentTarget.textContent='Preview ready ✓'}>Continue: tickets →</button></div></div><div className="bf-panel bf-side-note"><span className="bf-kicker">A GOOD EVENT PAGE</span><h3>Make it easy to say yes.</h3><p>Clear details help attendees know exactly what to expect.</p><ul><li>Choose a descriptive title</li><li>Add the venue and local time</li><li>Set ticket quantity & sales window</li><li>Preview before publishing</li></ul></div></div></>}{!isOverview&&path==='/organizer/events'&&<><div className="bf-panel-head"><div className="bf-tabs">{['All events','Upcoming','Active','Completed','Cancelled'].map(x=><button onClick={()=>setTab(x)} className={tab===x?'active':''}>{x}</button>)}</div><Link to="/organizer/events/new" className="bf-button">+ Create event</Link></div><div className="bf-panel"><Table headers={['EVENT','DATE','STATUS','TICKETS SOLD','CAPACITY','']} rows={ownedEvents.map((e,i)=>[<span className="bf-event-cell"><img src={`/images/${e[5]}.jpg`}/><span><b>{e[0]}</b><small>{e[1]}</small></span></span>,e[1],<Badge>{e[2]}</Badge>,e[3],`${Number(e[3])+Number(e[4])}`,<Link to={`/organizer/events/${i}`}>Manage →</Link>])}/></div></>}{detail&&<><div className="bf-event-subnav">{['Overview','Tickets','Attendees','Orders','Analytics','Campaigns','Staff','Activity','Settings'].map((x,i)=><button className={i===0?'active':''}>{x}</button>)}</div><div className="bf-welcome compact"><div><span className="bf-kicker">EVENT WORKSPACE</span><h2>{ownedEvents[Number(detail[1])%ownedEvents.length][0]}</h2><p>Nov 12, 2026 · Almaty, Kazakhstan · <Badge>Published</Badge></p></div><button className="bf-outline-button">View public page ↗</button></div><div className="bf-stats"><Stat label="Tickets sold" value="284" delta="56% of capacity"/><Stat label="Remaining" value="216" delta="Sales close Nov 12" icon="▣"/><Stat label="Gross revenue" value="₸1.42m" delta="Last 30 days" icon="₸"/><Stat label="Checked in" value="168" delta="59% of attendees" icon="♧"/></div><div className="bf-dash-grid"><div className="bf-panel"><h2>Ticket types</h2><Table headers={['TICKET','PRICE','SOLD','AVAILABLE','STATUS']} rows={ [['Early bird',money(4500),'142','0',<Badge>Sold out</Badge>],['General admission',money(6000),'132','198',<Badge>On sale</Badge>],['Student',money(3000),'10','18',<Badge>On sale</Badge>]]}/><button className="bf-text-button">+ Add ticket type</button></div><div className="bf-panel activation"><span className="bf-kicker">PAID SALES ACTIVATION</span><h2>Sales are active</h2><p>Identity verified · Payout account connected · Terms accepted</p><div className="bf-progress"><span/></div><small>4 of 4 steps complete</small><button className="bf-outline-button">View activation details →</button></div></div><div className="bf-section-title"><div><h2>Recent activity</h2><p>Latest updates from this event</p></div><button className="bf-text-button">View event history →</button></div><div className="bf-panel bf-timeline"><p><b>New order received</b><span>2 tickets · 12:42 today</span></p><p><b>Promo code created: ALMATY10</b><span>10% off · Yesterday</span></p><p><b>Paid sales activated</b><span>Nov 4, 2026</span></p></div></>}{!isOverview&&!path.includes('/events')&&path!='/organizer/events'&&<GenericOrganizer path={path} title={title} tab={tab} setTab={setTab}/>}</Shell>}
-function GenericOrganizer({path,title,tab,setTab}) {if(path.includes('analytics'))return <><div className="bf-filter-row"><select><option>All events</option></select><select><option>Last 30 days</option><option>Last 7 days</option></select><select><option>All ticket types</option></select></div><div className="bf-stats"><Stat label="Capacity" value="2,410"/><Stat label="Tickets sold" value="1,284" delta="53.3% capacity"/><Stat label="Gross revenue" value="₸8.42m"/><Stat label="Checked in" value="842" delta="65.5% of sold"/></div><div className="bf-panel"><div className="bf-panel-head"><div><h2>Sales over time</h2><p>Tickets sold and gross revenue</p></div><select><option>Daily</option><option>Weekly</option></select></div><div className="bf-chart big"><svg viewBox="0 0 700 200" preserveAspectRatio="none"><path d="M0 165 Q80 120 140 145 T280 102 T420 120 T560 55 T700 32" fill="none" stroke="#8050c6" strokeWidth="4"/></svg></div></div><div className="bf-panel"><h2>Sales by ticket type</h2><Table headers={['TICKET TYPE','SOLD','GROSS REVENUE','SHARE']} rows={ [['General admission','642','₸3,852,000','50%'],['Early bird','410','₸2,050,000','32%'],['Student','232','₸696,000','18%']]}/></div></>;if(path.includes('campaigns'))return <><div className="bf-panel-head"><div className="bf-tabs">{['Campaigns','Promo codes','Campaign QR'].map(x=><button onClick={()=>setTab(x)} className={tab===x?'active':''}>{x}</button>)}</div><button className="bf-button" onClick={e=>e.currentTarget.textContent='Campaign created ✓'}>+ Create campaign</button></div><div className="bf-stats"><Stat label="Active campaigns" value="4"/><Stat label="Redemptions" value="216" delta="Across all events"/><Stat label="Attributed revenue" value="₸1.28m"/><Stat label="Discount given" value="₸164k"/></div><div className="bf-panel"><Table headers={['CAMPAIGN','EVENT','PROMO CODE','REDEMPTIONS','TICKETS SOLD','STATUS','']} rows={ [['Almaty launch','Night at the museum','ALMATY10','86','102',<Badge>Active</Badge>,<button>Manage →</button>],['Student community','Product Camp','CAMPUS15','74','74',<Badge>Active</Badge>,<button>Manage →</button>],['Early access','Ceramics & tea','EARLY500','56','61',<Badge>Ended</Badge>,<button>View →</button>]]}/></div><div className="bf-panel bf-qr-promo"><div><span className="bf-kicker">TRACKABLE CAMPAIGN QR</span><h2>Make your next campaign shareable.</h2><p>Campaign QR opens the event page with the promo code applied. It is separate from admission tickets.</p><button className="bf-outline-button">Download campaign QR ↓</button></div><div className="bf-qr">▦<small>CAMPAIGN LINK</small></div></div></>;if(path.includes('attendees'))return <><div className="bf-filter-row"><input placeholder="Search attendees..."/><select><option>All events</option></select><select><option>All ticket types</option></select><button className="bf-outline-button">Export CSV ↓</button></div><div className="bf-stats"><Stat label="Total attendees" value="1,042"/><Stat label="Checked in" value="842"/><Stat label="Not checked in" value="200"/></div><div className="bf-panel"><Table headers={['ATTENDEE','EVENT','TICKET','ORDER','CHECK-IN','']} rows={ [['Aigerim T.','Night at the museum','General admission','#BF-2048',<Badge>Checked in</Badge>,<button>Details</button>],['Daniyar K.','Product Camp Almaty','Early bird','#BF-2045',<Badge>Not checked in</Badge>,<button>Details</button>],['Sara M.','Night at the museum','Student','#BF-2039',<Badge>Checked in</Badge>,<button>Details</button>]]}/></div></>;if(path.includes('orders'))return <><div className="bf-filter-row"><input placeholder="Search by order or attendee"/><select><option>All statuses</option><option>Paid</option><option>Refunded</option></select></div><div className="bf-panel"><Table headers={['ORDER','ATTENDEE','EVENT','DATE','TOTAL','STATUS','']} rows={orders.map(r=>[r[0],'Aigerim T.',r[1],r[2],money(r[3]),<Badge>{r[4]}</Badge>,<button>Details →</button>])}/></div></>;if(path.includes('support'))return <div className="bf-panel"><div className="bf-panel-head"><div><h2>Support inbox</h2><p>Requests related to your account and events</p></div><select><option>All cases</option><option>Open</option><option>Resolved</option></select></div><Table headers={['CASE','REQUESTER','CATEGORY','RELATED EVENT','UPDATED','STATUS']} rows={ [['#SC-1082','Malika S.','Ticket delivery','Night at the museum','Today',<Badge>In Progress</Badge>],['#SC-1074','Daniyar K.','Payment','Product Camp','Yesterday',<Badge>Open</Badge>]]}/></div>;return <div className="bf-panel bf-form"><h2>Organizer profile</h2><div className="bf-form-grid"><label>Organization name<input defaultValue="Malika Events"/></label><label>Contact email<input defaultValue="hello@malikaevents.kz"/></label><label>Country<input defaultValue="Kazakhstan"/></label><label>Payout account<select><option>Halyk Bank · •• 4821 · Verified</option><option>Connect payout account</option></select></label></div><button className="bf-button" onClick={e=>e.currentTarget.textContent='Settings saved ✓'}>Save settings</button></div>}
-export default function OrganizerApp({path}) { return <Organizer path={path}/> }
+import { useState } from "react";
+import { api, apiPath, download, query } from "../lib/client";
+import { useResource } from "../lib/use-resource";
+import { Shell, Link, Stat } from "./app-shared";
+import {
+  Form,
+  State,
+  Action,
+  DataTable,
+  RemoteTable,
+  Details,
+  Export,
+  SecureImage,
+  OrderSummary,
+} from "./live-shared";
+import SupportPanel from "./SupportPanel";
+
+const ticketFields = [
+  { name: "name", label: "Ticket name", required: true },
+  {
+    name: "description",
+    label: "Description",
+    type: "textarea",
+    nullable: true,
+  },
+  {
+    name: "price_amount",
+    label: "Price (whole KZT)",
+    type: "integer",
+    min: 0,
+    default: 0,
+    required: true,
+  },
+  {
+    name: "quantity_total",
+    label: "Capacity",
+    type: "integer",
+    min: 0,
+    required: true,
+  },
+  {
+    name: "min_per_order",
+    label: "Minimum per order",
+    type: "integer",
+    min: 1,
+    default: 1,
+    required: true,
+  },
+  {
+    name: "max_per_order",
+    label: "Maximum per order",
+    type: "integer",
+    min: 1,
+    default: 10,
+    required: true,
+  },
+  {
+    name: "sales_start_at",
+    label: "Sales start (local time)",
+    type: "datetime-local",
+    nullable: true,
+  },
+  {
+    name: "sales_end_at",
+    label: "Sales end (local time)",
+    type: "datetime-local",
+    nullable: true,
+  },
+  { name: "is_hidden", label: "Hide ticket type", type: "checkbox" },
+];
+function EventForm({ event, done }) {
+  const venues = useResource("/venues", true),
+    categories = useResource("/event-categories", true);
+  return (
+    <Form
+      key={event?.updated_at || "new"}
+      initial={event}
+      fields={[
+        { name: "title", label: "Event title", required: true, maxLength: 200 },
+        {
+          name: "description",
+          label: "Description",
+          type: "textarea",
+          nullable: true,
+        },
+        {
+          name: "starts_at",
+          label: "Starts (local time)",
+          type: "datetime-local",
+          required: true,
+        },
+        {
+          name: "ends_at",
+          label: "Ends (local time)",
+          type: "datetime-local",
+          required: true,
+        },
+        {
+          name: "seating_mode",
+          label: "Seating",
+          default: "general_admission",
+          required: true,
+          options: [
+            ["general_admission", "General admission"],
+            ["assigned", "Assigned seats (venue required)"],
+          ],
+        },
+        {
+          name: "timezone",
+          label: "Event timezone",
+          default: "Asia/Almaty",
+          required: true,
+        },
+        {
+          name: "venue_id",
+          label: "Venue",
+          nullable: true,
+          options: (venues.data || []).map((v) => [
+            v.id,
+            `${v.name}, ${v.city}`,
+          ]),
+        },
+        {
+          name: "category_id",
+          label: "Category",
+          nullable: true,
+          options: (categories.data || []).map((c) => [c.id, c.name_en]),
+        },
+        {
+          name: "visibility",
+          label: "Visibility",
+          default: "public",
+          required: true,
+          options: ["public", "unlisted", "private"].map((v) => [v, v]),
+        },
+        {
+          name: "capacity",
+          label: "Event capacity (optional)",
+          type: "integer",
+          min: 1,
+          nullable: true,
+        },
+        {
+          name: "registration_opens_at",
+          label: "Registration opens (local time)",
+          type: "datetime-local",
+          nullable: true,
+        },
+        {
+          name: "registration_closes_at",
+          label: "Registration closes (local time)",
+          type: "datetime-local",
+          nullable: true,
+        },
+        {
+          name: "refund_policy",
+          label: "Refund policy",
+          type: "textarea",
+          nullable: true,
+        },
+      ]}
+      label={event ? "Save event" : "Create draft"}
+      submit={(body) =>
+        api(event ? `/events/${event.id}` : "/events", {
+          method: event ? "PATCH" : "POST",
+          body,
+        })
+      }
+      done={done}
+    />
+  );
+}
+function TicketTypes({ base }) {
+  const resource = useResource(`${base}/ticket-types`, true);
+  const [edit, setEdit] = useState(null);
+  return (
+    <>
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["name", "Ticket"],
+            ["price_amount", "Price (KZT)"],
+            ["quantity_total", "Capacity"],
+            ["quantity_sold", "Sold"],
+            ["quantity_reserved", "Reserved"],
+            ["is_hidden", "Hidden"],
+          ]}
+          actions={(row) => (
+            <button className="bf-outline-button" onClick={() => setEdit(row)}>
+              Edit
+            </button>
+          )}
+        />
+      </State>
+      <h2>{edit ? "Edit ticket type" : "Add ticket type"}</h2>
+      <Form
+        key={edit?.id || "new"}
+        fields={ticketFields}
+        initial={edit || {}}
+        submit={(body) =>
+          api(
+            edit ? `${base}/ticket-types/${edit.id}` : `${base}/ticket-types`,
+            { method: edit ? "PATCH" : "POST", body },
+          )
+        }
+        done={() => {
+          setEdit(null);
+          resource.reload();
+        }}
+      />
+      {edit && <button onClick={() => setEdit(null)}>Cancel edit</button>}
+    </>
+  );
+}
+function Images({ base }) {
+  const resource = useResource(`${base}/images`, true);
+  return (
+    <>
+      <State resource={resource}>
+        <div className="bf-event-grid">
+          {resource.data?.map((image) => (
+            <div className="bf-panel" key={image.id}>
+              <SecureImage
+                path={apiPath(image.url)}
+                alt={image.alt_text || "Event image"}
+              />
+              <p>{image.is_cover ? "Cover image" : ""}</p>
+              <Action
+                perform={() =>
+                  api(`${base}/images/${image.id}`, {
+                    method: "PATCH",
+                    body: { is_cover: true },
+                  })
+                }
+                done={resource.reload}
+              >
+                Set cover
+              </Action>
+              <Action
+                confirm="Delete this image?"
+                perform={() =>
+                  api(`${base}/images/${image.id}`, { method: "DELETE" })
+                }
+                done={resource.reload}
+              >
+                Delete
+              </Action>
+            </div>
+          ))}
+        </div>
+      </State>
+      <Form
+        fields={[
+          { name: "alt_text", label: "Image description" },
+          { name: "is_cover", label: "Use as cover", type: "checkbox" },
+        ]}
+        label="Upload image"
+        submit={(body, form) => {
+          const data = new FormData();
+          data.append("file", form.elements.file.files[0]);
+          data.append("is_cover", String(body.is_cover));
+          data.append("alt_text", body.alt_text || "");
+          return api(`${base}/images`, { method: "POST", body: data });
+        }}
+        done={resource.reload}
+      >
+        <label>
+          Image file
+          <input
+            name="file"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            required
+          />
+        </label>
+      </Form>
+    </>
+  );
+}
+function Staff({ base }) {
+  const resource = useResource(`${base}/staff`, true);
+  return (
+    <>
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["user_id", "Staff member"],
+            ["role", "Role"],
+            ["revoked_at", "Revoked"],
+          ]}
+          actions={(row) =>
+            !row.revoked_at && (
+              <Action
+                confirm="Revoke this staff assignment?"
+                perform={() =>
+                  api(`${base}/staff/${row.id}`, { method: "DELETE" })
+                }
+                done={resource.reload}
+              >
+                Revoke
+              </Action>
+            )
+          }
+        />
+      </State>
+      <Form
+        fields={[
+          {
+            name: "email",
+            label: "Staff email",
+            type: "email",
+            required: true,
+          },
+          {
+            name: "role",
+            label: "Role",
+            options: ["event_admin", "support_agent", "co_organizer"].map(
+              (r) => [r, r.replaceAll("_", " ")],
+            ),
+            required: true,
+          },
+        ]}
+        label="Assign staff"
+        submit={(body) => api(`${base}/staff`, { method: "POST", body })}
+        done={resource.reload}
+      />
+    </>
+  );
+}
+function Activation({ base }) {
+  const resource = useResource(`${base}/paid-sales/checklist`);
+  const [payment, setPayment] = useState(null);
+  return (
+    <>
+      <p>Identity checks, payouts, and activation payments are simulated.</p>
+      <State resource={resource}>
+        {resource.data && (
+          <>
+            <Details
+              value={resource.data}
+              fields={[
+                ["has_paid_ticket_type", "Paid ticket type"],
+                ["identity_verified", "Identity verified"],
+                ["payout_account_active", "Active payout account"],
+                ["terms_accepted", "Terms accepted"],
+                ["fee_amount", "Activation fee (KZT)"],
+                ["fee_paid", "Fee paid"],
+                ["paid_sales_status", "Paid sales"],
+              ]}
+            />
+            <Action
+              perform={() =>
+                api(`${base}/paid-sales/terms`, {
+                  method: "POST",
+                  body: { accepted: true },
+                })
+              }
+              done={resource.reload}
+            >
+              Accept paid-sales terms
+            </Action>
+            <Action
+              perform={async () =>
+                setPayment(
+                  await api(`${base}/paid-sales/pay`, { method: "POST" }),
+                )
+              }
+            >
+              Start activation payment
+            </Action>
+            {payment &&
+              ["success", "failure"].map((outcome) => (
+                <Action
+                  key={outcome}
+                  perform={() =>
+                    api(`/payments/${payment.id}/simulate`, {
+                      method: "POST",
+                      body: { outcome },
+                    })
+                  }
+                  done={resource.reload}
+                >
+                  Simulate {outcome}
+                </Action>
+              ))}
+            <Action
+              perform={() =>
+                api(`${base}/paid-sales/activate`, { method: "POST", body: {} })
+              }
+              done={resource.reload}
+            >
+              Activate paid sales
+            </Action>
+            <p>
+              <Link to="/organizer/settings">
+                Manage identity and payout account
+              </Link>
+            </p>
+          </>
+        )}
+      </State>
+    </>
+  );
+}
+function Campaigns({ base }) {
+  const resource = useResource(`${base}/campaigns`, true),
+    tickets = useResource(`${base}/ticket-types`, true);
+  const [selected, setSelected] = useState(null);
+  const fields = [
+    { name: "name", label: "Campaign name", required: true },
+    {
+      name: "discount_type",
+      label: "Discount type",
+      required: true,
+      options: [
+        ["percent", "Percent"],
+        ["fixed", "Fixed amount (KZT)"],
+      ],
+    },
+    {
+      name: "discount_value",
+      label: "Discount value",
+      type: "integer",
+      min: 1,
+      required: true,
+    },
+    {
+      name: "starts_at",
+      label: "Starts (local time)",
+      type: "datetime-local",
+      nullable: true,
+    },
+    {
+      name: "ends_at",
+      label: "Ends (local time)",
+      type: "datetime-local",
+      nullable: true,
+    },
+    {
+      name: "max_redemptions",
+      label: "Maximum redemptions",
+      type: "integer",
+      min: 1,
+      nullable: true,
+    },
+    {
+      name: "ticket_type_ids",
+      label: "Eligible ticket types (none means all)",
+      multiple: true,
+      options: (tickets.data || []).map((t) => [t.id, t.name]),
+    },
+    ...(!selected
+      ? [{ name: "code", label: "Custom promo code (optional)" }]
+      : []),
+  ];
+  return (
+    <>
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["name", "Campaign"],
+            ["discount_type", "Discount"],
+            ["discount_value", "Value"],
+            ["redemption_count", "Claims"],
+            ["status", "Status"],
+          ]}
+          actions={(row) => (
+            <>
+              <button
+                className="bf-outline-button"
+                onClick={() => setSelected(row)}
+              >
+                Manage
+              </button>
+              {["activate", "disable"].map((action) => (
+                <Action
+                  key={action}
+                  perform={() =>
+                    api(`${base}/campaigns/${row.id}/${action}`, {
+                      method: "POST",
+                    })
+                  }
+                  done={resource.reload}
+                >
+                  {action}
+                </Action>
+              ))}
+              <Action
+                confirm="Delete this draft campaign?"
+                perform={() =>
+                  api(`${base}/campaigns/${row.id}`, { method: "DELETE" })
+                }
+                done={resource.reload}
+              >
+                Delete draft
+              </Action>
+            </>
+          )}
+        />
+      </State>
+      <h2>{selected ? "Edit campaign" : "Create campaign"}</h2>
+      <Form
+        key={selected?.id || "new"}
+        fields={fields}
+        initial={selected || {}}
+        submit={(body) =>
+          api(
+            selected ? `${base}/campaigns/${selected.id}` : `${base}/campaigns`,
+            { method: selected ? "PATCH" : "POST", body },
+          )
+        }
+        done={() => {
+          setSelected(null);
+          resource.reload();
+        }}
+      />
+      {selected && (
+        <>
+          <button onClick={() => setSelected(null)}>New campaign</button>
+          <CampaignQR
+            base={`${base}/campaigns/${selected.id}`}
+            codes={selected.promo_codes}
+          />
+        </>
+      )}
+    </>
+  );
+}
+function CampaignQR({ base, codes }) {
+  const resource = useResource(`${base}/qr`, true);
+  const campaign = useResource(base);
+  const currentCodes = campaign.data?.promo_codes || codes || [];
+  return (
+    <>
+      <h2>Promo codes</h2>
+      {currentCodes.map((c) => (
+        <p key={c.id}>{c.code}</p>
+      ))}
+      <Form
+        fields={[
+          { name: "code", label: "Custom code (leave blank to generate)" },
+        ]}
+        label="Add promo code"
+        submit={(body) => api(`${base}/promo-codes`, { method: "POST", body })}
+        done={() => {
+          campaign.reload();
+          resource.reload();
+        }}
+      />
+      <Form
+        fields={[
+          {
+            name: "promo_code_id",
+            label: "Promo code for this QR",
+            options: currentCodes.map((code) => [code.id, code.code]),
+          },
+        ]}
+        label="Create campaign QR"
+        submit={(body) => api(`${base}/qr`, { method: "POST", body })}
+        done={resource.reload}
+      />
+      <State resource={resource}>
+        {resource.data?.map((qr) => (
+          <div className="bf-panel" key={qr.id}>
+            <p>PROMO · {qr.scan_count} scans</p>
+            <a href={qr.target_url}>{qr.target_url}</a>
+            <SecureImage
+              path={apiPath(qr.image_url)}
+              alt="Campaign promo QR (not admission)"
+            />
+            <Action
+              perform={() =>
+                download(apiPath(qr.image_url), "campaign-promo.png")
+              }
+            >
+              Download promo QR
+            </Action>
+          </div>
+        ))}
+      </State>
+    </>
+  );
+}
+function Orders({ base }) {
+  const [id, setId] = useState(null),
+    [filters, setFilters] = useState({});
+  const resource = useResource(`${base}/orders?${query(filters)}`, true);
+  return (
+    <>
+      <Form
+        fields={[
+          { name: "q", label: "Search buyer or order" },
+          {
+            name: "status",
+            label: "Status",
+            options: [
+              "pending",
+              "completed",
+              "cancelled",
+              "expired",
+              "refunded",
+            ].map((s) => [s, s]),
+          },
+        ]}
+        label="Search orders"
+        submit={async (body) => setFilters(body)}
+      />
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["order_number", "Order"],
+            ["buyer_name", "Buyer"],
+            ["total_amount", "Total (KZT)"],
+            ["status", "Status"],
+          ]}
+          actions={(row) => (
+            <button className="bf-outline-button" onClick={() => setId(row.id)}>
+              View order
+            </button>
+          )}
+        />
+      </State>
+      {id && (
+        <ManagedOrder key={id} base={base} id={id} done={resource.reload} />
+      )}
+    </>
+  );
+}
+function ManagedOrder({ base, id, done }) {
+  const resource = useResource(`${base}/orders/${id}`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <>
+          <OrderSummary order={resource.data} managed />
+          {resource.data.status === "completed" && (
+            <Form
+              fields={[
+                {
+                  name: "reason",
+                  label: "Cancellation / refund reason",
+                  required: true,
+                  maxLength: 2000,
+                },
+              ]}
+              label={
+                resource.data.total_amount
+                  ? "Issue full simulated refund"
+                  : "Cancel free registration"
+              }
+              submit={async (body) => {
+                if (
+                  !window.confirm(
+                    "Invalidate every ticket and return inventory for this order?",
+                  )
+                )
+                  throw new Error("Cancelled.");
+                return api(
+                  `${base}/orders/${id}/${resource.data.total_amount ? "refunds" : "cancel"}`,
+                  { method: "POST", body },
+                );
+              }}
+              done={() => {
+                resource.reload();
+                done();
+              }}
+            />
+          )}
+        </>
+      )}
+    </State>
+  );
+}
+function Analytics({ base }) {
+  const tickets = useResource(`${base}/ticket-types`, true);
+  const [filters, setFilters] = useState({});
+  const suffix = "?" + query(filters);
+  const summary = useResource(`${base}/analytics/summary${suffix}`);
+  const reports = [
+    ["sales/daily", "Sales by day", [["day", "Day"]]],
+    [
+      "sales/ticket-types",
+      "Sales by ticket type",
+      [["ticket_type_name", "Ticket type"]],
+    ],
+    [
+      "campaigns",
+      "Campaigns",
+      [
+        ["campaign_name", "Campaign"],
+        ["redemptions", "Redemptions"],
+      ],
+    ],
+    ["promo-codes", "Promo codes", [["promo_code", "Code"]]],
+  ];
+  return (
+    <>
+      <p>All financial figures are simulated KZT.</p>
+      <Form
+        fields={[
+          {
+            name: "date_from",
+            label: "From (local time)",
+            type: "datetime-local",
+          },
+          {
+            name: "date_to",
+            label: "Until (local time)",
+            type: "datetime-local",
+          },
+          {
+            name: "ticket_type_id",
+            label: "Ticket type",
+            options: (tickets.data || []).map((t) => [t.id, t.name]),
+          },
+        ]}
+        submit={async (body) => setFilters(body)}
+        label="Apply filters"
+      />
+      <State resource={summary}>
+        {summary.data && (
+          <Details
+            value={summary.data}
+            fields={[
+              ["capacity", "Capacity"],
+              ["sold", "Sold"],
+              ["reserved", "Reserved"],
+              ["remaining", "Remaining"],
+              ["percent_sold", "Sold %"],
+              ["gross_amount", "Gross (KZT)"],
+              ["discount_amount", "Discounts (KZT)"],
+              ["refund_amount", "Refunds (KZT)"],
+              ["net_amount", "Net (KZT)"],
+              ["checked_in", "Checked in"],
+              ["absent", "Absent"],
+              ["check_in_percent", "Attendance %"],
+            ]}
+          />
+        )}
+      </State>
+      <Export path={`${base}/analytics/summary.csv${suffix}`} />
+      {reports.map(([path, label, columns]) => (
+        <section key={path}>
+          <h2>{label}</h2>
+          <RemoteTable
+            path={`${base}/analytics/${path}${suffix}`}
+            columns={[
+              ...columns,
+              ["gross_amount", "Gross (KZT)"],
+              ["discount_amount", "Discount (KZT)"],
+              ["net_amount", "Net (KZT)"],
+            ]}
+          />
+          <Export
+            path={`${base}/analytics/${path}.csv${suffix}`}
+            name={`${path.replaceAll("/", "-")}.csv`}
+          />
+        </section>
+      ))}
+    </>
+  );
+}
+function History({ base }) {
+  const [filters, setFilters] = useState({});
+  return (
+    <>
+      <Form
+        fields={[
+          {
+            name: "date_from",
+            label: "From (local time)",
+            type: "datetime-local",
+          },
+          {
+            name: "date_to",
+            label: "Until (local time)",
+            type: "datetime-local",
+          },
+          { name: "action_type", label: "Action type" },
+        ]}
+        submit={async (body) => setFilters(body)}
+        label="Filter activity"
+      />
+      <RemoteTable
+        path={`${base}/history?${query(filters)}`}
+        columns={[
+          ["occurred_at", "Time"],
+          ["actor_name", "Actor"],
+          ["action_type", "Action"],
+          ["summary", "Summary"],
+        ]}
+      />
+    </>
+  );
+}
+function Settings() {
+  const profile = useResource("/organizers/me"),
+    payout = useResource("/organizers/me/payout-accounts", true);
+  return (
+    <>
+      <h2>Organizer profile</h2>
+      <State resource={profile}>
+        {profile.data && (
+          <Form
+            initial={profile.data}
+            fields={[
+              { name: "display_name", label: "Organizer name", required: true },
+              {
+                name: "contact_email",
+                label: "Contact email",
+                type: "email",
+                required: true,
+              },
+              { name: "contact_phone", label: "Contact phone", nullable: true },
+              {
+                name: "description",
+                label: "Description",
+                type: "textarea",
+                nullable: true,
+              },
+            ]}
+            submit={(body) => api("/organizers/me", { method: "PATCH", body })}
+            done={profile.reload}
+          />
+        )}
+      </State>
+      <Action
+        perform={() =>
+          api("/organizers/me/identity-verification", { method: "POST" })
+        }
+        done={profile.reload}
+      >
+        Simulate identity verification
+      </Action>
+      <h2>Simulated payout accounts</h2>
+      <State resource={payout}>
+        <DataTable
+          rows={payout.data || []}
+          columns={[
+            ["account_holder_name", "Holder"],
+            ["external_account_ref", "Account"],
+            ["status", "Status"],
+            ["is_default", "Default"],
+          ]}
+          actions={(row) => (
+            <Action
+              perform={() =>
+                api(`/organizers/me/payout-accounts/${row.id}/default`, {
+                  method: "POST",
+                })
+              }
+              done={payout.reload}
+            >
+              Set default
+            </Action>
+          )}
+        />
+      </State>
+      <Form
+        fields={[
+          {
+            name: "account_holder_name",
+            label: "Account holder",
+            required: true,
+          },
+          {
+            name: "external_account_ref",
+            label: "Simulated IBAN / account reference",
+            required: true,
+          },
+        ]}
+        label="Add payout account"
+        submit={(body) =>
+          api("/organizers/me/payout-accounts", { method: "POST", body })
+        }
+        done={payout.reload}
+      />
+    </>
+  );
+}
+function EventWorkspace({ id, tab = "details" }) {
+  const base = `/events/${id}`;
+  const resource = useResource(base);
+  const event = resource.data;
+  return (
+    <>
+      <State resource={resource}>
+        {event && (
+          <>
+            <h2>{event.title}</h2>
+            <p>
+              {event.status} · Paid sales: {event.paid_sales_status}
+            </p>
+            <Link to={`/preview/${event.id}`}>Preview event</Link>
+            <div className="bf-actions">
+              {["publish", "unpublish", "cancel", "duplicate"].map((action) => (
+                <Action
+                  key={action}
+                  confirm={
+                    action === "cancel"
+                      ? "Cancel this event, invalidate tickets and simulate refunds for all buyers?"
+                      : null
+                  }
+                  perform={async () => {
+                    const result = await api(`${base}/${action}`, {
+                      method: "POST",
+                    });
+                    if (action === "duplicate")
+                      location.hash = `/organizer/events/${result.id}`;
+                  }}
+                  done={resource.reload}
+                >
+                  {action}
+                </Action>
+              ))}
+              {event.status === "draft" && (
+                <Action
+                  confirm="Delete this draft?"
+                  perform={() => api(base, { method: "DELETE" })}
+                  done={() => {
+                    location.hash = "/organizer/events";
+                  }}
+                >
+                  Delete draft
+                </Action>
+              )}
+            </div>
+          </>
+        )}
+      </State>
+      <nav className="bf-event-subnav">
+        {[
+          "details",
+          "tickets",
+          "images",
+          "staff",
+          "activation",
+          "campaigns",
+          "orders",
+          "attendees",
+          "analytics",
+          "history",
+          "support",
+        ].map((t) => (
+          <Link
+            key={t}
+            className={tab === t ? "bf-button" : ""}
+            to={`/organizer/events/${id}/${t}`}
+          >
+            {t}
+          </Link>
+        ))}
+      </nav>
+      {tab === "details" ? (
+        event && <EventForm event={event} done={resource.reload} />
+      ) : tab === "tickets" ? (
+        <TicketTypes base={base} />
+      ) : tab === "images" ? (
+        <Images base={base} />
+      ) : tab === "staff" ? (
+        <Staff base={base} />
+      ) : tab === "activation" ? (
+        <Activation base={base} />
+      ) : tab === "campaigns" ? (
+        <Campaigns base={base} />
+      ) : tab === "orders" ? (
+        <Orders base={base} />
+      ) : tab === "analytics" ? (
+        <Analytics base={base} />
+      ) : tab === "history" ? (
+        <History base={base} />
+      ) : tab === "support" ? (
+        <SupportPanel inbox={`${base}/support/cases`} staff eventId={id} />
+      ) : (
+        <>
+          <RemoteTable
+            path={`${base}/tickets`}
+            columns={[
+              ["ticket_code", "Ticket"],
+              ["attendee_name", "Attendee"],
+              ["ticket_type_name", "Type"],
+              ["status", "Status"],
+              ["checked_in_at", "Checked in"],
+            ]}
+          />
+          <h2>Refund history</h2>
+          <RemoteTable
+            path={`${base}/refunds`}
+            columns={[
+              ["order_id", "Order"],
+              ["amount", "Amount (KZT)"],
+              ["status", "Status"],
+            ]}
+          />
+          <h2>Scan history</h2>
+          <RemoteTable
+            path={`${base}/checkin/records`}
+            columns={[
+              ["scanned_at", "Time"],
+              ["result", "Result"],
+              ["action", "Action"],
+            ]}
+          />
+        </>
+      )}
+    </>
+  );
+}
+export default function OrganizerApp({ path }) {
+  const events = useResource("/events/my", true);
+  const parts = path.split("/");
+  const section = parts[2] || "";
+  const id = section === "events" && parts[3] !== "new" ? parts[3] : null;
+  const [chosen, setChosen] = useState("");
+  const content = id ? (
+    <EventWorkspace key={`${id}/${parts[4]}`} id={id} tab={parts[4]} />
+  ) : section === "events" && parts[3] === "new" ? (
+    <EventForm
+      done={(event) => {
+        location.hash = `/organizer/events/${event.id}`;
+      }}
+    />
+  ) : section === "settings" ? (
+    <Settings />
+  ) : section === "support" ? (
+    <SupportPanel organizer />
+  ) : ["orders", "attendees", "analytics", "campaigns", "history"].includes(
+      section,
+    ) ? (
+    <>
+      <label>
+        Event
+        <select value={chosen} onChange={(e) => setChosen(e.target.value)}>
+          <option value="">Choose an event…</option>
+          {events.data?.map((event) => (
+            <option key={event.id} value={event.id}>
+              {event.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      {chosen && (
+        <EventWorkspace key={chosen + section} id={chosen} tab={section} />
+      )}
+    </>
+  ) : (
+    <>
+      <div className="bf-stats">
+        <Stat label="My events" value={events.data?.length ?? "…"} />
+      </div>
+      <State resource={events}>
+        <DataTable
+          rows={events.data || []}
+          columns={[
+            ["title", "Event"],
+            ["classification", "Period"],
+            ["status", "Status"],
+            ["starts_at", "Starts"],
+          ]}
+          actions={(event) => (
+            <Link to={`/organizer/events/${event.id}`}>Manage event</Link>
+          )}
+        />
+      </State>
+      <Link className="bf-button" to="/organizer/events/new">
+        Create event
+      </Link>
+    </>
+  );
+  return (
+    <Shell role="organizer" path={path} title="Organizer workspace">
+      {content}
+    </Shell>
+  );
+}

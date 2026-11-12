@@ -3,9 +3,9 @@ import Navbar from "../../components/Navbar/Navbar";
 import ExperienceHero from "../../components/ExperienceHero/ExperienceHero";
 import TicketCarousel from "../../components/TicketCarousel/TicketCarousel";
 import { copy, locales, cities, cityLabel } from "../../data/i18n";
-import { demoEvents } from "../../data/events";
 import { filterEvents, sectionEvents, timezone } from "../../lib/discovery";
 import { loadEvents, login } from "../../lib/api";
+import { useSession } from "../../lib/session-context";
 import "./Home.css";
 const initialFilters = {
   q: "",
@@ -78,6 +78,7 @@ function Modal({ children, title, onClose, t }) {
   );
 }
 export default function Home() {
+  const session = useSession();
   const [lang, setLang] = useState(getLanguage);
   const [filters, setFilters] = useState(initialFilters);
   const [searchPaused, setSearchPaused] = useState(false);
@@ -101,10 +102,10 @@ export default function Home() {
     let active = true;
     loadEvents(controller.signal)
       .then((events) => {
-        if (active) setData(events.length ? { events, state: "live" } : { events: demoEvents, state: "demo" });
+        if (active) setData({ events, state: "live" });
       })
       .catch(() => {
-        if (active) setData({ events: demoEvents, state: "demo" });
+        if (active) setData({ events: [], state: "error" });
       })
       .finally(() => clearTimeout(timeout));
     return () => {
@@ -151,6 +152,7 @@ export default function Home() {
     try {
       const result = await login(form.get("email"), form.get("password"));
       setAuth({ busy: false, error: false, user: result.user });
+      location.hash = "/account";
     } catch {
       setAuth((a) => ({ ...a, busy: false, error: true }));
     }
@@ -203,7 +205,12 @@ export default function Home() {
         setLang={setLang}
         city={filters.city}
         setCity={(value) => update("city", value)}
-        onSignIn={() => setModal({ type: "login" })}
+        user={session.user}
+        onSignIn={() =>
+          session.user
+            ? (location.hash = "/account")
+            : setModal({ type: "login" })
+        }
       />
       <main id="home">
         <ExperienceHero
@@ -354,8 +361,8 @@ export default function Home() {
           <div className="catalog-status" role="status">
             {data.state === "loading" ? (
               t.loading
-            ) : data.state === "demo" ? (
-              t.demoNotice
+            ) : data.state === "error" ? (
+              "Unable to load events. Please try again."
             ) : (
               <>
                 {t.live} · {filtered.length} {t.count}
@@ -483,7 +490,14 @@ export default function Home() {
               <p className="detail-notice">
                 {modal.event.demo ? t.demoDetail : modal.event.description}
               </p>
-              {!modal.event.demo && <p>{t.noBooking}</p>}
+              {!modal.event.demo && (
+                <a
+                  className="button button-purple"
+                  href={`/#/events/${modal.event.slug}`}
+                >
+                  {t.discover} →
+                </a>
+              )}
             </>
           )}
           {modal.type === "organizer" && (

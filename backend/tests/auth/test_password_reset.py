@@ -50,8 +50,11 @@ async def _reset_token_for(session: AsyncSession, user: User, **overrides) -> st
 
 
 async def test_forgot_password_queues_reset_email_with_hashed_token(
-    client: AsyncClient, db_session: AsyncSession
+    client: AsyncClient, db_session: AsyncSession, monkeypatch
 ):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "web_base_url", "http://web.example.test:9020")
     user = await create_user(db_session)
     await db_session.commit()
 
@@ -66,7 +69,9 @@ async def test_forgot_password_queues_reset_email_with_hashed_token(
     (notification,) = await _notifications(db_session, user)
     assert notification.type is NotificationType.PASSWORD_RESET
     assert notification.channel is NotificationChannel.EMAIL
-    assert notification.payload["reset_url"].startswith("http://localhost:5173/reset-password?")
+    assert notification.payload["reset_url"].startswith(
+        "http://web.example.test:9020/reset-password?"
+    )
     assert hash_token(_raw_token(notification)) == token.token_hash
 
 

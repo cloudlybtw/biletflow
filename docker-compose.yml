@@ -53,6 +53,15 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "${WEB_PORT:-5173}:80"
+    depends_on:
+      - api
+
   mailpit:
     image: axllent/mailpit:latest
     ports:

@@ -221,6 +221,9 @@ async def test_lifespan_sends_queued_notification_and_stops(
     user = await create_verified_user(db_session)
     row = await create_notification(db_session, user, channel=NotificationChannel.EMAIL)
     await db_session.commit()
+    # Rollback expires ORM attributes, including primary keys. Keep a scalar
+    # identity so repeated polling never triggers an implicit async load.
+    notification_id = row.id
     sent = asyncio.Event()
 
     async def send(message):
@@ -233,7 +236,7 @@ async def test_lifespan_sends_queued_notification_and_stops(
         # Wait for the whole pass to commit rather than racing task cancellation.
         for _ in range(100):
             await db_session.rollback()
-            current = await db_session.get(Notification, row.id, populate_existing=True)
+            current = await db_session.get(Notification, notification_id, populate_existing=True)
             if current.status == "sent":
                 break
             await asyncio.sleep(0.01)
