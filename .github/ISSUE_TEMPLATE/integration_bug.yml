@@ -1,0 +1,22 @@
+name: Integration regression
+description: Web, Flutter, API or demo deployment bug
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit, browser/device, API base URL and Docker/SDK versions. Do not paste tokens or passwords.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Steps, expected behavior, actual behavior, and sanitized error code.
+    validations:
+      required: true
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression coverage
+      description: Failing test or walkthrough step; include the test added with the fix.

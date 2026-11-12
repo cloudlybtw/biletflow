@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     password_reset_token_minutes: int = 60
     password_reset_cooldown_seconds: int = 60
     web_base_url: str = "http://localhost:5173"
+    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    rate_limit_login_requests: int = Field(default=30, ge=1)
+    rate_limit_promo_requests: int = Field(default=120, ge=1)
+    rate_limit_window_seconds: int = Field(default=60, ge=1)
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     smtp_from: str = "no-reply@biletflow.local"

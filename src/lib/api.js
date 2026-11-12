@@ -1,29 +1,6 @@
 import { cities } from "../data/i18n.js";
-export const apiBase = (import.meta.env?.VITE_API_BASE_URL || "/api/v1").replace(
-  /\/$/,
-  "",
-);
-async function get(path, signal) {
-  const response = await fetch(`${apiBase}${path}`, {
-    signal,
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) throw new Error(`API ${response.status}`);
-  return response.json();
-}
-async function all(path, signal) {
-  const items = [];
-  for (let offset = 0; ; offset += 100) {
-    const page = await get(
-      `${path}${path.includes("?") ? "&" : "?"}limit=100&offset=${offset}`,
-      signal,
-    );
-    if (!Array.isArray(page.items) || !Number.isInteger(page.total))
-      throw new Error("Invalid page");
-    items.push(...page.items);
-    if (items.length >= page.total || !page.items.length) return items;
-  }
-}
+import { all, apiBase } from "./client.js";
+export { apiBase, login } from "./client.js";
 const categoryMap = {
   sport: "sport",
   sports: "sport",
@@ -80,6 +57,7 @@ export async function loadEvents(signal) {
         if (image && !/^https?:\/\//i.test(image)) image = null;
         return {
           id: e.id,
+          slug: e.slug,
           title: e.title,
           description: e.description,
           startsAt: e.starts_at,
@@ -100,13 +78,4 @@ export async function loadEvents(signal) {
   return result
     .filter((e) => new Date(e.startsAt) >= new Date())
     .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
-}
-export async function login(email, password) {
-  const response = await fetch(`${apiBase}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!response.ok) throw new Error("Login failed");
-  return response.json();
 }

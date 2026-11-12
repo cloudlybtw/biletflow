@@ -1,6 +1,14 @@
 import { cities, cityLabel } from "../../data/i18n";
 import "./Navbar.css";
-export default function Navbar({ t, lang, setLang, city, setCity, onSignIn }) {
+export default function Navbar({
+  t,
+  lang,
+  setLang,
+  city,
+  setCity,
+  onSignIn,
+  user,
+}) {
   return (
     <header className="site-header">
       <nav className="nav-inner" aria-label={t.discover}>
@@ -42,7 +50,7 @@ export default function Navbar({ t, lang, setLang, city, setCity, onSignIn }) {
             <option value="kk">ҚАЗ</option>
           </select>
           <button className="sign-in" onClick={onSignIn}>
-            {t.signIn}
+            {user ? user.full_name : t.signIn}
             <span aria-hidden="true"> ↗</span>
           </button>
         </div>

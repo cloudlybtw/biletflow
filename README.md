@@ -28,8 +28,12 @@ npm ci
 npm run dev
 ```
 
-The frontend includes a responsive, three-language discovery homepage with
-shared filters and the BiletFlow API adapter.
+The web app includes live discovery, buyer checkout/tickets/support,
+organizer event/campaign/reporting workflows, and platform administration.
+For the production web proxy, run `docker compose up --build -d web` and open
+`http://localhost:${WEB_PORT:-5173}`. The proxy serves `/api/` from the backend
+and falls back to the SPA for verification/reset/campaign links. In development,
+Vite proxies `/api` to port 8000; set `VITE_API_BASE_URL` for another API origin.
 
 ## Backend development and checks
 
@@ -53,7 +57,8 @@ uv run python -m app.scripts.export_openapi
 ```
 
 CI runs the backend suite against PostgreSQL 16. Frontend checks are
-`npm run lint` and `npm run build`.
+`npm run lint`, `npm test`, and `npm run build`. CI also generates/analyzes/tests
+the Flutter app with pinned Flutter 3.50.0 / Dart 3.14.0.
 
 ## Current backend scope
 
@@ -85,3 +90,23 @@ See the [M2/M3 integration guide](docs/api-m2-m3.md),
 [backend demo and SRS acceptance map](docs/demo-flow.md),
 [implementation status](docs/milestones.md), [ERD](docs/erd.md), and
 [generated OpenAPI contract](docs/openapi.json).
+
+## Integration, hardening, and bonuses
+
+React stores its per-tab session in sessionStorage, rotates tokens through a
+single refresh exchange, gates private/role routes, and displays backend errors.
+Checkout totals, payment outcomes, tickets, support threads, analytics and
+moderation all come from the API. The seed creates realistic future events,
+orders, promotions, support conversations and scanner assignments; see
+[demo setup, reset and rehearsal](docs/demo-flow.md).
+
+Assigned seating has seat maps, expiring owned holds/release and atomic checkout.
+Events expose ICS and Google/Outlook links. Support accepts private normalized
+screenshots; it does not accept arbitrary files. See the generated API contract.
+
+CORS origins and login/promo request limits are configurable in `.env.example`.
+The MVP limiter is process-local; shared ingress/Redis limits are needed for
+multiple workers. Security, dependency decisions and verification limits are in
+[security-and-testing.md](docs/security-and-testing.md). Native Chrome desktop/mobile visual review is recorded in
+[the acceptance log](docs/acceptance-2026-11-13.md). Physical device scanning
+remains a separate manual acceptance check.

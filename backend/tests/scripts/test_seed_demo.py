@@ -35,3 +35,33 @@ async def test_seeded_accounts_can_log_in(client: AsyncClient, db_session: Async
         )
         assert response.status_code == 200, account.email
         assert response.json()["user"]["email_verified"] is True
+
+
+async def test_scenarios_are_complete_and_reruns_do_not_duplicate_history(db_session):
+    from app.modules.campaigns.models import Campaign, CampaignQR
+    from app.modules.checkin.models import CheckInRecord
+    from app.modules.events.models import Event
+    from app.modules.orders.models import Order
+    from app.modules.support.models import SupportCase, SupportMessage
+    from app.modules.tickets.models import Ticket
+    from app.modules.users.models import StaffAssignment
+
+    await seed(db_session)
+    models = [
+        Event,
+        Campaign,
+        CampaignQR,
+        Order,
+        Ticket,
+        SupportCase,
+        SupportMessage,
+        StaffAssignment,
+        CheckInRecord,
+    ]
+    first = [await _count(db_session, model) for model in models]
+    assert first == [2, 1, 1, 2, 4, 2, 4, 2, 2]
+    await seed(db_session)
+    assert [await _count(db_session, model) for model in models] == first
+    orders = (await db_session.scalars(select(Order))).all()
+    assert all(order.status == "completed" for order in orders)
+    assert sorted(order.total_amount for order in orders) == [0, 7650]
