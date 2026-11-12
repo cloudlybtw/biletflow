@@ -1,0 +1,90 @@
+.experience-hero { position: relative; isolation: isolate; overflow: hidden; min-height: 620px; height: min(740px, calc(100svh - 76px)); background: #21122f; color: #fffaf3; display: grid; place-items: center; }
+.experience-glow { position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 45%, #70429680, transparent 68%); }
+.experience-art { position: absolute; inset: 0; pointer-events: none; perspective: 1000px; }
+.experience-content { position: relative; text-align: center; width: min(560px, calc(100% - 40px)); padding: 40px 0; }
+.experience-kicker { font-size: 24px; font-weight: 700; letter-spacing: -1px; animation: experience-reveal .55s 1.55s both; }
+.experience-kicker span { display: block; font-size: 8px; letter-spacing: 2px; font-weight: 400; margin-top: 9px; color: #d4bce9; }
+.experience-content h1 { font-size: clamp(52px, 5.8vw, 82px); line-height: 1.04; letter-spacing: -4px; margin-top: 23px; animation: experience-reveal .65s 1.65s both; }
+.experience-content h1 em { font-style: normal; color: #cfacf5; }
+.experience-subtitle { font-size: 13px; line-height: 1.7; max-width: 380px; margin: 22px auto 0; color: #e0d4e8; animation: experience-reveal .5s 1.9s both; }
+.experience-search { display: flex; align-items: center; gap: 12px; width: min(430px, 100%); margin: 25px auto 0; padding: 6px 6px 6px 19px; border-radius: 8px; background: #fffaf6; color: var(--plum); box-shadow: 0 8px 30px #10061a30; animation: search-unfold .55s 2.1s both; }
+.experience-search svg { width: 20px; flex-shrink: 0; }
+.experience-search input { width: 100%; min-width: 0; border: 0; background: none; font-size: 14px; padding: 9px 0; }
+.experience-search button { background: var(--violet); color: white; width: 44px; height: 44px; flex-shrink: 0; border-radius: 5px; font-size: 24px; transition: background .2s; }
+.experience-search button:hover { background: #542597; }
+.experience-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px 24px; margin-top: 21px; font-size: 12px; animation: experience-reveal .5s 2.3s both; }
+.experience-actions a { border-bottom: 1px solid #cba7e7; padding: 6px 0; }
+.experience-actions a span { margin-left: 14px; }
+.experience-actions button { color: #cbb9d9; padding: 6px 0; }
+.experience-actions a:hover, .experience-actions button:hover { color: #dfb8ff; }
+.experience-coordinate, .experience-note { position: absolute; bottom: 24px; font-size: 8px; letter-spacing: 1.8px; color: #c6b0d5; }
+.experience-coordinate { left: 32px; }
+.experience-note { right: 32px; }
+.intro-skip { position: absolute; right: 24px; top: 20px; padding: 12px; min-height: 44px; color: #e0cbee; font-size: 11px; }
+.experience-card { position: absolute; left: 50%; top: 50%; width: clamp(145px, 16vw, 235px); aspect-ratio: .77; border-radius: 9px; overflow: hidden; background: #dbc1f4; box-shadow: 0 20px 50px #08020f55; transform: translate(-50%, -50%) translate(var(--x), var(--y)) rotate(var(--r)); animation: ticket-to-world 1.1s .85s both cubic-bezier(.2,.75,.15,1); }
+.experience-card img { height: 100%; animation: photo-develop .65s 1s both; }
+.scene-concert { --x: -36vw; --y: -105px; --r: -13deg; --start: -95px; }
+.scene-festival { --x: 36vw; --y: -112px; --r: 12deg; --start: 95px; }
+.scene-theatre { --x: -32vw; --y: 155px; --r: 7deg; --start: -45px; }
+.scene-culture { --x: 33vw; --y: 155px; --r: -9deg; --start: 45px; }
+.scene-caption { position: absolute; inset: 40% 0 0; display: flex; flex-direction: column; justify-content: end; padding: 18px; background: linear-gradient(transparent, #14091de8); animation: photo-develop .5s 1.4s both; }
+.scene-caption small { font-size: 7px; letter-spacing: 1.4px; color: #e3d2ef; }
+.scene-caption strong { font-size: 23px; margin-top: 6px; letter-spacing: -.7px; }
+.scene-caption > span { position: absolute; right: 16px; bottom: 20px; font-size: 22px; }
+.opening-ticket { position: absolute; width: 340px; height: 184px; left: calc(50% - 170px); top: calc(50% - 92px); display: flex; transform-style: preserve-3d; animation: ticket-float 1.2s both; }
+.ticket-body, .ticket-stub { background: #f0dcff; color: #36164e; position: relative; box-shadow: inset 0 0 40px #b78dd53b; }
+.ticket-body { width: 260px; padding: 20px; border-radius: 9px 0 0 9px; clip-path: polygon(0 0,100% 0,97% 8%,100% 16%,97% 24%,100% 32%,97% 40%,100% 48%,97% 56%,100% 64%,97% 72%,100% 80%,97% 88%,100% 96%,100% 100%,0 100%); animation: tear-left .55s .72s both; }
+.ticket-brand { display: flex; justify-content: space-between; font-size: 19px; font-weight: 700; letter-spacing: -.8px; }
+.ticket-brand > span { font-size: 25px; line-height: 1; }
+.ticket-body > small { font-size: 6px; letter-spacing: 1.4px; display: block; margin-top: 6px; }
+.ticket-body > strong { display: block; font-size: 27px; letter-spacing: -1px; line-height: 1.05; margin-top: 12px; }
+.ticket-footer { display: flex; justify-content: space-between; font-size: 6px; letter-spacing: 1px; margin-top: 13px; }
+.ticket-stub { width: 80px; border-radius: 0 9px 9px 0; border-left: 1px dashed #6c409386; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 13px; transform-origin: top left; animation: tear-right .6s .72s both; }
+.ticket-stub > span { writing-mode: vertical-rl; font-size: 8px; letter-spacing: 2px; }
+.ticket-stub i { width: 44px; height: 22px; background: repeating-linear-gradient(90deg, #36164e 0 2px, transparent 2px 4px, #36164e 4px 5px, transparent 5px 8px); }
+.ticket-stub small { font-size: 6px; letter-spacing: 1px; }
+.tear-thread { position: absolute; left: 258px; top: 0; height: 100%; width: 2px; background: #fff9ec; transform-origin: top; animation: perforation .45s .68s both; }
+@keyframes ticket-float { 0% { opacity: 0; transform: translateY(25px) rotateX(20deg) rotateY(-18deg) rotate(-9deg) scale(.85); } 30% { opacity: 1; } 58% { transform: translateY(-8px) rotateX(-8deg) rotateY(12deg) rotate(-5deg); } 100% { transform: rotateX(0) rotateY(0) rotate(-3deg); } }
+@keyframes tear-left { 0%,20% { transform: none; opacity: 1; } 48% { transform: translate(-12px,3px) rotate(-5deg); opacity: 1; } 100% { transform: translate(-130px,-25px) rotate(-18deg) scale(.65); opacity: 0; } }
+@keyframes tear-right { 0% { transform: none; opacity: 1; } 35% { transform: translate(8px,-9px) rotate(15deg) rotateY(-25deg); opacity: 1; } 65% { opacity: 1; } 100% { transform: translate(140px,15px) rotate(36deg) scale(.65); opacity: 0; } }
+@keyframes perforation { 0% { transform: scaleY(0); opacity: 0; } 35% { opacity: 1; } 80% { transform: scaleY(1); opacity: 1; } 100% { opacity: 0; } }
+@keyframes ticket-to-world { 0% { opacity: 0; transform: translate(-50%,-50%) translateX(var(--start)) scale(.23,.55) rotate(0deg); border-radius: 0; } 17% { opacity: 1; } 70% { transform: translate(-50%,-50%) translate(var(--x),var(--y)) rotate(var(--r)) scale(1.04); } 100% { opacity: 1; transform: translate(-50%,-50%) translate(var(--x),var(--y)) rotate(var(--r)); } }
+@keyframes photo-develop { from { opacity: 0; } to { opacity: 1; } }
+@keyframes experience-reveal { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes search-unfold { from { opacity: 0; transform: translateY(12px) scaleX(.85); } to { opacity: 1; transform: none; } }
+.is-settled .opening-ticket { display: none; }
+.is-settled .experience-content > *, .is-settled .experience-card, .is-settled .experience-card img, .is-settled .scene-caption { animation: none; }
+@media (max-width: 1000px) {
+ .experience-card { width: 175px; }
+ .scene-concert { --x: -43vw; --y: -120px; }
+ .scene-festival { --x: 43vw; --y: -120px; }
+ .scene-theatre { --x: -43vw; --y: 150px; }
+ .scene-culture { --x: 43vw; --y: 150px; }
+ .experience-content { width: min(480px, calc(100% - 40px)); }
+}
+@media (max-width: 600px) {
+ .experience-hero { min-height: 670px; height: auto; align-items: start; }
+ .experience-content { padding-top: 48px; }
+ .experience-content h1 { font-size: 56px; letter-spacing: -2.8px; }
+ .experience-kicker { font-size: 22px; }
+ .experience-kicker span { font-size: 7px; letter-spacing: 1px; }
+ .experience-subtitle { max-width: 300px; font-size: 12px; margin-top: 17px; }
+ .experience-search { margin-top: 20px; }
+ .experience-search input { font-size: 16px; }
+ .experience-actions { font-size: 11px; gap: 12px 20px; margin-top: 14px; }
+ .experience-card { width: 112px; top: 535px; }
+ .scene-concert { --x: -139px; --y: 10px; --r: -15deg; }
+ .scene-festival { --x: -47px; --y: -5px; --r: -5deg; }
+ .scene-theatre { --x: 47px; --y: -5px; --r: 5deg; }
+ .scene-culture { --x: 139px; --y: 10px; --r: 15deg; }
+ .scene-caption { padding: 10px; }
+ .scene-caption small { font-size: 5px; letter-spacing: .5px; }
+ .scene-caption strong { font-size: 15px; }
+ .scene-caption > span { display: none; }
+ .experience-coordinate { left: 20px; bottom: 18px; font-size: 7px; }
+ .experience-note { display: none; }
+ .opening-ticket { transform: scale(.9); }
+ .intro-skip { top: 4px; right: 10px; }
+ @keyframes ticket-to-world { 0% { opacity: 0; transform: translate(-50%,-50%) translate(var(--start),-200px) scale(.4,.7); } 20% { opacity: 1; } 100% { opacity: 1; transform: translate(-50%,-50%) translate(var(--x),var(--y)) rotate(var(--r)); } }
+}
+@media (prefers-reduced-motion: reduce) { .opening-ticket, .intro-skip { display: none; } }
