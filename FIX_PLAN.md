@@ -37,12 +37,12 @@ checks complete based only on source inspection. No deployment is implied.
   passed; **17 tests passed**. `flutter analyze --no-fatal-infos` passed with
   zero errors/warnings and 14 existing Material import deprecation infos.
   Lockfile updated only for three SDK-pinned transitive packages (`meta`,
-  `test_api`, `vector_math`). Added a pinned mobile CI job; remote execution
-  awaits push. Printed-ticket/camera/device acceptance remains F11.
+  `test_api`, `vector_math`). The pinned mobile CI job passed remotely on PR #6.
+  Printed-ticket/camera/device acceptance remains F11.
 - F02: `npm run lint` and `npm run build` passed. Split shared constants from
   React component exports. Removed the undefined organizer order fixture access;
   F05 now supplies live organizer order data. Added the `web` CI job (Node 24, npm ci,
-  lint, production build). Remote execution awaits push.
+  lint, production build), which passed remotely on PR #6.
 
 ### Pass 1 — live integration (completed 2026-11-13)
 
