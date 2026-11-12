@@ -26,7 +26,7 @@ export default function Navbar({ t, lang, setLang, city, setCity, onSignIn }) {
           </select>
         </label>
         <div className="nav-links">
-          <a className="nav-active" href="#discover">
+          <a className="nav-active" href="#/events">
             {t.discover}
           </a>
           <a href="#organizers">{t.organizers}</a>
