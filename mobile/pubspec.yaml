@@ -1,0 +1,32 @@
+name: biletflow_verify
+description: BiletFlow Verification App - ticket check-in for event staff.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.0.0
+  go_router: ^16.0.0
+  dio: ^5.8.0
+  flutter_secure_storage: ^9.2.4
+  mobile_scanner: ^7.0.0
+  permission_handler: ^12.0.0
+  connectivity_plus: ^6.1.0
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.12.0
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.15
+  freezed: ^3.0.0
+  json_serializable: ^6.9.5
+
+flutter:
+  uses-material-design: true
