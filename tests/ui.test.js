@@ -678,3 +678,19 @@ test("completed order offers calendar links", async () => {
     ),
   );
 });
+
+test("skip control focuses main without changing the router location", async () => {
+  handle = (url) => {
+    if (url.startsWith("/api/v1/orders?")) return json({ items: [], total: 0 });
+    if (url.startsWith("/api/v1/tickets?"))
+      return json({ items: [], total: 0 });
+    throw new Error(`Unexpected ${url}`);
+  };
+  await render(AttendeeApp, { path: "/account" });
+  const before = location.hash;
+  const skip = document.querySelector(".bf-skip");
+  assert.ok(skip);
+  await act(() => skip.click());
+  assert.equal(document.activeElement, document.querySelector("main"));
+  assert.equal(location.hash, before);
+});

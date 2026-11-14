@@ -25,6 +25,8 @@ export default function ProductApp({ route }) {
       "/verify-email": "Verify your email",
     };
     document.title = `${translate(titles[path] || "BiletFlow")} | BiletFlow`;
+  }, [path, locale]);
+  useEffect(() => {
     if (typeof window.requestAnimationFrame !== "function") return;
     const frame = window.requestAnimationFrame(() => {
       const heading = document.querySelector("main h1");
@@ -34,7 +36,7 @@ export default function ProductApp({ route }) {
       }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [path, locale, loading]);
+  }, [path, loading]);
   const protectedRoute = [
     "/account",
     "/organizer",

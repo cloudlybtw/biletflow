@@ -15,6 +15,18 @@ export function Topbar() {
   const [error, setError] = useState("");
   return (
     <header className="bf-top">
+      <button
+        className="bf-skip"
+        onClick={() => {
+          const main = document.querySelector("main");
+          if (main) {
+            main.tabIndex = -1;
+            main.focus();
+          }
+        }}
+      >
+        {translate("Skip to content")}
+      </button>
       <a href="/" className="bf-brand">
         biletflow<span>.</span>
       </a>
