@@ -199,6 +199,9 @@ async def test_cancel_releases_pending_and_unattached_holds_without_altering_oth
                 venue_id=uuid.UUID("20000000-0000-0000-0000-000000000001"), seating_mode="assigned"
             )
         )
+    from tests.factories import configure_seat_prices
+
+    await configure_seat_prices(db_session, context.event_id, context.ticket_type.id)
     attached = await create_seat_hold(
         db_session, context.event_id, seats[0], context.ticket_type.id, context.buyer
     )

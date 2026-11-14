@@ -193,6 +193,7 @@ function TicketTypes({ base }) {
           )}
         />
       </State>
+      <SeatConfiguration base={base} tickets={resource.data || []} />
       <h2>Inventory by ticket type</h2>
       <RemoteTable
         path={`${base}/inventory`}
@@ -1125,5 +1126,67 @@ function Payouts({ base }) {
         />
       </State>
     </>
+  );
+}
+
+function SeatConfiguration({ base, tickets }) {
+  const event = useResource(base);
+  const venue = useResource(
+    event.data?.seating_mode === "assigned" && event.data?.venue_id
+      ? `/venues/${event.data.venue_id}`
+      : null,
+  );
+  const prices = useResource(
+    event.data?.seating_mode === "assigned" ? `${base}/seat-prices` : null,
+  );
+  if (event.data?.seating_mode !== "assigned") return null;
+  const seats = (venue.data?.sections || []).flatMap((section) =>
+    section.rows.flatMap((row) =>
+      row.seats.map((seat) => [
+        seat.id,
+        `${section.name} ${row.label} ${seat.seat_number}`,
+      ]),
+    ),
+  );
+  return (
+    <section className="bf-panel">
+      <h2>Seat pricing and availability</h2>
+      <State resource={prices}>
+        {prices.data?.map((category) => (
+          <Form
+            key={`${category.price_category_id}-${category.ticket_type_id}`}
+            fields={[
+              {
+                name: "ticket_type_id",
+                label: category.name,
+                nullable: true,
+                options: tickets
+                  .filter((t) => !t.is_hidden)
+                  .map((t) => [t.id, `${t.name} · ${t.price_amount} KZT`]),
+              },
+            ]}
+            initial={category}
+            submit={(body) =>
+              api(`${base}/seat-prices/${category.price_category_id}`, {
+                method: "PATCH",
+                body,
+              })
+            }
+            done={prices.reload}
+          />
+        ))}
+      </State>
+      <Form
+        fields={[
+          { name: "seat_id", label: "Seat", required: true, options: seats },
+          { name: "blocked", label: "Block seat", type: "checkbox" },
+          { name: "reason", label: "Reason", required: true, maxLength: 500 },
+        ]}
+        label="Update seat availability"
+        submit={({ seat_id, ...body }) =>
+          api(`${base}/seats/${seat_id}/block`, { method: "PATCH", body })
+        }
+      />
+    </section>
   );
 }

@@ -648,6 +648,27 @@
         "title": "AttendeeOut",
         "type": "object"
       },
+      "BlockUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "blocked": {
+            "title": "Blocked",
+            "type": "boolean"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "blocked",
+          "reason"
+        ],
+        "title": "BlockUpdate",
+        "type": "object"
+      },
       "Body_upload_api_v1_support_cases__case_id__messages__message_id__attachments_post": {
         "properties": {
           "file": {
@@ -5417,6 +5438,72 @@
         "title": "PriceCategoryOut",
         "type": "object"
       },
+      "PriceOut": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Amount"
+          },
+          "price_category_id": {
+            "format": "uuid",
+            "title": "Price Category Id",
+            "type": "string"
+          },
+          "ticket_type_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Type Id"
+          }
+        },
+        "required": [
+          "price_category_id",
+          "name",
+          "ticket_type_id",
+          "price_amount"
+        ],
+        "title": "PriceOut",
+        "type": "object"
+      },
+      "PriceUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "ticket_type_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Type Id"
+          }
+        },
+        "required": [
+          "ticket_type_id"
+        ],
+        "title": "PriceUpdate",
+        "type": "object"
+      },
       "PromoReportOut": {
         "properties": {
           "campaign_id": {
@@ -7607,6 +7694,17 @@
             "title": "Accessible",
             "type": "boolean"
           },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          },
           "held_by_me": {
             "title": "Held By Me",
             "type": "boolean"
@@ -7620,6 +7718,29 @@
             "title": "Number",
             "type": "string"
           },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Amount"
+          },
+          "price_category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Category Id"
+          },
           "row": {
             "title": "Row",
             "type": "string"
@@ -7631,6 +7752,18 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "ticket_type_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Type Id"
           },
           "x": {
             "title": "X",
@@ -7650,6 +7783,10 @@
           "x",
           "y",
           "status",
+          "price_category_id",
+          "ticket_type_id",
+          "price_amount",
+          "category_name",
           "held_by_me"
         ],
         "title": "SeatOut",
@@ -16080,6 +16217,130 @@
         ]
       }
     },
+    "/api/v1/events/{event_id}/seat-prices": {
+      "get": {
+        "operationId": "list_prices_api_v1_events__event_id__seat_prices_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PriceOut"
+                  },
+                  "title": "Response List Prices Api V1 Events  Event Id  Seat Prices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Prices",
+        "tags": [
+          "seat configuration"
+        ]
+      }
+    },
+    "/api/v1/events/{event_id}/seat-prices/{category_id}": {
+      "patch": {
+        "operationId": "set_price_api_v1_events__event_id__seat_prices__category_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PriceOut"
+                  },
+                  "title": "Response Set Price Api V1 Events  Event Id  Seat Prices  Category Id  Patch",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Price",
+        "tags": [
+          "seat configuration"
+        ]
+      }
+    },
     "/api/v1/events/{event_id}/seats": {
       "get": {
         "operationId": "seat_map_api_v1_events__event_id__seats_get",
@@ -16152,6 +16413,67 @@
         "summary": "Seat Map",
         "tags": [
           "assigned seating"
+        ]
+      }
+    },
+    "/api/v1/events/{event_id}/seats/{seat_id}/block": {
+      "patch": {
+        "operationId": "block_seat_api_v1_events__event_id__seats__seat_id__block_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seat Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Block Seat",
+        "tags": [
+          "seat configuration"
         ]
       }
     },

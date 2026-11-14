@@ -1,0 +1,3 @@
+BEGIN;
+CREATE TABLE event_seat_blocks(event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,seat_id UUID NOT NULL REFERENCES seats(id) ON DELETE CASCADE,reason TEXT NOT NULL CHECK(length(reason) BETWEEN 1 AND 500),PRIMARY KEY(event_id,seat_id));
+COMMIT;

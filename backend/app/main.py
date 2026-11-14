@@ -29,6 +29,7 @@ from app.modules.payments.router import router as payments_router
 from app.modules.refunds.router import router as refunds_router
 from app.modules.support.attachments import router as attachments_router
 from app.modules.support.router import router as support_router
+from app.modules.ticketing.seat_config import router as seat_config_router
 from app.modules.ticketing.seating import router as seating_router
 from app.modules.tickets.router import router as tickets_router
 from app.modules.users.router import router as users_router
@@ -72,6 +73,7 @@ def create_app(*, session_factory=AsyncSessionLocal) -> FastAPI:
     app.include_router(organizers_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
     app.include_router(calendar_router, prefix="/api/v1")
+    app.include_router(seat_config_router, prefix="/api/v1")
     app.include_router(seating_router, prefix="/api/v1")
     app.include_router(attachments_router, prefix="/api/v1")
     app.include_router(notifications_router, prefix="/api/v1")

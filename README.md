@@ -121,3 +121,7 @@ Customer screens share Kazakh/Russian/English language selection. See
 measurements and remaining device/accessibility checks, and
 [backup and isolated recovery](docs/backup-recovery.md) for daily timer setup and
 restore instructions. Hosting/encryption (M11.6) remains deferred.
+
+Assigned-seat pricing, blocked seats and updated calendar exports are documented
+in [seating and calendar workflows](docs/seating-calendar.md). Apply migration
+`0009_seat_configuration` and configure venue price categories before seat sales.

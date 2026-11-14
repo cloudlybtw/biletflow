@@ -1,0 +1,9 @@
+// Flutter's included Gradle build uses plugin resolution independently of the
+// app. Resolve Kotlin plugin dependencies from Maven Central as well as Portal.
+beforeSettings { settings ->
+    settings.pluginManagement.repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}

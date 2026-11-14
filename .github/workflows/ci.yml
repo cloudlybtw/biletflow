@@ -30,6 +30,12 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Configure repositories for included Flutter Gradle build
+        run: |
+          mkdir -p "$HOME/.gradle/init.d"
+          cp android/gradle/ci-repositories.init.gradle "$HOME/.gradle/init.d/biletflow-repositories.gradle"
       - run: flutter build apk --debug
 
   ios-build:
@@ -45,7 +51,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build ios --debug --no-codesign
+      - run: dart run build_runner build
+      - run: flutter build ios --simulator --debug
 
   web:
     runs-on: ubuntu-latest

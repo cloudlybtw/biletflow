@@ -18,6 +18,7 @@ from app.modules.orders.checkout import ensure_sales_open
 from app.modules.orders.service import expire_event_locked, now_utc
 from app.modules.ticketing.holds import SeatHold, SeatHoldStatus
 from app.modules.ticketing.models import TicketType
+from app.modules.ticketing.seat_config import SeatBlock, SeatPrice, validate_seat_types
 from app.modules.tickets.models import Ticket, TicketStatus
 from app.modules.users.models import User
 from app.modules.venues.models import Seat, VenueRow, VenueSection
@@ -55,6 +56,10 @@ class SeatOut(BaseModel):
     x: float
     y: float
     status: str
+    price_category_id: uuid.UUID | None
+    ticket_type_id: uuid.UUID | None
+    price_amount: int | None
+    category_name: str | None
     held_by_me: bool
 
 
@@ -101,6 +106,42 @@ async def seat_map(
             )
         ).all()
     }
+    from app.modules.venues.models import PriceCategory
+
+    categories = {
+        c.id: c.name
+        for c in (
+            await session.scalars(
+                select(PriceCategory).where(PriceCategory.venue_id == event.venue_id)
+            )
+        ).all()
+    }
+    mapping = dict(
+        (
+            await session.execute(
+                select(SeatPrice.price_category_id, TicketType)
+                .join(TicketType, TicketType.id == SeatPrice.ticket_type_id)
+                .where(SeatPrice.event_id == event.id, TicketType.event_id == event.id)
+            )
+        ).all()
+    )
+    blocked = set(
+        (
+            await session.scalars(select(SeatBlock.seat_id).where(SeatBlock.event_id == event.id))
+        ).all()
+    )
+
+    def configured(seat):
+        ticket = mapping.get(seat.price_category_id)
+        return (
+            ticket
+            and not ticket.is_hidden
+            and ticket.quantity_total > ticket.quantity_sold + ticket.quantity_reserved
+            and (not ticket.sales_start_at or ticket.sales_start_at <= now_utc())
+            and (not ticket.sales_end_at or ticket.sales_end_at > now_utc())
+            and (not ticket.price_amount or event.paid_sales_status == "active")
+        )
+
     return Page(
         items=[
             SeatOut(
@@ -111,7 +152,21 @@ async def seat_map(
                 accessible=seat.is_accessible,
                 x=float(seat.position_x),
                 y=float(seat.position_y),
-                status="sold" if seat.id in sold else "held" if seat.id in holds else "available",
+                status="sold"
+                if seat.id in sold
+                else "held"
+                if seat.id in holds
+                else "unavailable"
+                if seat.id in blocked or not configured(seat)
+                else "available",
+                price_category_id=seat.price_category_id,
+                ticket_type_id=mapping[seat.price_category_id].id
+                if seat.price_category_id in mapping
+                else None,
+                price_amount=mapping[seat.price_category_id].price_amount
+                if seat.price_category_id in mapping
+                else None,
+                category_name=categories.get(seat.price_category_id),
                 held_by_me=bool(
                     user and seat.id in holds and holds[seat.id].held_by_user_id == user.id
                 ),
@@ -160,6 +215,13 @@ async def create_holds(
     if ticket.price_amount and event.paid_sales_status != "active":
         raise AppError("PAID_SALES_INACTIVE", "Paid ticket sales are not active.", 409)
     seats = (await session.execute(venue_seats(event).where(Seat.id.in_(data.seat_ids)))).all()
+    from types import SimpleNamespace
+
+    await validate_seat_types(
+        session,
+        event.id,
+        [SimpleNamespace(seat_id=seat.id, ticket_type_id=ticket.id) for seat, _, _ in seats],
+    )
     if len(seats) != len(data.seat_ids):
         raise AppError("INVALID_SEAT", "Selected seats must belong to this event's venue.", 422)
     held = await session.scalar(

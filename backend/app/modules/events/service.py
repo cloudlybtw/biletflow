@@ -213,6 +213,16 @@ async def update_event(session: AsyncSession, access: EventAccess, data: EventUp
         setattr(event, key, getattr(merged, key))
     await audit(session, access, "event.updated", event, {"before": before, "after": changes})
     changed_fields = [key for key in changes if before[key] != getattr(merged, key)]
+    if set(changed_fields) & {
+        "title",
+        "description",
+        "starts_at",
+        "ends_at",
+        "timezone",
+        "venue_id",
+        "slug",
+    }:
+        event.ics_sequence += 1
     if changed_fields:
         buyers = (
             await session.scalars(

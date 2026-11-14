@@ -27,6 +27,7 @@ async def test_m2_m11_migrations_upgrade_downgrade_upgrade():
                 "0006_checkout_guards",
                 "0007_activation_moderation",
                 "0008_operational_workflows",
+                "0009_seat_configuration",
             ]:
                 await connection.execute((MIGRATIONS_DIR / f"{name}.up.sql").read_text())
             assert await connection.fetchval("SELECT count(*) FROM event_categories") == 4
@@ -53,6 +54,7 @@ async def test_m2_m11_migrations_upgrade_downgrade_upgrade():
             assert "uq_payments_initiated_ticket_order" in indexes
             assert "uq_payments_live_activation" in indexes
             for name in [
+                "0009_seat_configuration",
                 "0008_operational_workflows",
                 "0007_activation_moderation",
                 "0006_checkout_guards",

@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.deps import optional_current_user
 from app.db.session import get_session
 from app.modules.events.models import EventStatus, EventVisibility
@@ -36,6 +37,10 @@ def fold(line):
             current = " "
         current += character
     return "\r\n".join([*chunks, current])
+
+
+def event_url(event):
+    return get_settings().web_base_url.rstrip("/") + "/#/events/" + event.slug
 
 
 def stamp(value):
@@ -68,6 +73,7 @@ async def calendar(
         "PRODID:-//BiletFlow//Events//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
+        f"X-WR-TIMEZONE:{escape(event.timezone)}",
         "BEGIN:VEVENT",
         f"UID:{escape(event.ics_uid)}",
         f"SEQUENCE:{event.ics_sequence}",
@@ -77,6 +83,7 @@ async def calendar(
         f"SUMMARY:{escape(event.title)}",
         f"DESCRIPTION:{escape(event.description)}",
         f"LOCATION:{escape(location)}",
+        f"URL:{escape(event_url(event))}",
         f"STATUS:{'CANCELLED' if event.status == EventStatus.CANCELLED else 'CONFIRMED'}",
         "END:VEVENT",
         "END:VCALENDAR",
@@ -103,7 +110,8 @@ async def links(
                 "action": "TEMPLATE",
                 "text": event.title,
                 "dates": stamp(event.starts_at) + "/" + stamp(event.ends_at),
-                "details": event.description or "",
+                "details": (event.description or "") + "\n" + event_url(event),
+                "ctz": event.timezone,
                 "location": location,
             }
         ),
@@ -113,7 +121,7 @@ async def links(
                 "subject": event.title,
                 "startdt": event.starts_at.isoformat(),
                 "enddt": event.ends_at.isoformat(),
-                "body": event.description or "",
+                "body": (event.description or "") + "\n" + event_url(event),
                 "location": location,
             }
         ),

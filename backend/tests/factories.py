@@ -304,3 +304,20 @@ async def complete_purchase(client, context, **checkout_options):
     )
     assert response.status_code == 200, response.text
     return response.json()
+
+
+async def configure_seat_prices(session, event_id, ticket_type_id):
+    from sqlalchemy import select
+
+    from app.modules.ticketing.seat_config import SeatPrice
+    from app.modules.venues.models import PriceCategory
+
+    categories = (await session.scalars(select(PriceCategory))).all()
+    for category in categories:
+        if not await session.get(SeatPrice, (event_id, category.id)):
+            session.add(
+                SeatPrice(
+                    event_id=event_id, price_category_id=category.id, ticket_type_id=ticket_type_id
+                )
+            )
+    await session.flush()

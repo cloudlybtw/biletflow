@@ -608,3 +608,73 @@ test("admin payout review submits the selected transition and note to the API", 
   await submit(form);
   assert.ok(updated);
 });
+
+test("spatial seats expose prices, selection and disabled states", async () => {
+  const SeatMap = (await server.ssrLoadModule("/src/pages/SeatMap.jsx"))
+    .default;
+  let selected = [];
+  const seats = [
+    {
+      id: "s1",
+      section: "Main",
+      row: "A",
+      number: "1",
+      x: 10,
+      y: 10,
+      status: "available",
+      ticket_type_id: "t1",
+      price_amount: 1000,
+      accessible: true,
+    },
+    {
+      id: "s2",
+      section: "Main",
+      row: "B",
+      number: "2",
+      x: 20,
+      y: 20,
+      status: "unavailable",
+      ticket_type_id: "t1",
+      price_amount: 1000,
+    },
+  ];
+  await render(SeatMap, {
+    seats,
+    selected,
+    setSelected: (value) => {
+      selected = value;
+    },
+    ticketTypeId: "t1",
+  });
+  assert.match(document.body.textContent, /1,000|1 000/);
+  const inputs = document.querySelectorAll('input[type="checkbox"]');
+  assert.equal(inputs[1].disabled, true);
+  await act(() => inputs[0].click());
+  assert.deepEqual(selected, ["s1"]);
+  assert.equal(inputs[1].closest("label").style.gridRow, "2");
+});
+
+test("completed order offers calendar links", async () => {
+  handle = (url) => {
+    if (url === "/api/v1/orders/order-calendar")
+      return json({
+        id: "order-calendar",
+        event_id: "event-1",
+        order_number: "BF-CAL",
+        status: "completed",
+        ticket_ids: [],
+      });
+    if (url === "/api/v1/events/event-1/calendar-links")
+      return json({
+        google: "https://calendar.google.com/calendar/render",
+        outlook: "https://outlook.live.com/calendar/compose",
+      });
+    throw new Error(`Unexpected ${url}`);
+  };
+  await render(AttendeeApp, { path: "/account/orders/order-calendar" });
+  assert.ok(
+    [...document.querySelectorAll("a")].some(
+      (a) => a.textContent === "Google Calendar",
+    ),
+  );
+});

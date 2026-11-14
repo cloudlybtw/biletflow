@@ -32,6 +32,9 @@ async def seated(db_session, context):
             .limit(2)
         )
     ).all()
+    from tests.factories import configure_seat_prices
+
+    await configure_seat_prices(db_session, context.event_id, context.ticket_type.id)
     holds = [
         SeatHold(
             event_id=context.event_id,

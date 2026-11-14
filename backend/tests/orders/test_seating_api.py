@@ -23,6 +23,9 @@ async def seat_context(db_session, context):
     await db_session.execute(
         update(TicketType).where(TicketType.id == context.ticket_type.id).values(price_amount=0)
     )
+    from tests.factories import configure_seat_prices
+
+    await configure_seat_prices(db_session, context.event_id, context.ticket_type.id)
     await db_session.commit()
     return context
 
@@ -123,3 +126,91 @@ async def test_expired_holds_are_reclaimed_and_duplicate_input_rejected(
         )
     ).status_code == 422
     assert (await client.post(path, json=body)).status_code == 401
+
+
+async def test_seat_configuration_pricing_blocks_and_checkout_revalidation(
+    client, db_session, seat_context
+):
+    from app.modules.organizers.models import OrganizerProfile
+    from app.modules.ticketing.seat_config import SeatPrice
+    from app.modules.users.models import User
+    from tests.factories import create_ticket_type
+
+    c = seat_context
+    profile = await db_session.scalar(
+        select(OrganizerProfile)
+        .join(Event, Event.organizer_profile_id == OrganizerProfile.id)
+        .where(Event.id == c.event_id)
+    )
+    owner = await db_session.get(User, profile.user_id)
+    seat = await db_session.scalar(select(Seat).order_by(Seat.id))
+    other = await create_ticket_type(
+        db_session, c.event_id, name="Other category", price_amount=500
+    )
+    await db_session.commit()
+    path = f"/api/v1/events/{c.event_id}"
+    mapping = path + f"/seat-prices/{seat.price_category_id}"
+    assert (
+        await client.patch(
+            mapping, json={"ticket_type_id": str(other.id)}, headers=auth_headers(c.buyer)
+        )
+    ).status_code == 404
+    response = await client.patch(
+        mapping, json={"ticket_type_id": str(other.id)}, headers=auth_headers(owner)
+    )
+    assert response.status_code == 200, response.text
+    body = {"seat_ids": [str(seat.id)], "ticket_type_id": str(c.ticket_type.id)}
+    assert (
+        await client.post(path + "/seat-holds", json=body, headers=auth_headers(c.buyer))
+    ).status_code == 409
+    block = path + f"/seats/{seat.id}/block"
+    assert (
+        await client.patch(
+            block, json={"blocked": True, "reason": "Equipment"}, headers=auth_headers(owner)
+        )
+    ).status_code == 204
+    listing = (await client.get(path + "/seats")).json()["items"]
+    selected = next(s for s in listing if s["id"] == str(seat.id))
+    assert selected["status"] == "unavailable" and selected["price_amount"] == 500
+    assert (
+        await client.patch(
+            block, json={"blocked": False, "reason": "Reopened"}, headers=auth_headers(owner)
+        )
+    ).status_code == 204
+    body["ticket_type_id"] = str(other.id)
+    result = await client.post(path + "/seat-holds", json=body, headers=auth_headers(c.buyer))
+    assert result.status_code == 201, result.text
+    assert (
+        await client.patch(
+            mapping, json={"ticket_type_id": str(c.ticket_type.id)}, headers=auth_headers(owner)
+        )
+    ).status_code == 409
+    assert (
+        await client.patch(
+            block, json={"blocked": True, "reason": "Equipment"}, headers=auth_headers(owner)
+        )
+    ).status_code == 409
+    # Stale/tampered holds must not bypass server-side category validation.
+    await db_session.execute(
+        update(SeatPrice)
+        .where(
+            SeatPrice.event_id == c.event_id, SeatPrice.price_category_id == seat.price_category_id
+        )
+        .values(ticket_type_id=c.ticket_type.id)
+    )
+    await db_session.commit()
+    result = await checkout(
+        client,
+        c,
+        data={
+            "items": [
+                {
+                    "ticket_type_id": str(other.id),
+                    "quantity": 1,
+                    "seat_hold_ids": [result.json()[0]["id"]],
+                }
+            ]
+        },
+    )
+    assert result.status_code == 409, result.text
+    assert result.json()["error"]["code"] == "SEAT_PRICE_MISMATCH"

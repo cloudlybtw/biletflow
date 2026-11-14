@@ -163,6 +163,8 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
         )
     by_hold = {hold.id: hold for hold in holds}
     if holds:
+        from app.modules.ticketing.seat_config import validate_seat_types
+
         venue_seats = set(
             (
                 await session.scalars(
@@ -189,6 +191,10 @@ async def create(session: AsyncSession, event_id, user: User, data: CheckoutCrea
         )
         if sold_seat:
             raise AppError("SEAT_UNAVAILABLE", "A selected seat has already been sold.", 409)
+    if any(hold.ticket_type_id not in requested for hold in holds):
+        raise AppError("INVALID_SEAT_HOLD", "Seat hold ticket type does not match the cart.", 409)
+    if holds:
+        await validate_seat_types(session, event.id, holds)
     lines: list[ReservedLine] = []
     for ticket in types:
         item = requested[ticket.id]

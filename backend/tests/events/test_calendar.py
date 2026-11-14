@@ -39,3 +39,26 @@ async def test_calendar_uid_sequence_cancellation_and_private_access(client, db_
         and "STATUS:CANCELLED" in cancelled.text
         and "SEQUENCE:1" in cancelled.text
     )
+
+
+async def test_calendar_edits_advance_sequence_preserve_uid_and_export_url(client, db_session):
+    owner = await create_verified_user(db_session)
+    profile = await create_organizer(db_session, owner)
+    event_id = await create_event(db_session, profile, status="published", title="Before")
+    await db_session.commit()
+    path = f"/api/v1/events/{event_id}"
+    first = (await client.get(path + "/calendar.ics")).text
+    uid = next(line for line in first.splitlines() if line.startswith("UID:"))
+    for expected, body in [
+        (1, {"title": "After"}),
+        (1, {"title": "After"}),
+        (2, {"description": "Updated description"}),
+    ]:
+        response = await client.patch(path, json=body, headers=auth_headers(owner))
+        assert response.status_code == 200, response.text
+        feed = (await client.get(path + "/calendar.ics")).text
+        assert uid in feed and f"SEQUENCE:{expected}" in feed
+        assert "URL:http" in feed and "X-WR-TIMEZONE:Asia/Almaty" in feed
+    await client.post(path + "/cancel", headers=auth_headers(owner))
+    feed = (await client.get(path + "/calendar.ics")).text
+    assert uid in feed and "SEQUENCE:3" in feed and "STATUS:CANCELLED" in feed

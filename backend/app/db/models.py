@@ -19,11 +19,13 @@ from app.modules.refunds import models as refunds_models
 from app.modules.support import models as support_models
 from app.modules.ticketing import holds as holds_models
 from app.modules.ticketing import models as ticketing_models
+from app.modules.ticketing import seat_config as seat_config_models
 from app.modules.tickets import models as tickets_models
 from app.modules.users import models as users_models
 from app.modules.venues import models as venues_models
 
 __all__ = [
+    "seat_config_models",
     "operations_models",
     "activation_models",
     "auth_models",

@@ -1,3 +1,4 @@
+import CalendarLinks from "./CalendarLinks";
 import { t as translate } from "../lib/locale";
 import { useSession } from "../lib/session-context";
 import { api, apiPath, download } from "../lib/client";
@@ -27,6 +28,9 @@ function Order({ id }) {
       {resource.data && (
         <>
           <OrderSummary order={resource.data} />
+          {resource.data.status === "completed" && resource.data.event_id && (
+            <CalendarLinks id={resource.data.event_id} />
+          )}
           {["pending", "awaiting_payment"].includes(resource.data.status) && (
             <Payment
               key={resource.data.updated_at}

@@ -431,6 +431,10 @@ async def test_cancelled_assigned_seat_can_be_sold_again(client, db_session, con
         select(Seat.id).join(VenueRow).where(VenueRow.label == "A").limit(1)
     )
 
+    from tests.factories import configure_seat_prices
+
+    await configure_seat_prices(db_session, context.event_id, context.ticket_type.id)
+
     async def hold_for(buyer):
         hold = SeatHold(
             event_id=context.event_id,

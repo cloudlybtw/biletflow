@@ -1,3 +1,5 @@
+import CalendarLinks from "./CalendarLinks";
+import SeatMap from "./SeatMap";
 import { t as translate, dateTime, getLocale } from "../lib/locale";
 import { useState } from "react";
 import { api, apiPath, download, login, query } from "../lib/client";
@@ -256,39 +258,6 @@ function EventDetail({ slug, id, promo }) {
     </State>
   );
 }
-function CalendarLinks({ id }) {
-  const resource = useResource(`/events/${id}/calendar-links`);
-  return (
-    <State resource={resource}>
-      {resource.data && (
-        <div className="bf-panel">
-          <h2>{translate("Add to calendar")}</h2>
-          <Action
-            perform={() => download(`/events/${id}/calendar.ics`, "event.ics")}
-          >
-            {translate("Download calendar file")}
-          </Action>
-          <a
-            className="bf-outline-button"
-            href={resource.data.google}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {translate("Google Calendar")}
-          </a>
-          <a
-            className="bf-outline-button"
-            href={resource.data.outlook}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {translate("Outlook")}
-          </a>
-        </div>
-      )}
-    </State>
-  );
-}
 function EventImages({ id }) {
   const images = useResource(`/events/${id}/images`, true);
   return (
@@ -418,6 +387,9 @@ function Checkout({ id, params }) {
           {order.order_number}
         </h1>
         <OrderSummary order={order} />
+        {order.status === "completed" && order.event_id && (
+          <CalendarLinks id={order.event_id} />
+        )}
         {["pending", "awaiting_payment"].includes(order.status) && (
           <Payment order={order} done={setOrder} />
         )}
@@ -448,6 +420,7 @@ function Checkout({ id, params }) {
                   ...cart,
                   ticket_type_id: e.target.value,
                 });
+                setSelectedSeats([]);
                 setPreview(null);
               }}
             >
@@ -519,27 +492,20 @@ function Checkout({ id, params }) {
           <div className="bf-panel">
             <h2>{translate("Select your seats")}</h2>
             <State resource={seats}>
-              <div className="bf-seat-map">
-                {seats.data?.map((seat) => (
-                  <label key={seat.id}>
-                    <input
-                      type="checkbox"
-                      disabled={seat.status !== "available"}
-                      checked={selectedSeats.includes(seat.id)}
-                      onChange={(e) =>
-                        setSelectedSeats(
-                          e.target.checked
-                            ? [...selectedSeats, seat.id]
-                            : selectedSeats.filter((id) => id !== seat.id),
-                        )
-                      }
-                    />
-                    {seat.section} {seat.row}
-                    {seat.number} · {translate(seat.status)}
-                    {seat.accessible ? ` · ${translate("accessible")}` : ""}
-                  </label>
-                ))}
-              </div>
+              <SeatMap
+                seats={seats.data || []}
+                selected={selectedSeats}
+                setSelected={setSelectedSeats}
+                ticketTypeId={cart.ticket_type_id}
+              />
+              <p role="status">
+                {translate("Selected total")}:{" "}
+                {money(
+                  (seats.data || [])
+                    .filter((s) => selectedSeats.includes(s.id))
+                    .reduce((sum, s) => sum + (s.price_amount || 0), 0),
+                )}
+              </p>
             </State>
             <Action
               perform={() =>
