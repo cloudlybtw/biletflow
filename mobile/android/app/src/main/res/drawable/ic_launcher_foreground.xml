@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ticket and admission check stay within the adaptive icon safe zone. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,35 L76,35 Q79,35 79,38 L79,46 C69,46 69,62 79,62 L79,70 Q79,73 76,73 L32,73 Q29,73 29,70 L29,62 C39,62 39,46 29,46 L29,38 Q29,35 32,35 Z" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#7136BD"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M44,54 L51,61 L65,47" />
+</vector>
