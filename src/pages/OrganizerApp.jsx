@@ -193,6 +193,19 @@ function TicketTypes({ base }) {
           )}
         />
       </State>
+      <h2>Inventory by ticket type</h2>
+      <RemoteTable
+        path={`${base}/inventory`}
+        columns={[
+          ["name", "Ticket type"],
+          ["available", "Available"],
+          ["reserved", "Reserved"],
+          ["sold", "Sold"],
+          ["refunded", "Refunded"],
+          ["cancelled", "Cancelled"],
+          ["checked_in", "Checked in"],
+        ]}
+      />
       <h2>{edit ? "Edit ticket type" : "Add ticket type"}</h2>
       <Form
         key={edit?.id || "new"}
@@ -735,6 +748,8 @@ function Analytics({ base }) {
               ["discount_amount", "Discounts (KZT)"],
               ["refund_amount", "Refunds (KZT)"],
               ["net_amount", "Net (KZT)"],
+              ["fee_amount", "Processing fees (KZT)"],
+              ["estimated_payout_amount", "Estimated payout (KZT)"],
               ["checked_in", "Checked in"],
               ["absent", "Absent"],
               ["check_in_percent", "Attendance %"],
@@ -753,6 +768,8 @@ function Analytics({ base }) {
               ["gross_amount", "Gross (KZT)"],
               ["discount_amount", "Discount (KZT)"],
               ["net_amount", "Net (KZT)"],
+              ["fee_amount", "Processing fees (KZT)"],
+              ["estimated_payout_amount", "Estimated payout (KZT)"],
             ]}
           />
           <Export
@@ -939,6 +956,7 @@ function EventWorkspace({ id, tab = "details" }) {
           "images",
           "staff",
           "activation",
+          "payouts",
           "campaigns",
           "orders",
           "attendees",
@@ -965,6 +983,8 @@ function EventWorkspace({ id, tab = "details" }) {
         <Staff base={base} />
       ) : tab === "activation" ? (
         <Activation base={base} />
+      ) : tab === "payouts" ? (
+        <Payouts base={base} />
       ) : tab === "campaigns" ? (
         <Campaigns base={base} />
       ) : tab === "orders" ? (
@@ -1075,5 +1095,35 @@ export default function OrganizerApp({ path }) {
     <Shell role="organizer" path={path} title="Organizer workspace">
       {content}
     </Shell>
+  );
+}
+
+function Payouts({ base }) {
+  const resource = useResource(`${base}/payouts`, true);
+  return (
+    <>
+      <h2>Simulated payouts</h2>
+      <p>
+        Academic demo only. No real money moves. Request a payout after the
+        event ends.
+      </p>
+      <Action
+        perform={() => api(`${base}/payouts`, { method: "POST" })}
+        done={resource.reload}
+      >
+        Request simulated payout
+      </Action>
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["id", "Reference"],
+            ["amount", "Amount (KZT)"],
+            ["status", "Status"],
+            ["note", "Note"],
+          ]}
+        />
+      </State>
+    </>
   );
 }

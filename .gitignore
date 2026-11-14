@@ -44,3 +44,7 @@ __pycache__/
 !docs/BiletFlow_SRS.pdf
 *.png
 backend/media/
+
+# Database backups and recovery artifacts
+backups/
+*.dump

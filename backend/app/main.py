@@ -22,6 +22,7 @@ from app.modules.events.calendar import router as calendar_router
 from app.modules.events.router import router as events_router
 from app.modules.history.router import router as history_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.operations.router import router as operations_router
 from app.modules.orders.router import router as orders_router
 from app.modules.organizers.router import router as organizers_router
 from app.modules.payments.router import router as payments_router
@@ -64,6 +65,7 @@ def create_app(*, session_factory=AsyncSessionLocal) -> FastAPI:
         allow_credentials=False,
     )
     register_exception_handlers(app)
+    app.include_router(operations_router, prefix="/api/v1")
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(users_router, prefix="/api/v1")

@@ -25,6 +25,27 @@ jobs:
       # Keep errors/warnings fatal while retaining these diagnostics.
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: flutter build apk --debug
+
+  ios-build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.0"
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build ios --debug --no-codesign
 
   web:
     runs-on: ubuntu-latest

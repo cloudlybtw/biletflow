@@ -64,6 +64,9 @@ class SupportCase(Base):
     assigned_to_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
     )
+    escalated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    escalated_by: Mapped[uuid.UUID | None] = mapped_column(UUID, ForeignKey("users.id"))
+    escalation_reason: Mapped[str | None] = mapped_column(Text)
     last_message_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(

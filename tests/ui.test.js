@@ -432,3 +432,179 @@ test("editing an event preserves a saved venue when its options arrive later", a
   await submit(form);
   assert.equal(saved, true);
 });
+
+test("Russian and Kazakh customer flows translate labels, errors and status without changing API values", async () => {
+  const locale = await server.ssrLoadModule("/src/lib/locale.js");
+  try {
+    for (const [language, heading, email, error] of [
+      ["ru", "С возвращением", "Email", "Проверьте введённые данные."],
+      [
+        "kk",
+        "Қайта қош келдіңіз",
+        "Email",
+        "Енгізілген деректерді тексеріңіз.",
+      ],
+    ]) {
+      await act(() => locale.setLocale(language));
+      handle = (url, options) => {
+        assert.equal(url, "/api/v1/auth/login");
+        assert.equal(JSON.parse(options.body).email, user.email);
+        return json(
+          { error: { code: "VALIDATION_ERROR", message: "Invalid input" } },
+          422,
+        );
+      };
+      await render(PublicPages, { path: "/login", route: "/login" });
+      assert.match(document.body.textContent, new RegExp(heading));
+      assert.match(document.body.textContent, new RegExp(email));
+      const form = document.querySelector("form");
+      fill(form, { email: user.email, password: "invalid" });
+      await submit(form);
+      assert.match(document.body.textContent, new RegExp(error));
+      assert.equal(document.documentElement.lang, language);
+      assert.equal(
+        locale.t("refunded"),
+        language === "ru" ? "возвращён" : "қайтарылды",
+      );
+      assert.notEqual(locale.number(10000), "10000");
+    }
+  } finally {
+    await act(() => locale.setLocale("en"));
+  }
+});
+
+test("customer forms, event detail and seat checkout pass automated WCAG structural rules", async () => {
+  const { default: axe } = await import("axe-core");
+  document.documentElement.lang = "en";
+  document.title = "BiletFlow";
+  for (const path of [
+    "/register",
+    "/login",
+    "/events/demo-event",
+    "/checkout/event-1",
+  ]) {
+    handle = (url) => {
+      if (
+        url === "/api/v1/events/by-slug/demo-event" ||
+        url === "/api/v1/events/event-1"
+      )
+        return json({ ...event, seating_mode: "assigned" });
+      if (url === "/api/v1/events/event-1/ticket-types?limit=100&offset=0")
+        return json({
+          items: [{ id: "type-1", name: "Regular", price_amount: 1000 }],
+          total: 1,
+        });
+      if (url.includes("/seats?"))
+        return json({
+          items: [
+            {
+              id: "seat-1",
+              section: "Main",
+              row: "A",
+              number: "1",
+              status: "available",
+              accessible: true,
+            },
+          ],
+          total: 1,
+        });
+      if (url.includes("/seat-holds?")) return json({ items: [], total: 0 });
+      if (url.includes("calendar-links"))
+        return json({
+          google: "https://calendar.google.com",
+          outlook: "https://outlook.live.com",
+        });
+      if (url.includes("/images")) return json({ items: [], total: 0 });
+      throw new Error(`Unexpected ${url}`);
+    };
+    await render(ProductApp, { route: path });
+    const result = await axe.run(document, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
+      rules: { "color-contrast": { enabled: false } },
+    });
+    assert.deepEqual(
+      result.violations.map((v) => ({
+        id: v.id,
+        nodes: v.nodes.map((n) => n.target),
+      })),
+      [],
+      path,
+    );
+  }
+});
+
+test("language changes preserve the form and API credentials while updating customer labels", async () => {
+  const locale = await server.ssrLoadModule("/src/lib/locale.js");
+  handle = () => {
+    throw new Error("Language selection must not submit credentials");
+  };
+  try {
+    await render(ProductApp, { route: "/login" }, null);
+    const form = document.querySelector("form");
+    fill(form, { email: "preserved@example.com", password: "unsent-password" });
+    const select = document.querySelector(".bf-language select");
+    await act(async () => {
+      select.value = "kk";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    assert.equal(document.querySelector("form"), form);
+    assert.equal(
+      form.elements.namedItem("email").value,
+      "preserved@example.com",
+    );
+    assert.match(document.body.textContent, /Қайта қош келдіңіз/);
+    assert.equal(document.documentElement.lang, "kk");
+    assert.match(document.title, /Кіру/);
+    assert.equal(requests.length, 0);
+  } finally {
+    await act(() => locale.setLocale("en"));
+  }
+});
+
+test("admin payout review submits the selected transition and note to the API", async () => {
+  const Admin = (await server.ssrLoadModule("/src/pages/PlatformAdminApp.jsx"))
+    .default;
+  let updated = false;
+  handle = (url, options) => {
+    if (url.startsWith("/api/v1/admin/payouts?"))
+      return json({
+        items: [
+          {
+            id: "payout-1",
+            event_id: "event-1",
+            amount: 1000,
+            status: updated ? "processing" : "requested",
+            note: "",
+          },
+        ],
+        total: 1,
+      });
+    if (url === "/api/v1/admin/events/event-1") return json(event);
+    if (url === "/api/v1/admin/payouts/payout-1") {
+      assert.equal(options.method, "PATCH");
+      assert.deepEqual(JSON.parse(options.body), {
+        status: "processing",
+        note: "Demo review",
+      });
+      updated = true;
+      return json({ id: "payout-1", status: "processing" });
+    }
+    throw new Error(`Unexpected ${url}`);
+  };
+  await render(
+    Admin,
+    { path: "/admin/payouts" },
+    { ...user, platform_role: "platform_admin" },
+  );
+  const button = [...document.querySelectorAll("button")].find(
+    (b) => b.textContent === "Review",
+  );
+  await act(async () => {
+    button.click();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  });
+  const form = document.querySelector("form");
+  fill(form, { status: "processing", note: "Demo review" });
+  await submit(form);
+  assert.ok(updated);
+});

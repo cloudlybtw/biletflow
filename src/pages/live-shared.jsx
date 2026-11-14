@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
+import { t as translate, dateTime, number, errorText } from "../lib/locale";
+import { useState, useEffect, useId } from "react";
 import { api, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Link, Badge } from "./app-shared";
-
 export function State({ resource, children }) {
   if (resource.loading)
     return (
       <p role="status" className="bf-panel">
-        Loading…
+        {translate("Loading\u2026")}
       </p>
     );
   if (resource.error)
     return (
       <div className="bf-panel" role="alert">
-        <p>{resource.error.message}</p>
+        <p>{errorText(resource.error)}</p>
         <button className="bf-outline-button" onClick={resource.reload}>
-          Try again
+          {translate("Try again")}
         </button>
       </div>
     );
@@ -28,28 +28,38 @@ export function Action({
   confirm,
   className = "bf-outline-button",
 }) {
-  const [status, setStatus] = useState({ busy: false, error: "", message: "" });
+  const [status, setStatus] = useState({
+    busy: false,
+    error: "",
+    message: "",
+  });
   return (
     <span className="bf-action">
       <button
         className={className}
         disabled={status.busy}
         onClick={async () => {
-          if (confirm && !window.confirm(confirm)) return;
-          setStatus({ busy: true });
+          if (confirm && !window.confirm(translate(confirm))) return;
+          setStatus({
+            busy: true,
+          });
           try {
             await perform();
-            setStatus({ message: "Saved." });
+            setStatus({
+              message: "Saved.",
+            });
             done?.();
           } catch (error) {
-            setStatus({ error: error.message });
+            setStatus({
+              error: error,
+            });
           }
         }}
       >
-        {status.busy ? "Working…" : children}
+        {status.busy ? translate("Working\u2026") : children}
       </button>
-      {status.error && <span role="alert">{status.error}</span>}
-      {status.message && <span role="status">{status.message}</span>}
+      {status.error && <span role="alert">{errorText(status.error)}</span>}
+      {status.message && <span role="status">{translate(status.message)}</span>}
     </span>
   );
 }
@@ -57,14 +67,16 @@ export function Form({
   fields,
   initial = {},
   submit,
-  label = "Save",
+  label = translate("Save"),
   done,
   children,
 }) {
   const [status, setStatus] = useState({});
+  const feedbackId = useId();
   return (
     <form
       className="bf-panel bf-form"
+      aria-busy={Boolean(status.busy)}
       onSubmit={async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
@@ -83,24 +95,31 @@ export function Form({
                 : value;
           else if (field.nullable) body[field.name] = null;
         }
-        setStatus({ busy: true });
+        setStatus({
+          busy: true,
+        });
         try {
           const result = await submit(body, form);
-          setStatus({ message: "Saved successfully." });
+          setStatus({
+            message: "Saved successfully.",
+          });
           done?.(result);
         } catch (error) {
-          setStatus({ error: error.message });
+          setStatus({
+            error: error,
+          });
         }
       }}
     >
       {fields.map((field) => (
         <label key={field.name}>
-          {field.label}
+          {translate(field.label)}
           {field.options ? (
             <SelectInput field={field} initial={initial[field.name]} />
           ) : field.type === "textarea" ? (
             <textarea
               name={field.name}
+              aria-describedby={status.error ? feedbackId : undefined}
               defaultValue={initial[field.name] ?? field.default ?? ""}
               required={field.required}
               rows={4}
@@ -110,6 +129,17 @@ export function Form({
             <input
               name={field.name}
               type={field.type === "integer" ? "number" : field.type || "text"}
+              aria-describedby={status.error ? feedbackId : undefined}
+              autoComplete={
+                field.autoComplete ||
+                {
+                  full_name: "name",
+                  email: "email",
+                  phone: "tel",
+                  password: "current-password",
+                  new_password: "new-password",
+                }[field.name]
+              }
               defaultValue={
                 field.type === "checkbox"
                   ? undefined
@@ -133,10 +163,14 @@ export function Form({
         </label>
       ))}
       {children}
-      {status.error && <p role="alert">{status.error}</p>}
-      {status.message && <p role="status">{status.message}</p>}
+      {status.error && (
+        <p id={feedbackId} role="alert">
+          {errorText(status.error)}
+        </p>
+      )}
+      {status.message && <p role="status">{translate(status.message)}</p>}
       <button className="bf-button" disabled={status.busy}>
-        {status.busy ? "Saving…" : label}
+        {status.busy ? translate("Saving\u2026") : label}
       </button>
     </form>
   );
@@ -165,27 +199,27 @@ function SelectInput({ field, initial }) {
         )
       }
     >
-      <option value="">Select…</option>
+      <option value="">{translate("Select\u2026")}</option>
       {field.options.map((option) => (
         <option key={option[0]} value={option[0]}>
-          {option[1]}
+          {translate(option[1])}
         </option>
       ))}
     </select>
   );
 }
-
 export function DataTable({ rows = [], columns, actions }) {
-  if (!rows.length) return <p className="bf-panel">No records found.</p>;
+  if (!rows.length)
+    return <p className="bf-panel">{translate("No records found.")}</p>;
   return (
     <div className="bf-panel bf-table-wrap">
       <table>
         <thead>
           <tr>
             {columns.map(([key, label]) => (
-              <th key={key}>{label}</th>
+              <th key={key}>{translate(label)}</th>
             ))}
-            {actions && <th>Actions</th>}
+            {actions && <th>{translate("Actions")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -193,7 +227,7 @@ export function DataTable({ rows = [], columns, actions }) {
             <tr key={row.id || row.key || index}>
               {columns.map(([key, , render]) => (
                 <td key={key}>
-                  {render ? render(row[key], row) : show(row[key])}
+                  {render ? render(row[key], row) : show(row[key], key)}
                 </td>
               ))}
               {actions && (
@@ -208,13 +242,30 @@ export function DataTable({ rows = [], columns, actions }) {
     </div>
   );
 }
-function show(value) {
+function show(value, key = "") {
+  if (
+    value != null &&
+    /(_at|expires)$/.test(key) &&
+    !Number.isNaN(Date.parse(value))
+  )
+    return dateTime(value);
+  if (typeof value === "number") return number(value);
+  if (
+    [
+      "status",
+      "sender_role",
+      "case_type",
+      "category",
+      "platform_role",
+    ].includes(key)
+  )
+    return translate(value);
   return value == null
     ? "—"
     : typeof value === "boolean"
       ? value
-        ? "Yes"
-        : "No"
+        ? translate("Yes")
+        : translate("No")
       : String(value);
 }
 export function Details({ value, fields }) {
@@ -222,8 +273,8 @@ export function Details({ value, fields }) {
     <dl className="bf-panel bf-details">
       {fields.map(([key, label]) => (
         <div key={key}>
-          <dt>{label}</dt>
-          <dd>{show(value?.[key])}</dd>
+          <dt>{translate(label)}</dt>
+          <dd>{show(value?.[key], key)}</dd>
         </div>
       ))}
     </dl>
@@ -242,33 +293,47 @@ export function RemoteTable({ path, columns, actions, poll = 0 }) {
   );
 }
 export function Export({ path, name = "report.csv" }) {
-  return <Action perform={() => download(path, name)}>Download CSV</Action>;
+  return (
+    <Action perform={() => download(path, name)}>
+      {translate("Download CSV")}
+    </Action>
+  );
 }
 export function SecureImage({ path, alt }) {
   const [image, setImage] = useState({});
   useEffect(() => {
     let alive = true;
     let url;
-    api(path, { raw: true })
+    api(path, {
+      raw: true,
+    })
       .then((response) => response.blob())
       .then((blob) => {
         url = URL.createObjectURL(blob);
-        if (alive) setImage({ path, url });
+        if (alive)
+          setImage({
+            path,
+            url,
+          });
         else URL.revokeObjectURL(url);
       })
       .catch((error) => {
-        if (alive) setImage({ path, error });
+        if (alive)
+          setImage({
+            path,
+            error,
+          });
       });
     return () => {
       alive = false;
       if (url) URL.revokeObjectURL(url);
     };
   }, [path]);
-  if (image.path !== path) return <p>Loading image…</p>;
+  if (image.path !== path) return <p>{translate("Loading image\u2026")}</p>;
   return image.error ? (
-    <p role="alert">{image.error.message}</p>
+    <p role="alert">{errorText(image.error)}</p>
   ) : (
-    <img className="bf-secure-image" src={image.url} alt={alt} />
+    <img className="bf-secure-image" src={image.url} alt={translate(alt)} />
   );
 }
 export function OrderSummary({ order, managed = false }) {
@@ -277,13 +342,13 @@ export function OrderSummary({ order, managed = false }) {
       <Details
         value={order}
         fields={[
-          ["order_number", "Order"],
-          ["status", "Status"],
-          ["subtotal_amount", "Subtotal (KZT)"],
-          ["discount_amount", "Discount (KZT)"],
-          ["fee_amount", "Processing fee (KZT)"],
-          ["total_amount", "Total (KZT)"],
-          ["expires_at", "Reservation expires"],
+          ["order_number", translate("Order")],
+          ["status", translate("Status")],
+          ["subtotal_amount", translate("Subtotal (KZT)")],
+          ["discount_amount", translate("Discount (KZT)")],
+          ["fee_amount", translate("Processing fee (KZT)")],
+          ["total_amount", translate("Total (KZT)")],
+          ["expires_at", translate("Reservation expires")],
         ]}
       />
       {!managed &&
@@ -293,7 +358,7 @@ export function OrderSummary({ order, managed = false }) {
             className="bf-outline-button"
             to={`/account/tickets/${id}`}
           >
-            View ticket
+            {translate("View ticket")}
           </Link>
         ))}
     </>

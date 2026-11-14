@@ -1,3 +1,4 @@
+import { t as translate } from "../lib/locale";
 import { useSession } from "../lib/session-context";
 import { api, apiPath, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
@@ -48,18 +49,18 @@ function Ticket({ id }) {
           <Details
             value={resource.data}
             fields={[
-              ["ticket_code", "Ticket code"],
-              ["attendee_name", "Attendee"],
-              ["ticket_type_name", "Ticket type"],
-              ["status", "Status"],
-              ["seat_section_label", "Section"],
-              ["seat_row_label", "Row"],
-              ["seat_number_label", "Seat"],
+              ["ticket_code", translate("Ticket code")],
+              ["attendee_name", translate("Attendee")],
+              ["ticket_type_name", translate("Ticket type")],
+              ["status", translate("Status")],
+              ["seat_section_label", translate("Section")],
+              ["seat_row_label", translate("Row")],
+              ["seat_number_label", translate("Seat")],
             ]}
           />
           <SecureImage
             path={apiPath(resource.data.qr_image_url)}
-            alt="Ticket admission QR"
+            alt={translate("Ticket admission QR")}
           />
           <Action
             perform={() =>
@@ -69,7 +70,7 @@ function Ticket({ id }) {
               )
             }
           >
-            Download A4 ticket
+            {translate("Download A4 ticket")}
           </Action>
         </>
       )}
@@ -85,14 +86,18 @@ function Profile() {
         fields={[
           {
             name: "full_name",
-            label: "Full name",
+            label: translate("Full name"),
             required: true,
             maxLength: 200,
           },
-          { name: "phone", label: "Phone", nullable: true },
+          {
+            name: "phone",
+            label: translate("Phone"),
+            nullable: true,
+          },
           {
             name: "locale",
-            label: "Language",
+            label: translate("Language"),
             required: true,
             options: [
               ["en", "English"],
@@ -101,12 +106,19 @@ function Profile() {
             ],
           },
         ]}
-        submit={(body) => api("/me", { method: "PATCH", body })}
+        submit={(body) =>
+          api("/me", {
+            method: "PATCH",
+            body,
+          })
+        }
         done={() => window.dispatchEvent(new Event("biletflow-session"))}
       />
-      <Link to="/forgot-password">Change password</Link>
+      <Link to="/forgot-password">{translate("Change password")}</Link>
       {!user.email_verified && (
-        <Link to="/verify-email">Verify email to book tickets</Link>
+        <Link to="/verify-email">
+          {translate("Verify email to book tickets")}
+        </Link>
       )}
     </>
   );
@@ -117,7 +129,10 @@ function Overview() {
   const { user } = useSession();
   return (
     <>
-      <h2>Welcome, {user.full_name}</h2>
+      <h2>
+        {translate("Welcome, ")}
+        {user.full_name}
+      </h2>
       <div className="bf-stats">
         <Stat label="Orders" value={orders.data?.length ?? "…"} />
         <Stat label="Tickets" value={tickets.data?.length ?? "…"} />
@@ -125,7 +140,7 @@ function Overview() {
       <State resource={orders} />
       <State resource={tickets} />
       <Link className="bf-button" to="/events">
-        Browse events
+        {translate("Browse events")}
       </Link>
     </>
   );
@@ -138,12 +153,12 @@ export default function AttendeeApp({ path }) {
       path={path}
       title={
         {
-          tickets: "My tickets",
-          orders: "My orders",
-          support: "Support",
-          settings: "Profile settings",
-          notifications: "Notifications",
-        }[section] || "Your account"
+          tickets: translate("My tickets"),
+          orders: translate("My orders"),
+          support: translate("Support"),
+          settings: translate("Profile settings"),
+          notifications: translate("Notifications"),
+        }[section] || translate("Your account")
       }
     >
       {section === "orders" ? (
@@ -154,7 +169,9 @@ export default function AttendeeApp({ path }) {
             path="/orders"
             columns={orderColumns}
             actions={(row) => (
-              <Link to={`/account/orders/${row.id}`}>View order</Link>
+              <Link to={`/account/orders/${row.id}`}>
+                {translate("View order")}
+              </Link>
             )}
           />
         )
@@ -165,13 +182,15 @@ export default function AttendeeApp({ path }) {
           <RemoteTable
             path="/tickets"
             columns={[
-              ["ticket_code", "Ticket"],
-              ["attendee_name", "Attendee"],
-              ["ticket_type_name", "Type"],
-              ["status", "Status"],
+              ["ticket_code", translate("Ticket")],
+              ["attendee_name", translate("Attendee")],
+              ["ticket_type_name", translate("Type")],
+              ["status", translate("Status")],
             ]}
             actions={(row) => (
-              <Link to={`/account/tickets/${row.id}`}>View ticket</Link>
+              <Link to={`/account/tickets/${row.id}`}>
+                {translate("View ticket")}
+              </Link>
             )}
           />
         )
@@ -180,19 +199,21 @@ export default function AttendeeApp({ path }) {
           poll={15000}
           path="/notifications"
           columns={[
-            ["title", "Notification"],
-            ["body", "Message"],
-            ["read_at", "Read"],
+            ["title", translate("Notification")],
+            ["body", translate("Message")],
+            ["read_at", translate("Read")],
           ]}
           actions={(row, reload) =>
             !row.read_at && (
               <Action
                 perform={() =>
-                  api(`/notifications/${row.id}/read`, { method: "POST" })
+                  api(`/notifications/${row.id}/read`, {
+                    method: "POST",
+                  })
                 }
                 done={reload}
               >
-                Mark read
+                {translate("Mark read")}
               </Action>
             )
           }

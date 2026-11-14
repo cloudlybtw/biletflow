@@ -1,11 +1,11 @@
+import { t as translate, dateTime, getLocale } from "../lib/locale";
 import { useState } from "react";
 import { api, apiPath, download, login, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
-import { Topbar, Link, EventCard } from "./app-shared";
+import { Topbar, Link, EventCard, LanguagePicker } from "./app-shared";
 import { Form, State, Action, OrderSummary, SecureImage } from "./live-shared";
 import { money } from "./app-data";
-
 function AuthPage({ path, params }) {
   const next = params.get("next");
   const safeNext =
@@ -19,19 +19,25 @@ function AuthPage({ path, params }) {
   const fields = verify
     ? token
       ? []
-      : [{ name: "token", label: "Verification token", required: true }]
+      : [
+          {
+            name: "token",
+            label: translate("Verification token"),
+            required: true,
+          },
+        ]
     : [
         ...(register
           ? [
               {
                 name: "full_name",
-                label: "Full name",
+                label: translate("Full name"),
                 required: true,
                 maxLength: 200,
               },
               {
                 name: "locale",
-                label: "Language",
+                label: translate("Language"),
                 options: [
                   ["en", "English"],
                   ["kk", "Қазақша"],
@@ -43,14 +49,24 @@ function AuthPage({ path, params }) {
             ]
           : []),
         ...(!reset
-          ? [{ name: "email", label: "Email", type: "email", required: true }]
+          ? [
+              {
+                name: "email",
+                label: translate("Email"),
+                type: "email",
+                required: true,
+              },
+            ]
           : []),
         ...(loginPage || register || reset
           ? [
               {
                 name: reset ? "new_password" : "password",
-                label: reset ? "New password" : "Password",
+                label: reset
+                  ? translate("New password")
+                  : translate("Password"),
                 type: "password",
+                autoComplete: loginPage ? "current-password" : "new-password",
                 required: true,
                 minLength: loginPage ? 1 : 8,
                 maxLength: 128,
@@ -59,21 +75,22 @@ function AuthPage({ path, params }) {
           : []),
       ];
   const title = loginPage
-    ? "Welcome back"
+    ? translate("Welcome back")
     : register
-      ? "Create your account"
+      ? translate("Create your account")
       : verify
-        ? "Verify your email"
-        : "Reset your password";
+        ? translate("Verify your email")
+        : translate("Reset your password");
   return (
     <main className="bf-auth">
       <Link to="/events">BiletFlow</Link>
+      <LanguagePicker />
       <div className="bf-auth-card">
         <h1>{title}</h1>
-        {message && <p role="status">{message}</p>}
+        {message && <p role="status">{translate(message)}</p>}
         <Form
           fields={fields}
-          label={title}
+          label={loginPage ? translate("Sign in") : title}
           submit={async (body) => {
             if (loginPage) {
               await login(body.email, body.password);
@@ -95,7 +112,9 @@ function AuthPage({ path, params }) {
               await api("/auth/verify-email", {
                 method: "POST",
                 auth: false,
-                body: { token: token || body.token },
+                body: {
+                  token: token || body.token,
+                },
               });
               window.dispatchEvent(new Event("biletflow-session"));
               setMessage("Email verified. You can now book tickets.");
@@ -105,7 +124,10 @@ function AuthPage({ path, params }) {
               await api("/auth/password/reset", {
                 method: "POST",
                 auth: false,
-                body: { ...body, token },
+                body: {
+                  ...body,
+                  token,
+                },
               });
               history.replaceState(null, "", "/#/login");
               window.dispatchEvent(new Event("hashchange"));
@@ -122,7 +144,12 @@ function AuthPage({ path, params }) {
         {verify && (
           <Form
             fields={[
-              { name: "email", label: "Email", type: "email", required: true },
+              {
+                name: "email",
+                label: translate("Email"),
+                type: "email",
+                required: true,
+              },
             ]}
             label="Resend verification"
             submit={(body) =>
@@ -135,10 +162,10 @@ function AuthPage({ path, params }) {
           />
         )}
         <div className="bf-bridge-links">
-          <Link to="/login">Sign in</Link>
-          <Link to="/register">Register</Link>
-          <Link to="/forgot-password">Forgot password?</Link>
-          <Link to="/verify-email">Verify email</Link>
+          <Link to="/login">{translate("Sign in")}</Link>
+          <Link to="/register">{translate("Register")}</Link>
+          <Link to="/forgot-password">{translate("Forgot password?")}</Link>
+          <Link to="/verify-email">{translate("Verify email")}</Link>
         </div>
       </div>
     </main>
@@ -151,7 +178,7 @@ function Events() {
   const categories = useResource("/event-categories", true);
   return (
     <>
-      <h1>Events for you</h1>
+      <h1>{translate("Events for you")}</h1>
       <form
         className="bf-filter-row"
         onSubmit={(event) => {
@@ -162,25 +189,33 @@ function Events() {
           setFilters(values);
         }}
       >
-        <input name="q" aria-label="Search" placeholder="Search events" />
-        <input name="city" aria-label="City" placeholder="City" />
-        <select name="category_id" aria-label="Category">
-          <option value="">All categories</option>
+        <input
+          name="q"
+          aria-label={translate("Search")}
+          placeholder={translate("Search events")}
+        />
+        <input
+          name="city"
+          aria-label={translate("City")}
+          placeholder={translate("City")}
+        />
+        <select name="category_id" aria-label={translate("Category")}>
+          <option value="">{translate("All categories")}</option>
           {categories.data?.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name_en}
+              {c[`name_${getLocale()}`] || c.name_en}
             </option>
           ))}
         </select>
         <label>
-          From
+          {translate("From")}
           <input name="date_from" type="datetime-local" />
         </label>
         <label>
-          Until
+          {translate("Until")}
           <input name="date_to" type="datetime-local" />
         </label>
-        <button className="bf-button">Search</button>
+        <button className="bf-button">{translate("Search")}</button>
       </form>
       <State resource={resource}>
         <div className="bf-event-grid">
@@ -188,7 +223,9 @@ function Events() {
             <EventCard key={event.id} event={event} />
           ))}
         </div>
-        {resource.data?.length === 0 && <p>No upcoming events found.</p>}
+        {resource.data?.length === 0 && (
+          <p>{translate("No upcoming events found.")}</p>
+        )}
       </State>
     </>
   );
@@ -205,7 +242,7 @@ function EventDetail({ slug, id, promo }) {
           <h1>{event.title}</h1>
           <p>{event.description}</p>
           <p>
-            {new Date(event.starts_at).toLocaleString(undefined, {
+            {dateTime(event.starts_at, {
               timeZone: event.timezone,
             })}{" "}
             · {event.timezone}
@@ -213,6 +250,7 @@ function EventDetail({ slug, id, promo }) {
           <EventImages id={event.id} />
           <TicketChoices event={event} promo={promo} />
           <CalendarLinks id={event.id} />
+          <ReportEvent id={event.id} />
         </>
       )}
     </State>
@@ -224,11 +262,11 @@ function CalendarLinks({ id }) {
     <State resource={resource}>
       {resource.data && (
         <div className="bf-panel">
-          <h2>Add to calendar</h2>
+          <h2>{translate("Add to calendar")}</h2>
           <Action
             perform={() => download(`/events/${id}/calendar.ics`, "event.ics")}
           >
-            Download calendar file
+            {translate("Download calendar file")}
           </Action>
           <a
             className="bf-outline-button"
@@ -236,7 +274,7 @@ function CalendarLinks({ id }) {
             target="_blank"
             rel="noreferrer"
           >
-            Google Calendar
+            {translate("Google Calendar")}
           </a>
           <a
             className="bf-outline-button"
@@ -244,7 +282,7 @@ function CalendarLinks({ id }) {
             target="_blank"
             rel="noreferrer"
           >
-            Outlook
+            {translate("Outlook")}
           </a>
         </div>
       )}
@@ -259,7 +297,7 @@ function EventImages({ id }) {
         <SecureImage
           key={image.id}
           path={apiPath(image.url)}
-          alt={image.alt_text || "Event image"}
+          alt={image.alt_text || translate("Event image")}
         />
       ))}
     </div>
@@ -270,7 +308,7 @@ function TicketChoices({ event, promo }) {
   return (
     <State resource={tickets}>
       <div className="bf-panel">
-        <h2>Ticket types</h2>
+        <h2>{translate("Ticket types")}</h2>
         {tickets.data
           ?.filter((t) => !t.is_hidden)
           .map((t) => (
@@ -281,17 +319,19 @@ function TicketChoices({ event, promo }) {
                   0,
                   t.quantity_total - t.quantity_sold - t.quantity_reserved,
                 )}{" "}
-                available
+                {translate("available")}
               </span>
               {event.status === "published" ? (
                 <Link
                   className="bf-button"
                   to={`/checkout/${event.id}?ticket=${t.id}&promo=${encodeURIComponent(promo || "")}`}
                 >
-                  Choose tickets
+                  {translate("Choose tickets")}
                 </Link>
               ) : (
-                <span>Preview only — registration is not open.</span>
+                <span>
+                  {translate("Preview only \u2014 registration is not open.")}
+                </span>
               )}
             </div>
           ))}
@@ -305,7 +345,10 @@ function Campaign({ token }) {
     <State resource={resource}>
       {resource.data && (
         <>
-          <p role="status">Promotion applied: {resource.data.promo_code}</p>
+          <p role="status">
+            {translate("Promotion applied: ")}
+            {resource.data.promo_code}
+          </p>
           <EventDetail
             slug={resource.data.event_slug}
             promo={resource.data.promo_code}
@@ -341,13 +384,13 @@ function Checkout({ id, params }) {
   const fields = [
     {
       name: "full_name",
-      label: "Attendee name",
+      label: translate("Attendee name"),
       default: user.full_name,
       required: true,
     },
     {
       name: "email",
-      label: "Attendee email",
+      label: translate("Attendee email"),
       type: "email",
       default: user.email,
       required: true,
@@ -360,13 +403,20 @@ function Checkout({ id, params }) {
     {
       ticket_type_id: cart.ticket_type_id,
       quantity: assigned ? owned.length : Number(cart.quantity),
-      ...(assigned ? { seat_hold_ids: owned.map((hold) => hold.id) } : {}),
+      ...(assigned
+        ? {
+            seat_hold_ids: owned.map((hold) => hold.id),
+          }
+        : {}),
     },
   ];
   if (order)
     return (
       <>
-        <h1>Order {order.order_number}</h1>
+        <h1>
+          {translate("Order ")}
+          {order.order_number}
+        </h1>
         <OrderSummary order={order} />
         {["pending", "awaiting_payment"].includes(order.status) && (
           <Payment order={order} done={setOrder} />
@@ -375,29 +425,33 @@ function Checkout({ id, params }) {
     );
   return (
     <>
-      <h1>Checkout</h1>
+      <h1>{translate("Checkout")}</h1>
       <p>
-        Payments are simulated. No real money moves. The final total includes
-        any processing fee calculated by the server.
+        {translate(
+          "Payments are simulated. No real money moves. The final total includes any processing fee calculated by the server.",
+        )}
       </p>
       {!user.email_verified && (
         <p role="alert">
-          Verify your email before booking.{" "}
-          <Link to="/verify-email">Verify email</Link>
+          {translate("Verify your email before booking.")}{" "}
+          <Link to="/verify-email">{translate("Verify email")}</Link>
         </p>
       )}
       <State resource={tickets}>
         <div className="bf-panel bf-form">
           <label>
-            Ticket type
+            {translate("Ticket type")}
             <select
               value={cart.ticket_type_id}
               onChange={(e) => {
-                setCart({ ...cart, ticket_type_id: e.target.value });
+                setCart({
+                  ...cart,
+                  ticket_type_id: e.target.value,
+                });
                 setPreview(null);
               }}
             >
-              <option value="">Choose…</option>
+              <option value="">{translate("Choose\u2026")}</option>
               {tickets.data
                 ?.filter((t) => !t.is_hidden)
                 .map((t) => (
@@ -408,7 +462,7 @@ function Checkout({ id, params }) {
             </select>
           </label>
           <label>
-            Quantity
+            {translate("Quantity")}
             <input
               type="number"
               min="1"
@@ -416,17 +470,23 @@ function Checkout({ id, params }) {
               disabled={assigned}
               value={assigned ? owned.length : cart.quantity}
               onChange={(e) => {
-                setCart({ ...cart, quantity: e.target.value });
+                setCart({
+                  ...cart,
+                  quantity: e.target.value,
+                });
                 setPreview(null);
               }}
             />
           </label>
           <label>
-            Promo code
+            {translate("Promo code")}
             <input
               value={cart.code}
               onChange={(e) => {
-                setCart({ ...cart, code: e.target.value });
+                setCart({
+                  ...cart,
+                  code: e.target.value,
+                });
                 setPreview(null);
               }}
             />
@@ -437,23 +497,27 @@ function Checkout({ id, params }) {
                 await api(`/events/${id}/promo/validate`, {
                   method: "POST",
                   auth: false,
-                  body: { code: cart.code, items },
+                  body: {
+                    code: cart.code,
+                    items,
+                  },
                 }),
               )
             }
           >
-            Check discount
+            {translate("Check discount")}
           </Action>
           {preview && (
             <p role="status">
-              Discount {money(preview.discount_amount)} · Before fees{" "}
-              {money(preview.total_amount)}
+              {translate("Discount")}
+              {money(preview.discount_amount)}
+              {translate(" \xB7 Before fees")} {money(preview.total_amount)}
             </p>
           )}
         </div>
         {assigned && (
           <div className="bf-panel">
-            <h2>Select your seats</h2>
+            <h2>{translate("Select your seats")}</h2>
             <State resource={seats}>
               <div className="bf-seat-map">
                 {seats.data?.map((seat) => (
@@ -471,8 +535,8 @@ function Checkout({ id, params }) {
                       }
                     />
                     {seat.section} {seat.row}
-                    {seat.number} · {seat.status}
-                    {seat.accessible ? " · accessible" : ""}
+                    {seat.number} · {translate(seat.status)}
+                    {seat.accessible ? ` · ${translate("accessible")}` : ""}
                   </label>
                 ))}
               </div>
@@ -493,12 +557,13 @@ function Checkout({ id, params }) {
                 setSelectedSeats([]);
               }}
             >
-              Hold selected seats
+              {translate("Hold selected seats")}
             </Action>
             <State resource={holds}>
               {owned.map((hold) => (
                 <div key={hold.id}>
-                  Held until {new Date(hold.expires_at).toLocaleTimeString()}{" "}
+                  {translate("Held until")}
+                  {dateTime(hold.expires_at)}{" "}
                   <Action
                     perform={() =>
                       api(`/events/${id}/seat-holds/${hold.id}`, {
@@ -510,7 +575,7 @@ function Checkout({ id, params }) {
                       seats.reload();
                     }}
                   >
-                    Release
+                    {translate("Release")}
                   </Action>
                 </div>
               ))}
@@ -526,9 +591,18 @@ function Checkout({ id, params }) {
               body: {
                 items: items.map((item) => ({
                   ...item,
-                  attendees: Array.from({ length: item.quantity }, () => body),
+                  attendees: Array.from(
+                    {
+                      length: item.quantity,
+                    },
+                    () => body,
+                  ),
                 })),
-                ...(cart.code ? { promo_code: cart.code } : {}),
+                ...(cart.code
+                  ? {
+                      promo_code: cart.code,
+                    }
+                  : {}),
               },
             })
           }
@@ -546,18 +620,24 @@ export function Payment({ order, done }) {
   );
   return (
     <div className="bf-panel">
-      <h2>Simulated payment</h2>
+      <h2>{translate("Simulated payment")}</h2>
       <p>
-        Payable total: {money(order.total_amount)}. Reservation expires:{" "}
-        {order.expires_at ? new Date(order.expires_at).toLocaleString() : "—"}
+        {translate("Payable total:")}
+        {money(order.total_amount)}
+        {translate(". Reservation expires:")}{" "}
+        {order.expires_at ? dateTime(order.expires_at) : "—"}
       </p>
       {!payment || payment.status === "failed" ? (
         <Action
           perform={async () =>
-            setPayment(await api(`/orders/${order.id}/pay`, { method: "POST" }))
+            setPayment(
+              await api(`/orders/${order.id}/pay`, {
+                method: "POST",
+              }),
+            )
           }
         >
-          Start payment
+          {translate("Start payment")}
         </Action>
       ) : (
         ["success", "failure"].map((outcome) => (
@@ -566,13 +646,15 @@ export function Payment({ order, done }) {
             perform={async () => {
               const result = await api(`/payments/${payment.id}/simulate`, {
                 method: "POST",
-                body: { outcome },
+                body: {
+                  outcome,
+                },
               });
               setPayment(result);
               done(await api(`/orders/${order.id}`));
             }}
           >
-            Simulate {outcome}
+            {translate("Simulate")} {translate(outcome)}
           </Action>
         ))
       )}
@@ -613,4 +695,30 @@ export default function PublicPages({ route, path }) {
       </main>
     </>
   );
+}
+function ReportEvent({ id }) {
+  const { user } = useSession();
+  return user ? (
+    <details className="bf-panel">
+      <summary>{translate("Report this event")}</summary>
+      <Form
+        fields={[
+          {
+            name: "reason",
+            label: translate("Report reason"),
+            type: "textarea",
+            required: true,
+            maxLength: 2000,
+          },
+        ]}
+        label="Send report"
+        submit={(body) =>
+          api(`/events/${id}/reports`, {
+            method: "POST",
+            body,
+          })
+        }
+      />
+    </details>
+  ) : null;
 }

@@ -24,6 +24,7 @@ from app.modules.users import models as users_models
 from app.modules.venues import models as venues_models
 
 __all__ = [
+    "operations_models",
     "activation_models",
     "auth_models",
     "history_models",
@@ -43,3 +44,5 @@ __all__ = [
     "tickets_models",
     "holds_models",
 ]
+
+from app.modules.operations import models as operations_models

@@ -110,3 +110,14 @@ multiple workers. Security, dependency decisions and verification limits are in
 [security-and-testing.md](docs/security-and-testing.md). Native Chrome desktop/mobile visual review is recorded in
 [the acceptance log](docs/acceptance-2026-11-13.md). Physical device scanning
 remains a separate manual acceptance check.
+
+
+### M11 follow-up workflows
+
+Migrate through `0008_operational_workflows` before using simulated payouts,
+event-report review, escalated support and per-ticket-type inventory summaries.
+Customer screens share Kazakh/Russian/English language selection. See
+[implementation and verification](docs/m11-verification.md) for scope, performance
+measurements and remaining device/accessibility checks, and
+[backup and isolated recovery](docs/backup-recovery.md) for daily timer setup and
+restore instructions. Hosting/encryption (M11.6) remains deferred.

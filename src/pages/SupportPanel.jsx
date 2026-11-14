@@ -1,9 +1,9 @@
+import { t as translate, dateTime } from "../lib/locale";
 import { useState } from "react";
 import { api, apiPath, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
 import { Form, State, DataTable, Action, Details } from "./live-shared";
-
 const categories = [
   "ticket_delivery",
   "payment",
@@ -13,7 +13,7 @@ const categories = [
   "check_in",
   "account",
   "technical",
-].map((value) => [value, value.replaceAll("_", " ")]);
+].map((value) => [value, value]);
 export default function SupportPanel({
   inbox = "/support/cases",
   staff = false,
@@ -27,7 +27,7 @@ export default function SupportPanel({
     return (
       <>
         <button className="bf-outline-button" onClick={() => setSelected(null)}>
-          Back to cases
+          {translate("Back to cases")}
         </button>
         <Thread key={selected} id={selected} staff={staff} eventId={eventId} />
       </>
@@ -38,35 +38,35 @@ export default function SupportPanel({
         <DataTable
           rows={cases.data || []}
           columns={[
-            ["case_number", "Case"],
-            ["subject", "Subject"],
-            ["status", "Status"],
-            ["last_message_at", "Last update"],
+            ["case_number", translate("Case")],
+            ["subject", translate("Subject")],
+            ["status", translate("Status")],
+            ["last_message_at", translate("Last update")],
           ]}
           actions={(row) => (
             <button
               className="bf-outline-button"
               onClick={() => setSelected(row.id)}
             >
-              Open conversation
+              {translate("Open conversation")}
             </button>
           )}
         />
       </State>
       {!staff && (
         <>
-          <h2>Open a support case</h2>
+          <h2>{translate("Open a support case")}</h2>
           <Form
             fields={[
               {
                 name: "subject",
-                label: "Subject",
+                label: translate("Subject"),
                 required: true,
                 maxLength: 200,
               },
               {
                 name: "category",
-                label: "Category",
+                label: translate("Category"),
                 options: categories,
                 required: true,
               },
@@ -74,7 +74,7 @@ export default function SupportPanel({
                 ? [
                     {
                       name: "order_id",
-                      label: "Related order",
+                      label: translate("Related order"),
                       required: true,
                       options: (orders.data || []).map((order) => [
                         order.id,
@@ -85,7 +85,7 @@ export default function SupportPanel({
                 : []),
               {
                 name: "body",
-                label: "Message",
+                label: translate("Message"),
                 type: "textarea",
                 required: true,
                 maxLength: 10000,
@@ -98,7 +98,11 @@ export default function SupportPanel({
                 body: {
                   ...body,
                   case_type: organizer ? "organizer" : "attendee",
-                  ...(eventId ? { event_id: eventId } : {}),
+                  ...(eventId
+                    ? {
+                        event_id: eventId,
+                      }
+                    : {}),
                 },
               })
             }
@@ -138,14 +142,45 @@ function Thread({ id, staff, eventId }) {
           <Details
             value={detail.data}
             fields={[
-              ["case_number", "Case"],
-              ["subject", "Subject"],
-              ["status", "Status"],
-              ["category", "Category"],
+              ["case_number", translate("Case")],
+              ["subject", translate("Subject")],
+              ["status", translate("Status")],
+              ["category", translate("Category")],
             ]}
           />
         )}
       </State>
+      {staff && (
+        <details className="bf-panel">
+          <summary>{translate("Escalate to platform support")}</summary>
+          {detail.data?.escalated_at ? (
+            <p>
+              {translate("Escalated: ")}
+              {detail.data.escalation_reason}
+            </p>
+          ) : (
+            <Form
+              fields={[
+                {
+                  name: "reason",
+                  label: translate("Escalation reason"),
+                  type: "textarea",
+                  required: true,
+                  maxLength: 2000,
+                },
+              ]}
+              label="Escalate"
+              submit={(body) =>
+                api(`/support/cases/${id}/escalate`, {
+                  method: "POST",
+                  body,
+                })
+              }
+              done={detail.reload}
+            />
+          )}
+        </details>
+      )}
       <State resource={messages}>
         <div className="bf-panel bf-chat">
           {messages.data?.map((message) => (
@@ -155,11 +190,11 @@ function Thread({ id, staff, eventId }) {
             >
               <strong>
                 {message.is_internal_note
-                  ? "Internal note"
-                  : message.sender_role}
+                  ? translate("Internal note")
+                  : translate(message.sender_role)}
               </strong>
               <p>{message.body}</p>
-              <small>{new Date(message.created_at).toLocaleString()}</small>
+              <small>{dateTime(message.created_at)}</small>
             </div>
           ))}
         </div>
@@ -168,7 +203,7 @@ function Thread({ id, staff, eventId }) {
         fields={[
           {
             name: "body",
-            label: "Reply",
+            label: translate("Reply"),
             type: "textarea",
             required: true,
             maxLength: 10000,
@@ -177,7 +212,7 @@ function Thread({ id, staff, eventId }) {
             ? [
                 {
                   name: "is_internal_note",
-                  label: "Internal note (staff only)",
+                  label: translate("Internal note (staff only)"),
                   type: "checkbox",
                 },
               ]
@@ -196,13 +231,18 @@ function Thread({ id, staff, eventId }) {
               data.append("file", file);
               await api(
                 `/support/cases/${id}/messages/${message.id}/attachments`,
-                { method: "POST", body: data },
+                {
+                  method: "POST",
+                  body: data,
+                },
               );
             } catch (error) {
               messages.reload();
               throw new Error(
                 `Message sent, but screenshot failed: ${error.message}`,
-                { cause: error },
+                {
+                  cause: error,
+                },
               );
             }
           }
@@ -214,7 +254,7 @@ function Thread({ id, staff, eventId }) {
         }}
       >
         <label>
-          Screenshot (optional, PNG/JPEG/WebP)
+          {translate("Screenshot (optional, PNG/JPEG/WebP)")}
           <input
             type="file"
             name="screenshot"
@@ -230,8 +270,8 @@ function Thread({ id, staff, eventId }) {
               download(apiPath(attachment.file_url), attachment.filename)
             }
           >
-            Download screenshot ·{" "}
-            {new Date(attachment.created_at).toLocaleString()}
+            {translate("Download screenshot \xB7")}{" "}
+            {dateTime(attachment.created_at)}
           </Action>
         ))}
       </State>
@@ -241,7 +281,7 @@ function Thread({ id, staff, eventId }) {
             fields={[
               {
                 name: "status",
-                label: "Case status",
+                label: translate("Case status"),
                 required: true,
                 options: [
                   "open",
@@ -252,7 +292,10 @@ function Thread({ id, staff, eventId }) {
               },
             ]}
             submit={(body) =>
-              api(`/support/cases/${id}/status`, { method: "PATCH", body })
+              api(`/support/cases/${id}/status`, {
+                method: "PATCH",
+                body,
+              })
             }
             done={detail.reload}
           />
@@ -260,13 +303,16 @@ function Thread({ id, staff, eventId }) {
             fields={[
               {
                 name: "assigned_to_user_id",
-                label: "Assign to staff member",
+                label: translate("Assign to staff member"),
                 required: true,
                 options,
               },
             ]}
             submit={(body) =>
-              api(`/support/cases/${id}/assignment`, { method: "PATCH", body })
+              api(`/support/cases/${id}/assignment`, {
+                method: "PATCH",
+                body,
+              })
             }
             done={detail.reload}
           />
@@ -274,12 +320,14 @@ function Thread({ id, staff, eventId }) {
             perform={() =>
               api(`/support/cases/${id}/assignment`, {
                 method: "PATCH",
-                body: { assigned_to_user_id: null },
+                body: {
+                  assigned_to_user_id: null,
+                },
               })
             }
             done={detail.reload}
           >
-            Unassign
+            {translate("Unassign")}
           </Action>
         </>
       )}

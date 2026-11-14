@@ -1,0 +1,11 @@
+[Unit]
+Description=BiletFlow database and media backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=biletflow
+WorkingDirectory=/srv/biletflow/backend
+UMask=0077
+ExecStart=/usr/local/bin/uv run python -m app.scripts.backup backup --project biletflow --destination /var/backups/biletflow --keep-days 14

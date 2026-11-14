@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends
-from pydantic import AwareDatetime
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import (
@@ -84,12 +84,20 @@ async def admin_cases(
     event_id: uuid.UUID | None = None,
     order_id: uuid.UUID | None = None,
     category: Category | None = None,
+    escalated: bool | None = None,
     page: Pagination = Depends(pagination),
     user: User = Depends(require_platform_admin),
     session: AsyncSession = Depends(get_session),
 ):
     items, total = await service.admin_cases(
-        session, page, status, case_type, event_id=event_id, order_id=order_id, category=category
+        session,
+        page,
+        status,
+        case_type,
+        event_id=event_id,
+        order_id=order_id,
+        category=category,
+        escalated=escalated,
     )
     return Page(items=items, total=total)
 
@@ -154,3 +162,17 @@ async def status(
     session: AsyncSession = Depends(get_session),
 ):
     return await service.change_status(session, access, data.status)
+
+
+class EscalationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/support/cases/{case_id}/escalate", response_model=CaseOut)
+async def escalate(
+    data: EscalationRequest,
+    access: CaseAccess = Depends(require_support_case),
+    session: AsyncSession = Depends(get_session),
+):
+    return await service.escalate(session, access, data.reason)

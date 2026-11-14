@@ -250,7 +250,11 @@ export default function PlatformAdminApp({ path }) {
   const kind = path.split("/")[2];
   return (
     <Shell role="admin" path={path} title="Platform administration">
-      {kind === "settings" || kind === "reports" ? (
+      {kind === "payouts" || kind === "event-reports" ? (
+        <OperationalQueue kind={kind} />
+      ) : kind === "escalations" ? (
+        <SupportPanel inbox="/admin/support/cases?escalated=true" staff />
+      ) : kind === "settings" || kind === "reports" ? (
         <Settings />
       ) : kind === "support" ? (
         <SupportPanel inbox="/admin/support/cases" staff />
@@ -271,5 +275,101 @@ export default function PlatformAdminApp({ path }) {
         </div>
       )}
     </Shell>
+  );
+}
+
+function OperationalQueue({ kind }) {
+  const resource = useResource(`/admin/${kind}`, true);
+  const [selected, setSelected] = useState(null);
+  const payout = kind === "payouts";
+  const event = useResource(
+    selected ? `/admin/events/${selected.event_id}` : null,
+  );
+  return (
+    <>
+      <h2>{payout ? "Simulated payouts" : "Reported events"}</h2>
+      <State resource={resource}>
+        <DataTable
+          rows={resource.data || []}
+          columns={[
+            ["event_id", "Event"],
+            ["status", "Status"],
+            ...(payout
+              ? [
+                  ["amount", "Amount (KZT)"],
+                  ["note", "Note"],
+                ]
+              : [
+                  ["reason", "Reason"],
+                  ["resolution", "Resolution"],
+                ]),
+          ]}
+          actions={(row) => (
+            <button onClick={() => setSelected(row)}>Review</button>
+          )}
+        />
+      </State>
+      {selected && (
+        <section className="bf-panel">
+          <h2>Review</h2>
+          <State resource={event}>
+            {event.data && (
+              <Details
+                value={event.data}
+                fields={[
+                  ["title", "Event"],
+                  ["status", "Status"],
+                  ["is_suspended", "Suspended"],
+                  ["starts_at", "Starts"],
+                ]}
+              />
+            )}
+          </State>
+          <Details
+            value={selected}
+            fields={[
+              ["event_id", "Event"],
+              ["status", "Status"],
+              [payout ? "note" : "reason", "Details"],
+            ]}
+          />
+          <Form
+            key={selected.id}
+            fields={[
+              {
+                name: "status",
+                label: "Status",
+                required: true,
+                options: (payout
+                  ? ["processing", "paid", "failed"]
+                  : ["reviewing", "resolved", "dismissed"]
+                ).map((s) => [s, s]),
+              },
+              {
+                name: payout ? "note" : "resolution",
+                label: "Review note",
+                type: "textarea",
+                required: true,
+                maxLength: 1000,
+              },
+            ]}
+            submit={(body) =>
+              api(`/admin/${kind}/${selected.id}`, { method: "PATCH", body })
+            }
+            done={() => {
+              setSelected(null);
+              resource.reload();
+            }}
+          />
+          {!payout && (
+            <Moderation
+              kind="events"
+              record={{ id: selected.event_id }}
+              done={resource.reload}
+            />
+          )}
+        </section>
+      )}
+    </>
   );
 }

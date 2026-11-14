@@ -1,8 +1,8 @@
+import { t as translate, useLocale, setLocale, dateTime } from "../lib/locale";
 import { useState } from "react";
 import { money, navGroups } from "./app-data";
 import { useSession } from "../lib/session-context";
 import { logout } from "../lib/client";
-
 export function Link({ to, children, className = "" }) {
   return (
     <a className={className} href={`/#${to}`}>
@@ -19,14 +19,17 @@ export function Topbar() {
         biletflow<span>.</span>
       </a>
       <div className="bf-top-right">
-        <Link to="/events">Explore events</Link>
+        <LanguagePicker />
+        <Link to="/events">{translate("Explore events")}</Link>
         {user ? (
           <>
-            <Link to="/account/notifications">Notifications</Link>
+            <Link to="/account/notifications">
+              {translate("Notifications")}
+            </Link>
             <Link to="/account">{user.full_name}</Link>
-            <Link to="/organizer">Organizer</Link>
+            <Link to="/organizer">{translate("Organizer")}</Link>
             {user.platform_role === "platform_admin" && (
-              <Link to="/admin">Admin</Link>
+              <Link to="/admin">{translate("Admin")}</Link>
             )}
             <button
               onClick={async () => {
@@ -40,34 +43,36 @@ export function Topbar() {
                 }
               }}
             >
-              Sign out
+              {translate("Sign out")}
             </button>
           </>
         ) : (
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{translate("Sign in")}</Link>
         )}
         <details className="bf-mobile-nav">
-          <summary>Menu</summary>
-          <nav aria-label="Workspace navigation">
-            <Link to="/events">Explore events</Link>
+          <summary>{translate("Menu")}</summary>
+          <nav aria-label={translate("Workspace navigation")}>
+            <Link to="/events">{translate("Explore events")}</Link>
             {user ? (
               <>
-                <Link to="/account">My account</Link>
-                <Link to="/account/notifications">Notifications</Link>
-                <Link to="/organizer">Organizer workspace</Link>
+                <Link to="/account">{translate("My account")}</Link>
+                <Link to="/account/notifications">
+                  {translate("Notifications")}
+                </Link>
+                <Link to="/organizer">{translate("Organizer workspace")}</Link>
                 {user.platform_role === "platform_admin" && (
-                  <Link to="/admin">Platform admin</Link>
+                  <Link to="/admin">{translate("Platform admin")}</Link>
                 )}
               </>
             ) : (
               <>
-                <Link to="/login">Sign in</Link>
-                <Link to="/register">Register</Link>
+                <Link to="/login">{translate("Sign in")}</Link>
+                <Link to="/register">{translate("Register")}</Link>
               </>
             )}
           </nav>
         </details>
-        {error && <span role="alert">{error}</span>}
+        {error && <span role="alert">{translate(error)}</span>}
       </div>
     </header>
   );
@@ -78,23 +83,23 @@ export function Shell({ role = "attendee", path, title, subtitle, children }) {
       <Topbar />
       <div className="bf-shell">
         <aside className="bf-side">
-          <div className="bf-side-label">{role.toUpperCase()}</div>
+          <div className="bf-side-label">{translate(role)}</div>
           {navGroups[role].map(([label, to]) => (
             <Link
               key={to}
               to={to}
               className={`bf-side-link ${path === to ? "active" : ""}`}
             >
-              {label}
+              {translate(label)}
             </Link>
           ))}
-          <Link to="/events">Back to events</Link>
+          <Link to="/events">{translate("Back to events")}</Link>
         </aside>
         <main className="bf-main">
           <div className="bf-page-head">
             <div>
-              <h1>{title}</h1>
-              {subtitle && <p>{subtitle}</p>}
+              <h1>{translate(title)}</h1>
+              {subtitle && <p>{translate(subtitle)}</p>}
             </div>
           </div>
           {children}
@@ -106,7 +111,7 @@ export function Shell({ role = "attendee", path, title, subtitle, children }) {
 export function Stat({ label, value }) {
   return (
     <div className="bf-stat">
-      <span>{label}</span>
+      <span>{translate(label)}</span>
       <strong>{value}</strong>
     </div>
   );
@@ -128,20 +133,33 @@ export function EventCard({ event }) {
     >
       <div className="bf-event-image">
         <img src={event.image || "/images/culture.jpg"} alt="" />
-        <span>{event.category || "Event"}</span>
+        <span>{event.category || translate("Event")}</span>
       </div>
       <div className="bf-event-info">
-        <small>
-          {new Date(event.startsAt || event.starts_at).toLocaleString()}
-        </small>
+        <small>{dateTime(event.startsAt || event.starts_at)}</small>
         <h3>{event.title}</h3>
         <p>{event.venue || event.city || ""}</p>
         {event.price != null && (
           <strong>
-            {event.price === 0 ? "Free" : `From ${money(event.price)}`}
+            {event.price === 0
+              ? translate("Free")
+              : `From ${money(event.price)}`}
           </strong>
         )}
       </div>
     </Link>
+  );
+}
+export function LanguagePicker() {
+  const locale = useLocale();
+  return (
+    <label className="bf-language">
+      {translate("Language")}
+      <select value={locale} onChange={(e) => setLocale(e.target.value)}>
+        <option value="kk">Қазақша</option>
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+      </select>
+    </label>
   );
 }

@@ -1,3 +1,4 @@
+import { useLocale, setLocale } from "../../lib/locale";
 import { useEffect, useRef, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import ExperienceHero from "../../components/ExperienceHero/ExperienceHero";
@@ -34,17 +35,6 @@ const symbols = {
   workshop: "✳",
   campus: "↗",
 };
-function getLanguage() {
-  try {
-    return ["en", "ru", "kk"].includes(
-      localStorage.getItem("biletflow-language"),
-    )
-      ? localStorage.getItem("biletflow-language")
-      : "ru";
-  } catch {
-    return "ru";
-  }
-}
 function Modal({ children, title, onClose, t }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -79,7 +69,8 @@ function Modal({ children, title, onClose, t }) {
 }
 export default function Home() {
   const session = useSession();
-  const [lang, setLang] = useState(getLanguage);
+  const lang = useLocale();
+  const setLang = setLocale;
   const [filters, setFilters] = useState(initialFilters);
   const [searchPaused, setSearchPaused] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);

@@ -41,8 +41,10 @@ class CaseAccess:
 
 
 async def staff_for_case(session: AsyncSession, case: SupportCase, user: User) -> bool:
+    if user.platform_role == PlatformRole.PLATFORM_ADMIN:
+        return case.case_type == CaseType.ORGANIZER or case.escalated_at is not None
     if case.case_type == CaseType.ORGANIZER:
-        return user.platform_role == PlatformRole.PLATFORM_ADMIN
+        return False
     if case.event_id is None:
         return False
     relation = await users.get_event_relation(session, case.event_id, user.id)
@@ -153,7 +155,19 @@ async def staff_ids(session: AsyncSession, case: SupportCase) -> set[uuid.UUID]:
         query = select(User.id).where(
             User.status == UserStatus.ACTIVE, (User.id.in_(relation) | User.id.in_(assignments))
         )
-    return set((await session.scalars(query)).all())
+    eligible = set((await session.scalars(query)).all())
+    if case.escalated_at is not None:
+        eligible.update(
+            (
+                await session.scalars(
+                    select(User.id).where(
+                        User.platform_role == PlatformRole.PLATFORM_ADMIN,
+                        User.status == UserStatus.ACTIVE,
+                    )
+                )
+            ).all()
+        )
+    return eligible
 
 
 async def responders(session: AsyncSession, case: SupportCase) -> set[uuid.UUID]:
@@ -308,8 +322,15 @@ async def admin_cases(
     event_id=None,
     order_id=None,
     category=None,
+    escalated=None,
 ):
     query = select(SupportCase)
+    if escalated is not None:
+        query = query.where(
+            SupportCase.escalated_at.is_not(None)
+            if escalated
+            else SupportCase.escalated_at.is_(None)
+        )
     if case_type is not None:
         query = query.where(SupportCase.case_type == case_type)
     for column, value in (
@@ -399,3 +420,35 @@ async def change_status(session: AsyncSession, access: CaseAccess, status: CaseS
     result = CaseOut.model_validate(case)
     await session.commit()
     return result
+
+
+async def escalate(session: AsyncSession, access: CaseAccess, reason: str):
+    access = await access_case(session, access.user, access.case.id, lock=True)
+    if not access.can_manage:
+        raise AppError(FORBIDDEN, "Support staff access required.", 403)
+    case = access.case
+    if case.status == CaseStatus.RESOLVED:
+        raise AppError("CASE_RESOLVED", "Reopen the case before escalation.", 409)
+    if case.escalated_at is None:
+        case.escalated_at = datetime.now(UTC)
+        case.escalated_by = access.user.id
+        case.escalation_reason = reason
+        await audit(session, access, "support_case.escalated", {"reason": reason})
+        admins = set(
+            (
+                await session.scalars(
+                    select(User.id).where(
+                        User.platform_role == PlatformRole.PLATFORM_ADMIN,
+                        User.status == UserStatus.ACTIVE,
+                    )
+                )
+            ).all()
+        )
+        await notify(
+            session,
+            access,
+            NotificationType.SUPPORT_STATUS_CHANGED,
+            admins | {case.opened_by_user_id},
+        )
+        await session.commit()
+    return CaseOut.model_validate(case)

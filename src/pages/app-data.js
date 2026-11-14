@@ -1,4 +1,5 @@
-export const money = (value) => `${Number(value).toLocaleString("en-US")} ₸`;
+import { number } from "../lib/locale";
+export const money = (value) => `${number(value)} ₸`;
 export const navGroups = {
   attendee: [
     ["Overview", "/account"],
@@ -23,6 +24,9 @@ export const navGroups = {
   admin: [
     ["Overview", "/admin"],
     ["Users", "/admin/users"],
+    ["Reported events", "/admin/event-reports"],
+    ["Simulated payouts", "/admin/payouts"],
+    ["Escalated support", "/admin/escalations"],
     ["Event moderation", "/admin/events"],
     ["Paid sales", "/admin/activations"],
     ["Orders", "/admin/orders"],

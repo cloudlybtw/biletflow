@@ -57,6 +57,9 @@ class CaseOut(BaseModel):
     ticket_id: uuid.UUID | None
     status: CaseStatus
     assigned_to_user_id: uuid.UUID | None
+    escalated_at: datetime | None
+    escalated_by: uuid.UUID | None
+    escalation_reason: str | None
     last_message_at: datetime | None
     resolved_at: datetime | None
     created_at: datetime
