@@ -2,7 +2,7 @@ import CalendarLinks from "./CalendarLinks";
 import SeatMap from "./SeatMap";
 import { t as translate, dateTime, getLocale } from "../lib/locale";
 import { useState } from "react";
-import { api, apiPath, download, login, query } from "../lib/client";
+import { api, apiPath, login, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
 import { Topbar, Link, EventCard, LanguagePicker } from "./app-shared";
