@@ -103,3 +103,9 @@ td{font-size:13px;padding:15px 12px}
 .bf-form input,.bf-form textarea,.bf-form select{border-color:#827587}
 .bf-seat-scroll{overflow:auto;max-width:100%;padding:8px}.bf-spatial-seats{display:grid;gap:10px;min-width:max-content}.bf-spatial-seats label{display:flex;flex-direction:column;border:2px solid #376248;border-radius:6px;padding:8px;color:#24372b;background:#eff9f2;min-height:90px;font-size:12px}.bf-spatial-seats input{width:auto;margin:0 0 6px;align-self:start}.bf-spatial-seats label[data-state=selected]{background:#e9ddfa;border-color:#7136bd;color:#32164d}.bf-spatial-seats label[data-state=held]{background:#fff1ce;border-color:#805a10;color:#553b08}.bf-spatial-seats label[data-state=sold],.bf-spatial-seats label[data-state=unavailable]{background:#eee;border-color:#6a626e;color:#49414d}.bf-spatial-seats label:focus-within{outline:3px solid #7136bd;outline-offset:3px}.bf-seat-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:#49414d}.bf-spatial-seats small{display:block;font-size:11px;max-width:120px}
 .bf-skip{position:fixed;top:8px;left:8px;transform:translateY(-200%);z-index:1000;padding:12px 18px;background:#251632;color:#fff;border-radius:4px}.bf-skip:focus{transform:translateY(0)}
+/* Keep validation feedback readable and reachable after server-side rejection. */
+.bf-form [role=alert]{color:#86283c;background:#fff1f3;padding:12px;border:1px solid #a53851;border-radius:4px;line-height:1.5}
+.bf-form [role=alert]:focus{outline:3px solid #7136bd;outline-offset:3px}
+.bf-auth-card,.bf-auth-card .bf-panel{min-width:0;max-width:100%}
+.bf-form label{min-width:0}.bf-form input,.bf-form select,.bf-form textarea{min-width:0;width:100%}
+.bf-form button,.bf-bridge-links a{white-space:normal;overflow-wrap:anywhere}

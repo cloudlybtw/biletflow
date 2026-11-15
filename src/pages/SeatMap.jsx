@@ -37,6 +37,9 @@ export default function SeatMap({
         >
           {seats.map((seat) => {
             const checked = selected.includes(seat.id);
+            const wrongType =
+              seat.status === "available" &&
+              seat.ticket_type_id !== ticketTypeId;
             const state = checked ? "selected" : seat.status;
             const disabled =
               seat.status !== "available" ||
@@ -66,7 +69,7 @@ export default function SeatMap({
                   {seat.section} {seat.row} {seat.number}
                 </span>
                 <small>
-                  {t(state)}
+                  {wrongType ? t("Choose the matching ticket type") : t(state)}
                   {seat.held_by_me ? ` · ${t("Your hold")}` : ""}
                   {seat.accessible ? ` · ♿ ${t("accessible")}` : ""}
                 </small>

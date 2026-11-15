@@ -46,3 +46,22 @@ test("rendered seat states retain AA text and control boundary contrast", () => 
     dom.window.close();
   }
 });
+
+test("validation feedback remains AA-readable with a visible boundary", () => {
+  const css = readFileSync(
+    new URL("../src/pages/ProductApp.css", import.meta.url),
+    "utf8",
+  );
+  const dom = new JSDOM(
+    `<style>${css}</style><form class="bf-form"><p role="alert">Invalid request</p></form>`,
+  );
+  try {
+    const style = dom.window.getComputedStyle(
+      dom.window.document.querySelector("[role=alert]"),
+    );
+    assert.ok(contrast(style.color, style.backgroundColor) >= 4.5);
+    assert.ok(contrast(style.borderTopColor, style.backgroundColor) >= 3);
+  } finally {
+    dom.window.close();
+  }
+});

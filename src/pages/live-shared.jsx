@@ -1,5 +1,5 @@
 import { t as translate, dateTime, number, errorText } from "../lib/locale";
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect, useId, useRef } from "react";
 import { api, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Link, Badge } from "./app-shared";
@@ -73,6 +73,10 @@ export function Form({
 }) {
   const [status, setStatus] = useState({});
   const feedbackId = useId();
+  const feedback = useRef(null);
+  useEffect(() => {
+    if (status.error) feedback.current?.focus();
+  }, [status.error]);
   return (
     <form
       className="bf-panel bf-form"
@@ -164,7 +168,7 @@ export function Form({
       ))}
       {children}
       {status.error && (
-        <p id={feedbackId} role="alert">
+        <p id={feedbackId} ref={feedback} tabIndex={-1} role="alert">
           {errorText(status.error)}
         </p>
       )}

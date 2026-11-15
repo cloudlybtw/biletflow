@@ -694,3 +694,22 @@ test("skip control focuses main without changing the router location", async () 
   assert.equal(document.activeElement, document.querySelector("main"));
   assert.equal(location.hash, before);
 });
+
+test("server validation moves focus to readable feedback without losing user input", async () => {
+  handle = () =>
+    json(
+      { error: { code: "VALIDATION_ERROR", message: "Check entered details" } },
+      422,
+    );
+  await render(PublicPages, { path: "/login", route: "/login" });
+  const form = document.querySelector("form");
+  fill(form, { email: user.email, password: "retained-password" });
+  await submit(form);
+  const alert = form.querySelector("[role=alert]");
+  assert.equal(document.activeElement, alert);
+  assert.equal(form.elements.namedItem("email").value, user.email);
+  assert.equal(
+    form.elements.namedItem("email").getAttribute("aria-describedby"),
+    alert.id,
+  );
+});
