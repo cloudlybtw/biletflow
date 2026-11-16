@@ -4,7 +4,10 @@ Run from the repository's `backend/` directory with Docker access. Backups inclu
 PostgreSQL custom-format dumps and all event/support uploads, a versioned manifest
 and SHA-256 checksums. Output permissions are owner-only (umask 077). Keep backups
 outside the checkout and copy them to a separately controlled backup location.
-Encryption configuration belongs to deferred M11.6; these files are not encrypted.
+These local archives are not encrypted. Hosting/encryption planning has resumed;
+configure encryption/access/retention for the chosen backup destination before
+storing real-user data. The Compose procedure below is not managed-platform backup
+automation; see [production runtime](production-runtime.md).
 
 ```sh
 uv run python -m app.scripts.backup backup \

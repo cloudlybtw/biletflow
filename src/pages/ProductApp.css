@@ -109,3 +109,11 @@ td{font-size:13px;padding:15px 12px}
 .bf-auth-card,.bf-auth-card .bf-panel{min-width:0;max-width:100%}
 .bf-form label{min-width:0}.bf-form input,.bf-form select,.bf-form textarea{min-width:0;width:100%}
 .bf-form button,.bf-bridge-links a{white-space:normal;overflow-wrap:anywhere}
+/* Zoomed layouts must keep workspace links reachable without a second scroll axis. */
+@media(max-width:760px){
+  .bf-top{position:static}
+  .bf-side{width:100%;flex-basis:auto;position:static;flex-wrap:wrap;overflow:visible}
+  .bf-side-link{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+  .bf-main{overflow-wrap:anywhere}
+  .bf-button,.bf-outline-button{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+}

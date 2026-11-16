@@ -6,6 +6,7 @@ can cause redelivery. Failed rows retain their payload for explicit operator ret
 
 import asyncio
 import smtplib
+import ssl
 import uuid
 from datetime import UTC, datetime
 from email.message import EmailMessage
@@ -50,9 +51,18 @@ def scrub_secrets(value):
 
 def _smtp_send(message: EmailMessage) -> None:
     settings = get_settings()
-    with smtplib.SMTP(
-        settings.smtp_host, settings.smtp_port, timeout=settings.smtp_timeout_seconds
-    ) as smtp:
+    context = ssl.create_default_context()
+    client = smtplib.SMTP_SSL if settings.smtp_security == "ssl" else smtplib.SMTP
+    options = {"timeout": settings.smtp_timeout_seconds}
+    if settings.smtp_security == "ssl":
+        options["context"] = context
+    with client(settings.smtp_host, settings.smtp_port, **options) as smtp:
+        if settings.smtp_security == "starttls":
+            smtp.ehlo()
+            smtp.starttls(context=context)
+            smtp.ehlo()
+        if settings.smtp_username:
+            smtp.login(settings.smtp_username, settings.smtp_password.get_secret_value())
         smtp.send_message(message)
 
 

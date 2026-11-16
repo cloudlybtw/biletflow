@@ -174,7 +174,7 @@ export function Form({
       )}
       {status.message && <p role="status">{translate(status.message)}</p>}
       <button className="bf-button" disabled={status.busy}>
-        {status.busy ? translate("Saving\u2026") : label}
+        {status.busy ? translate("Saving\u2026") : translate(label)}
       </button>
     </form>
   );

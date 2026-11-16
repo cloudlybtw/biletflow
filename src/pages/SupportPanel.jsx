@@ -1,5 +1,5 @@
 import { t as translate, dateTime } from "../lib/locale";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, apiPath, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
@@ -22,11 +22,22 @@ export default function SupportPanel({
 }) {
   const cases = useResource(inbox, true, 10000);
   const [selected, setSelected] = useState(null);
+  const backButton = useRef(null);
+  const caseButtons = useRef(new Map());
+  const lastSelected = useRef(null);
   const orders = useResource(!staff && !organizer ? "/orders" : null, true);
+  useEffect(() => {
+    if (selected) backButton.current?.focus();
+    else caseButtons.current.get(lastSelected.current)?.focus();
+  }, [selected]);
   if (selected)
     return (
       <>
-        <button className="bf-outline-button" onClick={() => setSelected(null)}>
+        <button
+          ref={backButton}
+          className="bf-outline-button"
+          onClick={() => setSelected(null)}
+        >
           {translate("Back to cases")}
         </button>
         <Thread key={selected} id={selected} staff={staff} eventId={eventId} />
@@ -45,8 +56,15 @@ export default function SupportPanel({
           ]}
           actions={(row) => (
             <button
+              ref={(node) => {
+                if (node) caseButtons.current.set(row.id, node);
+                else caseButtons.current.delete(row.id);
+              }}
               className="bf-outline-button"
-              onClick={() => setSelected(row.id)}
+              onClick={() => {
+                lastSelected.current = row.id;
+                setSelected(row.id);
+              }}
             >
               {translate("Open conversation")}
             </button>

@@ -3,6 +3,11 @@
 M11.6 (hosting/TLS/encryption) was explicitly excluded. Nothing was deployed to
 Cloudflare, Vercel or another public host. The original plan remains outside Git.
 
+Update 2026-11-16: hosting/encryption planning resumed on 2026-11-15. Provider and
+budget remain unresolved. Secure DB/SMTP configuration, a production image and a
+release migration command are prepared and tested locally; see
+[production runtime](production-runtime.md). No public deployment has occurred.
+
 ## Product workflows
 
 - Customer locales: shared kk/ru/en selection across discovery, auth, checkout,

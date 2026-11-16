@@ -120,7 +120,11 @@ Customer screens share Kazakh/Russian/English language selection. See
 [implementation and verification](docs/m11-verification.md) for scope, performance
 measurements and remaining device/accessibility checks, and
 [backup and isolated recovery](docs/backup-recovery.md) for daily timer setup and
-restore instructions. Hosting/encryption (M11.6) remains deferred.
+restore instructions. Hosting/encryption planning resumed; the provider and budget
+remain unresolved. The [production runtime](docs/production-runtime.md) now includes
+a verified-TLS configuration, non-root image and separate migration command.
+The [Render plan](docs/render-deployment-plan.md) is an optional candidate; no
+public services have been provisioned.
 
 Assigned-seat pricing, blocked seats and updated calendar exports are documented
 in [seating and calendar workflows](docs/seating-calendar.md). Apply migration

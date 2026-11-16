@@ -37,12 +37,16 @@ criterion requires actual online device timing, not the existing local API sampl
 
 The API/background worker, PostgreSQL and private uploads require an identified
 runtime/storage destination. A frontend-only hosting choice is insufficient.
-After the user chooses the target, follow `backup-recovery.md` to install the
-daily timer, configure separate backup storage and alerts, then rehearse recovery
-into isolated DB/media destinations. Do not perform a live restore as a drill.
+After the user chooses the target, configure its supported backup mechanism,
+separate backup storage and alerts, then rehearse recovery into isolated DB/media
+destinations. The timer in `backup-recovery.md` applies only to a Linux/Compose
+host; it is not managed-platform automation. Do not perform a live restore as a drill.
 Repeat representative paid-checkout and reporting-load measurements on that
-actual topology using agreed service objectives. HTTPS/storage encryption remain
-excluded until the user explicitly resumes M11.6.
+actual topology using agreed service objectives. Hosting/encryption planning resumed on 2026-11-15; provider, public-hosting intent
+and budget remain unresolved. The production image, verified DB TLS, secure SMTP
+and configuration template are prepared locally; follow `production-runtime.md`.
+Real hosted delivery, persistence, encryption and recovery still need target
+configuration and acceptance. Physical phone checks remain deferred.
 
 Jira is still deferred until the team supplies its project and authorized access.
 Local bug reports can use `.github/ISSUE_TEMPLATE/integration_bug.yml` meanwhile.

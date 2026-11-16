@@ -713,3 +713,46 @@ test("server validation moves focus to readable feedback without losing user inp
     alert.id,
   );
 });
+
+test("support conversations preserve keyboard focus and translate submit controls", async () => {
+  const locale = await server.ssrLoadModule("/src/lib/locale.js");
+  const SupportPanel = (
+    await server.ssrLoadModule("/src/pages/SupportPanel.jsx")
+  ).default;
+  const supportCase = {
+    id: "case-1",
+    case_number: "BFS-TEST",
+    subject: "Ticket help",
+    status: "open",
+    last_message_at: "2026-11-16T00:00:00Z",
+  };
+  handle = (url) => {
+    if (url === "/api/v1/support/cases/case-1") return json(supportCase);
+    return json({
+      items: url.startsWith("/api/v1/support/cases?") ? [supportCase] : [],
+      total: url.startsWith("/api/v1/support/cases?") ? 1 : 0,
+    });
+  };
+  try {
+    for (const language of ["ru", "kk"]) {
+      await act(() => locale.setLocale(language));
+      await render(SupportPanel, {});
+      const findButton = (label) =>
+        [...document.querySelectorAll("button")].find(
+          (button) => button.textContent === locale.t(label),
+        );
+      assert.ok(findButton("Send request"));
+      const open = findButton("Open conversation");
+      await act(() => {
+        open.focus();
+        open.click();
+      });
+      assert.equal(document.activeElement, findButton("Back to cases"));
+      assert.ok(findButton("Send message"));
+      await act(() => findButton("Back to cases").click());
+      assert.equal(document.activeElement, findButton("Open conversation"));
+    }
+  } finally {
+    await act(() => locale.setLocale("en"));
+  }
+});
