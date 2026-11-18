@@ -5,7 +5,8 @@ import { useState } from "react";
 import { api, apiPath, login, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
-import { Topbar, Link, EventCard, LanguagePicker } from "./app-shared";
+import { Link, EventCard, LanguagePicker } from "./app-shared";
+import SiteHeader from "../components/Navbar/Navbar";
 import { Form, State, Action, OrderSummary, SecureImage } from "./live-shared";
 import { money } from "./app-data";
 function AuthPage({ path, params }) {
@@ -642,7 +643,7 @@ export default function PublicPages({ route, path }) {
   const campaign = params.get("c");
   return (
     <>
-      <Topbar />
+      <SiteHeader />
       <main className="bf-public">
         {path.startsWith("/checkout/") ? (
           <Checkout id={path.split("/")[2]} params={params} />

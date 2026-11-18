@@ -1,10 +1,17 @@
-import { useLocale, setLocale } from "../../lib/locale";
+import { useLocale } from "../../lib/locale";
 import { useEffect, useRef, useState } from "react";
+import Arrow from "../../components/Icons/Arrow";
 import Navbar from "../../components/Navbar/Navbar";
 import ExperienceHero from "../../components/ExperienceHero/ExperienceHero";
 import TicketCarousel from "../../components/TicketCarousel/TicketCarousel";
-import { copy, locales, cities, cityLabel } from "../../data/i18n";
-import { filterEvents, sectionEvents, timezone } from "../../lib/discovery";
+import EventCard from "../../components/EventCard/EventCard";
+import {
+  formatEventDate,
+  formatEventPrice,
+} from "../../components/EventCard/format";
+import { useCity } from "../../lib/city";
+import { copy, cities, cityLabel } from "../../data/i18n";
+import { filterEvents, sectionEvents } from "../../lib/discovery";
 import { loadEvents, login } from "../../lib/api";
 import { useSession } from "../../lib/session-context";
 import "./Home.css";
@@ -70,7 +77,7 @@ function Modal({ children, title, onClose, t }) {
 export default function Home() {
   const session = useSession();
   const lang = useLocale();
-  const setLang = setLocale;
+  const [city, setCity] = useCity();
   const [filters, setFilters] = useState(initialFilters);
   const [searchPaused, setSearchPaused] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
@@ -108,28 +115,18 @@ export default function Home() {
   const update = (key, value) => setFilters((f) => ({ ...f, [key]: value }));
   const reset = () => {
     setFilters(initialFilters);
+    setCity("");
     setCollection(null);
   };
   const invalidDates = filters.from && filters.to && filters.to < filters.from;
-  const filtered = invalidDates ? [] : filterEvents(data.events, filters);
+  const filtered = invalidDates
+    ? []
+    : filterEvents(data.events, { ...filters, city });
   const visibleSections = (collection ? [collection] : sections)
     .map((key) => ({ key, events: sectionEvents(filtered, key) }))
     .filter((s) => s.events.length);
-  const date = (e) =>
-    new Intl.DateTimeFormat(locales[lang], {
-      timeZone: timezone,
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(new Date(e.startsAt));
-  const price = (e) =>
-    e.price === 0
-      ? t.freePrice
-      : e.price == null
-        ? t.unknownPrice
-        : `${t.from} ${new Intl.NumberFormat(locales[lang]).format(e.price)} ₸`;
+  const date = (e) => formatEventDate(e, lang);
+  const price = (e) => formatEventPrice(e, lang);
   const viewAll = (key) => {
     setCollection(key);
     document
@@ -148,55 +145,9 @@ export default function Home() {
       setAuth((a) => ({ ...a, busy: false, error: true }));
     }
   }
-  function card(e) {
-    return (
-      <article className="event-card" key={e.id}>
-        <button
-          className="event-link"
-          onClick={() => setModal({ type: "event", event: e })}
-          aria-label={`${e.title}, ${date(e)}, ${price(e)}`}
-        >
-          <div className="event-image">
-            <img
-              src={e.image}
-              alt=""
-              loading="lazy"
-              onError={(event) => {
-                event.currentTarget.style.visibility = "hidden";
-              }}
-            />
-            <span className="event-badge">{t[e.category]}</span>
-            <span className="image-arrow" aria-hidden="true">
-              ↗
-            </span>
-          </div>
-          <div className="event-date">{date(e)}</div>
-          <h3>{e.title}</h3>
-          <p className="event-location">
-            {e.venue || t.unknownVenue} ·{" "}
-            {cityLabel(e.city, lang) || t.unknownVenue}
-          </p>
-          <div className="event-bottom">
-            <strong className={e.price === 0 ? "free-price" : ""}>
-              {price(e)}
-            </strong>
-            <span>
-              {e.demo ? t.demo : "BiletFlow"} <span aria-hidden="true">↗</span>
-            </span>
-          </div>
-        </button>
-      </article>
-    );
-  }
   return (
     <>
       <Navbar
-        t={t}
-        lang={lang}
-        setLang={setLang}
-        city={filters.city}
-        setCity={(value) => update("city", value)}
-        user={session.user}
         onSignIn={() =>
           session.user
             ? (location.hash = "/account")
@@ -211,6 +162,8 @@ export default function Home() {
           onSearchInteraction={() => setSearchPaused(true)}
           onIntroFinish={setIntroFinished}
           onCreate={() => setModal({ type: "organizer" })}
+          events={data.events}
+          onDetails={(event) => setModal({ type: "event", event })}
         />
         <TicketCarousel
           t={t}
@@ -265,10 +218,7 @@ export default function Home() {
             </label>
             <label className="filter-select">
               <span>{t.city}</span>
-              <select
-                value={filters.city}
-                onChange={(e) => update("city", e.target.value)}
-              >
+              <select value={city} onChange={(e) => setCity(e.target.value)}>
                 <option value="">{t.allCities}</option>
                 {Object.keys(cities).map((c) => (
                   <option key={c} value={c}>
@@ -391,7 +341,7 @@ export default function Home() {
                   {!collection && (
                     <button className="view-all" onClick={() => viewAll(key)}>
                       {t.all}
-                      <span>↗</span>
+                      <Arrow size={17} />
                     </button>
                   )}
                   {collection && (
@@ -399,7 +349,14 @@ export default function Home() {
                   )}
                 </div>
                 <div className="event-grid">
-                  {(collection ? events : events.slice(0, 4)).map(card)}
+                  {(collection ? events : events.slice(0, 4)).map((e) => (
+                    <EventCard
+                      key={e.id}
+                      event={e}
+                      lang={lang}
+                      onOpen={(event) => setModal({ type: "event", event })}
+                    />
+                  ))}
                 </div>
               </section>
             ))}
@@ -426,7 +383,7 @@ export default function Home() {
                 onClick={() => setModal({ type: "organizer" })}
               >
                 {t.create}
-                <span>↗</span>
+                <Arrow size={17} />
               </button>
             </div>
             <div className="organizer-art" aria-hidden="true">
@@ -440,14 +397,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="page-width">
-        <a className="wordmark" href="#home">
-          BiletFlow<span className="brand-dot">.</span>
-        </a>
-        <p>{t.footer}</p>
-        <span>{t.timezone}</span>
-        <small>© {new Date().getFullYear()} BiletFlow</small>
-      </footer>
       {modal && (
         <Modal
           title={
@@ -498,7 +447,7 @@ export default function Home() {
                 className="button button-purple"
                 onClick={() => setModal({ type: "login" })}
               >
-                {t.signIn} ↗
+                {t.signIn} <Arrow size={17} />
               </button>
             </>
           )}
@@ -534,7 +483,7 @@ export default function Home() {
                   </p>
                 )}
                 <button disabled={auth.busy} className="button button-purple">
-                  {auth.busy ? t.working : t.signIn} ↗
+                  {auth.busy ? t.working : t.signIn} <Arrow size={17} />
                 </button>
               </form>
             ))}

@@ -1,3 +1,4 @@
+import Arrow from "../Icons/Arrow";
 import { useEffect, useRef, useState } from "react";
 import { heroCopy, heroThemes, showcaseEvents } from "../../data/hero";
 import { cityLabel, locales } from "../../data/i18n";
@@ -65,7 +66,7 @@ function EventTrack({ t, lang, h, category, playing, setPlaying, introFinished, 
         <div className="ticket-editorial">
           <div className="ticket-topline"><span>BiletFlow<span aria-hidden="true"> ✳</span></span><span>{event.demo ? t.demo : t.live}</span></div>
           <div className="ticket-story"><p className="ticket-category">{t[event.category] || t.other}</p><h3 className="ticket-headline">{event.title}</h3><p className="ticket-description">{event.description || h[theme.description]}</p></div>
-          <div className="ticket-bottom"><p>{cityLabel(event.city, lang)}<span>{event.venue || t.unknownVenue}</span></p><button onClick={() => { setPlaying(false); onDetails(event); }}>{t.details} <span aria-hidden="true">↗</span></button></div>
+          <div className="ticket-bottom"><p>{cityLabel(event.city, lang)}<span>{event.venue || t.unknownVenue}</span></p><button onClick={() => { setPlaying(false); onDetails(event); }}>{t.details} <Arrow size={17} /></button></div>
         </div>
       </div>
       <aside className="event-ticket-stub"><span className="stub-brand">BiletFlow / {String(index + 1).padStart(2, "0")}</span><span className="stub-star" aria-hidden="true">✳</span><div className="stub-meta"><strong>{date}</strong><span>{cityLabel(event.city, lang)}</span><strong>{price}</strong></div><div><svg className="preview-barcode" viewBox="0 0 150 34" aria-hidden="true">{Array.from({ length: 38 }, (_, i) => <rect key={i} x={i * 4} width={i % 3 === 0 ? 3 : 1} height={34} fill="currentColor" />)}</svg><small>{h.preview}</small></div></aside>
