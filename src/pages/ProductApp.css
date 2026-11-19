@@ -153,3 +153,251 @@ td{font-size:13px;padding:15px 12px}
   white-space: nowrap;
   overflow-wrap: normal;
 }
+
+/* Workspace header: same look as the public site header (black bar, yellow logo,
+   pill buttons). Dark tokens are scoped here because workspace pages are light. */
+header.bf-top.ws-top {
+  --bg: #000;
+  --fg: #fff;
+  --muted: rgb(255 255 255 / 0.62);
+  --chip: #333;
+  --hl: #f2ef1d;
+  --focus: #f2ef1d;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 28px;
+  height: 72px;
+  min-height: 0;
+  padding: 0 24px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 0;
+  box-shadow: none;
+}
+.ws-top .wordmark {
+  flex-shrink: 0;
+  color: var(--fg);
+  text-decoration: none;
+}
+.ws-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ws-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out);
+}
+.ws-links a:hover {
+  background: var(--chip);
+}
+.ws-links a[aria-current="page"] {
+  background: var(--hl);
+  color: #000;
+}
+header.ws-top .bf-top-right {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+header.ws-top .bf-top-right > a {
+  display: inline-flex;
+}
+.ws-bell {
+  /* display comes from `.bf-top-right > a` (inline-flex), so centre with flex props */
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--fg);
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.ws-bell:hover {
+  background: #4a4a4a;
+}
+.ws-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  max-width: 220px;
+  padding: 0 14px 0 4px;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.ws-user > span:first-child {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--hl);
+  color: #000;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.ws-user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws-signout,
+.ws-signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: var(--pill);
+  background: #fff;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.ws-signout:hover,
+.ws-signin:hover {
+  background: var(--hl);
+}
+.ws-signout:active,
+.ws-signin:active {
+  transform: scale(0.97);
+}
+header.ws-top .bf-mobile-nav {
+  display: none;
+  position: relative;
+}
+.ws-top .bf-mobile-nav summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--pill);
+  background: #fff;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ws-top .bf-mobile-nav summary::-webkit-details-marker {
+  display: none;
+}
+.ws-top .bf-mobile-nav nav {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  display: grid;
+  min-width: 230px;
+  padding: 6px;
+  background: #1a1a1a;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
+}
+.ws-top .bf-mobile-nav nav a,
+.ws-top .bf-mobile-nav nav button {
+  display: block;
+  padding: 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 15px;
+  text-align: left;
+  text-decoration: none;
+}
+.ws-top .bf-mobile-nav nav a:hover,
+.ws-top .bf-mobile-nav nav button:hover {
+  background: #333;
+}
+header.ws-top .bf-top-right [role="alert"] {
+  color: #ffb4b4;
+}
+@media (max-width: 1100px) {
+  .ws-user-name {
+    display: none;
+  }
+  .ws-user {
+    padding: 0 4px;
+  }
+}
+@media (max-width: 900px) {
+  header.bf-top.ws-top {
+    height: 64px;
+    padding: 0 16px;
+  }
+  .ws-links,
+  header.ws-top .bf-top-right > a,
+  header.ws-top .bf-top-right > .ws-signout {
+    display: none;
+  }
+  header.ws-top .bf-mobile-nav {
+    display: block;
+  }
+}
+@media (max-width: 600px) {
+  header.bf-top.ws-top {
+    gap: 10px;
+  }
+  .ws-top .wordmark {
+    font-size: 21px;
+  }
+  header.ws-top .bf-top-right {
+    gap: 8px;
+  }
+}
+
+/* Workspace sidebar: match the header's type and the "back" link's alignment. */
+.bf-side-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.bf-side > a:last-child:not(.bf-side-link) {
+  display: flex;
+  margin-top: 12px;
+  padding: 11px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #646464;
+  text-decoration: none;
+}
+.bf-side > a:last-child:not(.bf-side-link):hover {
+  color: #0d0d0d;
+}

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { money, navGroups } from "./app-data";
 import { useSession } from "../lib/session-context";
 import { logout } from "../lib/client";
+import Dropdown from "../components/Dropdown/Dropdown";
+import { languageOptions } from "../data/languages";
 export function Link({ to, children, className = "" }) {
   return (
     <a className={className} href={`/#${to}`}>
@@ -12,9 +14,23 @@ export function Link({ to, children, className = "" }) {
 }
 export function Topbar() {
   const { user } = useSession();
+  const locale = useLocale();
   const [error, setError] = useState("");
+  const here = typeof location === "undefined" ? "" : location.hash.slice(1);
+  const current = (to) =>
+    here === to || (to !== "/account" && here.startsWith(to))
+      ? "page"
+      : undefined;
+  async function signOut() {
+    try {
+      await logout();
+      location.hash = "/login";
+    } catch {
+      setError("Signed out locally. Server logout could not be confirmed.");
+    }
+  }
   return (
-    <header className="bf-top">
+    <header className="bf-top ws-top">
       <button
         className="bf-skip"
         onClick={() => {
@@ -27,39 +43,71 @@ export function Topbar() {
       >
         {translate("Skip to content")}
       </button>
-      <a href="/" className="bf-brand">
-        biletflow<span>.</span>
+      <a href="/" className="wordmark" aria-label="BiletFlow">
+        <span className="brand-icon" aria-hidden="true">
+          b<span>f</span>
+        </span>
+        BiletFlow<span className="brand-dot">.</span>
       </a>
-      <div className="bf-top-right">
-        <LanguagePicker />
+      <nav className="ws-links" aria-label={translate("Workspace")}>
         <Link to="/events">{translate("Explore events")}</Link>
+        {user && (
+          <>
+            <a href="/#/account" aria-current={current("/account")}>
+              {translate("My account")}
+            </a>
+            <a href="/#/organizer" aria-current={current("/organizer")}>
+              {translate("Organizer")}
+            </a>
+            {user.platform_role === "platform_admin" && (
+              <a href="/#/admin" aria-current={current("/admin")}>
+                {translate("Admin")}
+              </a>
+            )}
+          </>
+        )}
+      </nav>
+      <div className="bf-top-right">
+        <Dropdown
+          label={translate("Language")}
+          value={locale}
+          onChange={setLocale}
+          display={languageOptions.find((o) => o.value === locale)?.hint}
+          options={languageOptions}
+        />
         {user ? (
           <>
-            <Link to="/account/notifications">
-              {translate("Notifications")}
-            </Link>
-            <Link to="/account">{user.full_name}</Link>
-            <Link to="/organizer">{translate("Organizer")}</Link>
-            {user.platform_role === "platform_admin" && (
-              <Link to="/admin">{translate("Admin")}</Link>
-            )}
-            <button
-              onClick={async () => {
-                try {
-                  await logout();
-                  location.hash = "/login";
-                } catch {
-                  setError(
-                    "Signed out locally. Server logout could not be confirmed.",
-                  );
-                }
-              }}
+            <a
+              className="ws-bell"
+              href="/#/account/notifications"
+              aria-label={translate("Notifications")}
             >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                aria-hidden="true"
+              >
+                <path d="M6 9a6 6 0 1 1 12 0c0 6 2 7 2 7H4s2-1 2-7Zm4 10a2 2 0 0 0 4 0" />
+              </svg>
+            </a>
+            <a className="ws-user" href="/#/account">
+              <span aria-hidden="true">
+                {user.full_name?.trim()?.[0]?.toUpperCase() || "•"}
+              </span>
+              <span className="ws-user-name">{user.full_name}</span>
+            </a>
+            <button className="ws-signout" onClick={signOut}>
               {translate("Sign out")}
             </button>
           </>
         ) : (
-          <Link to="/login">{translate("Sign in")}</Link>
+          <Link to="/login" className="ws-signin">
+            {translate("Sign in")}
+          </Link>
         )}
         <details className="bf-mobile-nav">
           <summary>{translate("Menu")}</summary>
@@ -75,6 +123,7 @@ export function Topbar() {
                 {user.platform_role === "platform_admin" && (
                   <Link to="/admin">{translate("Platform admin")}</Link>
                 )}
+                <button onClick={signOut}>{translate("Sign out")}</button>
               </>
             ) : (
               <>

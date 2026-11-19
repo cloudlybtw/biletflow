@@ -3,6 +3,8 @@ import { cities, cityLabel } from "../../data/i18n";
 import { menuCategories } from "../../data/categories";
 import { useLocale, setLocale } from "../../lib/locale";
 import { useCity } from "../../lib/city";
+import Dropdown from "../Dropdown/Dropdown";
+import { languageOptions } from "../../data/languages";
 import { useSession } from "../../lib/session-context";
 import { logout } from "../../lib/client";
 import "./Navbar.css";
@@ -136,26 +138,45 @@ export default function Navbar({ onSignIn }) {
             onKeyDown={(e) => e.key === "Enter" && submit()}
           />
         </div>
-        <label className="nav-city">
-          <span className="visually-hidden">{t.city}</span>
-          <span aria-hidden="true">⌖</span>
-          <select value={city} onChange={(e) => setCity(e.target.value)}>
-            <option value="">{t.allCities}</option>
-            {Object.keys(cities).map((c) => (
-              <option key={c} value={c}>
-                {cityLabel(c, lang)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="nav-lang">
-          <span className="visually-hidden">{t.language}</span>
-          <select value={lang} onChange={(e) => setLocale(e.target.value)}>
-            <option value="kk">ҚАЗ</option>
-            <option value="ru">RU</option>
-            <option value="en">EN</option>
-          </select>
-        </label>
+        <div className="nav-city">
+          <Dropdown
+            variant="plain"
+            label={t.city}
+            value={city}
+            onChange={setCity}
+            options={[
+              { value: "", label: t.allCities },
+              ...Object.keys(cities).map((c) => ({
+                value: c,
+                label: cityLabel(c, lang),
+              })),
+            ]}
+            icon={
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                aria-hidden="true"
+              >
+                <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" />
+                <circle cx="12" cy="9.5" r="2.5" />
+              </svg>
+            }
+          />
+        </div>
+        <div className="nav-lang">
+          <Dropdown
+            variant="plain"
+            label={t.language}
+            value={lang}
+            onChange={setLocale}
+            display={languageOptions.find((o) => o.value === lang)?.hint}
+            options={languageOptions}
+          />
+        </div>
         <div className="nav-actions">
           <a className="nav-link" href="#/account/tickets">
             {t.tickets}
@@ -183,7 +204,12 @@ export default function Navbar({ onSignIn }) {
                 </svg>
               </a>
               <details className="user-menu">
-                <summary aria-label={t.menu}>{user.full_name}</summary>
+                <summary aria-label={t.menu}>
+                  <span className="user-initial" aria-hidden="true">
+                    {user.full_name?.trim()?.[0]?.toUpperCase() || "•"}
+                  </span>
+                  <span className="user-name">{user.full_name}</span>
+                </summary>
                 <div>
                   <a href="#/account">{t.account}</a>
                   <a href="#/organizer">{t.organizer}</a>

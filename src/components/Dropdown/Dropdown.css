@@ -1,0 +1,103 @@
+/* Dropdown: pill or plain trigger, square dark list (same in light and dark pages). */
+.dropdown {
+  position: relative;
+}
+.dropdown-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.dropdown-button:hover,
+.dropdown-button[aria-expanded="true"] {
+  background: #4a4a4a;
+}
+.dropdown-chevron {
+  transition: transform var(--t-ui) var(--ease-out);
+}
+.dropdown-button[aria-expanded="true"] .dropdown-chevron {
+  transform: rotate(180deg);
+}
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 30;
+  min-width: 200px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #1a1a1a;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
+  transform-origin: top right;
+  animation: dropdown-in var(--t-ui) var(--ease-out);
+}
+.dropdown-list:focus {
+  outline: none;
+}
+.dropdown-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+.dropdown-list li small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgb(255 255 255 / 0.62);
+}
+.dropdown-list li.is-active {
+  background: #333;
+}
+.dropdown-list li[aria-selected="true"] {
+  background: #f2ef1d;
+  color: #000;
+}
+.dropdown-list li[aria-selected="true"] small {
+  color: #000;
+}
+.dropdown-list:focus-visible li.is-active {
+  outline: 2px solid #f2ef1d;
+  outline-offset: -2px;
+}
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+.dropdown-list-right {
+  right: 0;
+}
+.dropdown-list-left {
+  left: 0;
+  transform-origin: top left;
+}
+.dropdown-value {
+  white-space: nowrap;
+}
+/* Plain: text trigger for the public header (no background until hover). */
+.dropdown-plain .dropdown-button {
+  gap: 6px;
+  padding: 0 10px;
+  background: transparent;
+  text-transform: uppercase;
+}
+.dropdown-plain .dropdown-button:hover,
+.dropdown-plain .dropdown-button[aria-expanded="true"] {
+  background: var(--chip);
+}

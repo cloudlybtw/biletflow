@@ -89,29 +89,7 @@
 .nav-lang {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.nav-city > span[aria-hidden] {
-  font-size: 18px;
-}
-.nav-inner select {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  font: inherit;
-  padding: 10px 2px;
-  max-width: 150px;
-  border-radius: 6px;
-  text-transform: inherit;
-  letter-spacing: inherit;
-}
-.nav-inner select option {
-  color: #000;
-  text-transform: none;
+  flex-shrink: 0;
 }
 .nav-actions {
   margin-left: auto;
@@ -183,6 +161,29 @@ html:not([data-theme="dark"]) .nav-link:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.user-menu summary {
+  gap: 8px;
+  padding-left: 4px;
+}
+.user-initial {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--hl);
+  color: var(--bg);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+html[data-theme="dark"] .user-initial {
+  color: #000;
+}
+.user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .user-menu summary::-webkit-details-marker {
   display: none;
@@ -291,11 +292,17 @@ html:not([data-theme="dark"]) .nav-link:hover {
   .nav-city {
     order: 4;
   }
-  .nav-city > span[aria-hidden] {
+  .nav-city .dropdown-button > svg:first-child {
     display: none;
   }
   .nav-link {
     display: none;
+  }
+  .user-name {
+    display: none;
+  }
+  .user-menu summary {
+    padding: 0 4px;
   }
   .sign-in {
     padding: 0 16px;
@@ -304,10 +311,6 @@ html:not([data-theme="dark"]) .nav-link:hover {
     order: 3;
     flex: 1 1 160px;
     max-width: none;
-  }
-  .nav-inner select {
-    max-width: 96px;
-    padding-inline: 0;
   }
   .category-nav-inner {
     width: calc(100% - 32px);
