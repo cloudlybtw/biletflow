@@ -1,5 +1,6 @@
 import Home from "./pages/Home/Home";
 import ProductApp from "./pages/ProductApp";
+import Category from "./pages/Category/Category";
 import SiteFooter from "./components/SiteFooter/SiteFooter";
 import SessionProvider from "./components/SessionProvider";
 import { useEffect, useState } from "react";
@@ -21,13 +22,28 @@ export default function App() {
       window.removeEventListener("popstate", update);
     };
   }, []);
+  const path = route?.split("?")[0];
+  // Listing pages (category, all events, search) share the dark Category page.
+  const category =
+    path?.startsWith("/category/") || path === "/events" || path === "/search";
+  // New page starts at the top; filter changes (same path, new ?query) keep the scroll.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [path]);
   // Discovery pages are dark (DICE-style); workspace and form pages stay light.
   useEffect(() => {
-    document.documentElement.dataset.theme = route ? "light" : "dark";
-  }, [route]);
+    document.documentElement.dataset.theme =
+      !route || category ? "dark" : "light";
+  }, [route, category]);
   return (
     <SessionProvider>
-      {route ? <ProductApp key={route} route={route} /> : <Home />}
+      {category ? (
+        <Category key={route.split("?")[0]} route={route} />
+      ) : route ? (
+        <ProductApp key={route} route={route} />
+      ) : (
+        <Home />
+      )}
       <SiteFooter />
     </SessionProvider>
   );

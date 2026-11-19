@@ -117,3 +117,39 @@ td{font-size:13px;padding:15px 12px}
   .bf-main{overflow-wrap:anywhere}
   .bf-button,.bf-outline-button{white-space:normal;overflow-wrap:anywhere;max-width:100%}
 }
+
+/* Alignment pass: public pages share the header's 1320px column. */
+.bf-public {
+  width: min(1320px, calc(100% - 48px));
+  max-width: none;
+  margin-inline: auto;
+  padding: 32px 0 72px;
+}
+@media (max-width: 600px) {
+  .bf-public {
+    width: calc(100% - 32px);
+    padding: 20px 0 56px;
+  }
+}
+/* Auth pages: real logo, card content flush with the title, links on one line each. */
+.bf-auth-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.bf-auth-card .bf-form {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+.bf-bridge-links {
+  justify-content: center;
+  gap: 10px 22px;
+}
+.bf-bridge-links a {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}

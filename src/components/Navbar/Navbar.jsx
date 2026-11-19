@@ -71,7 +71,11 @@ export default function Navbar({ onSignIn }) {
   const t = text[lang];
   const { user } = useSession() || {};
   const [city, setCity] = useCity();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(() =>
+    here().startsWith("/search")
+      ? new URLSearchParams(here().split("?")[1] || "").get("q") || ""
+      : "",
+  );
   const [error, setError] = useState("");
   const route = here();
   const workspace = /^\/(organizer|admin)/.test(route);

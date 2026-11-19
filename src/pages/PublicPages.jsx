@@ -1,12 +1,13 @@
 import CalendarLinks from "./CalendarLinks";
 import SeatMap from "./SeatMap";
-import { t as translate, dateTime, getLocale } from "../lib/locale";
+import { t as translate, dateTime } from "../lib/locale";
 import { useState } from "react";
-import { api, apiPath, login, query } from "../lib/client";
+import { api, apiPath, login } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
-import { Link, EventCard, LanguagePicker } from "./app-shared";
+import { Link, LanguagePicker } from "./app-shared";
 import SiteHeader from "../components/Navbar/Navbar";
+import { NotFound } from "../components/States/States";
 import { Form, State, Action, OrderSummary, SecureImage } from "./live-shared";
 import { money } from "./app-data";
 function AuthPage({ path, params }) {
@@ -86,8 +87,15 @@ function AuthPage({ path, params }) {
         : translate("Reset your password");
   return (
     <main className="bf-auth">
-      <Link to="/events">BiletFlow</Link>
-      <LanguagePicker />
+      <div className="bf-auth-top">
+        <a href="/" className="wordmark" aria-label="BiletFlow">
+          <span className="brand-icon" aria-hidden="true">
+            b<span>f</span>
+          </span>
+          BiletFlow<span className="brand-dot">.</span>
+        </a>
+        <LanguagePicker />
+      </div>
       <div className="bf-auth-card">
         <h1>{title}</h1>
         {message && <p role="status">{translate(message)}</p>}
@@ -172,65 +180,6 @@ function AuthPage({ path, params }) {
         </div>
       </div>
     </main>
-  );
-}
-function Events() {
-  const [filters, setFilters] = useState({});
-  const path = "/events?" + query(filters);
-  const resource = useResource(path, true);
-  const categories = useResource("/event-categories", true);
-  return (
-    <>
-      <h1>{translate("Events for you")}</h1>
-      <form
-        className="bf-filter-row"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const values = Object.fromEntries(new FormData(event.currentTarget));
-          for (const key of ["date_from", "date_to"])
-            if (values[key]) values[key] = new Date(values[key]).toISOString();
-          setFilters(values);
-        }}
-      >
-        <input
-          name="q"
-          aria-label={translate("Search")}
-          placeholder={translate("Search events")}
-        />
-        <input
-          name="city"
-          aria-label={translate("City")}
-          placeholder={translate("City")}
-        />
-        <select name="category_id" aria-label={translate("Category")}>
-          <option value="">{translate("All categories")}</option>
-          {categories.data?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c[`name_${getLocale()}`] || c.name_en}
-            </option>
-          ))}
-        </select>
-        <label>
-          {translate("From")}
-          <input name="date_from" type="datetime-local" />
-        </label>
-        <label>
-          {translate("Until")}
-          <input name="date_to" type="datetime-local" />
-        </label>
-        <button className="bf-button">{translate("Search")}</button>
-      </form>
-      <State resource={resource}>
-        <div className="bf-event-grid">
-          {resource.data?.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
-        {resource.data?.length === 0 && (
-          <p>{translate("No upcoming events found.")}</p>
-        )}
-      </State>
-    </>
   );
 }
 function EventDetail({ slug, id, promo }) {
@@ -657,7 +606,7 @@ export default function PublicPages({ route, path }) {
             promo={params.get("promo")}
           />
         ) : (
-          <Events />
+          <NotFound />
         )}
       </main>
     </>

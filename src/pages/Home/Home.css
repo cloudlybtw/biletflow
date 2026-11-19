@@ -41,7 +41,7 @@
   flex: 1 1 260px;
   min-height: 52px;
   background: var(--chip);
-  border-radius: var(--pill);
+  border-radius: var(--radius); /* same shape as the selects next to it */
   color: var(--muted);
 }
 .search-field:focus-within {

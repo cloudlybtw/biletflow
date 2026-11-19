@@ -278,19 +278,21 @@ html:not([data-theme="dark"]) .nav-link:hover {
   .nav-inner .wordmark {
     font-size: 21px;
   }
+  /* Row 1: logo · language · sign in. Row 2: search · city. */
+  .nav-lang {
+    order: 1;
+    margin-left: auto;
+  }
   .nav-actions {
     order: 2;
-    margin-left: auto;
+    margin-left: 0;
     gap: 6px;
   }
   .nav-city {
-    order: 3;
+    order: 4;
   }
   .nav-city > span[aria-hidden] {
     display: none;
-  }
-  .nav-lang {
-    order: 4;
   }
   .nav-link {
     display: none;
@@ -299,8 +301,8 @@ html:not([data-theme="dark"]) .nav-link:hover {
     padding: 0 16px;
   }
   .nav-search {
-    order: 5;
-    flex: 1 1 120px;
+    order: 3;
+    flex: 1 1 160px;
     max-width: none;
   }
   .nav-inner select {

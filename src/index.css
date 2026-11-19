@@ -224,3 +224,8 @@ button:hover > .arrow,
 .event-link:hover .arrow {
   transform: translate(2px, -2px);
 }
+/* Headings receive focus after route changes for screen readers; no visible ring. */
+h1[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus {
+  outline: none;
+}

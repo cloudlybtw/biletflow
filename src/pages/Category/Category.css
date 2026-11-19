@@ -1,0 +1,370 @@
+/* Category page (e.g. #/category/concerts): DICE-style listing.
+   Card styles come from Home.css (.event-grid, .event-card). */
+.category-page {
+  padding-bottom: 72px;
+}
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 28px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.crumbs a:hover {
+  color: var(--fg);
+}
+.crumbs [aria-current] {
+  color: var(--fg);
+}
+.category-head {
+  padding: 20px 0 32px;
+  border-bottom: 1px solid var(--line);
+  animation: hero-in 500ms var(--ease-out) both;
+}
+.category-head h1 {
+  font-size: clamp(56px, 10vw, 144px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.88;
+  overflow-wrap: anywhere;
+}
+.category-head h1:focus {
+  outline: none;
+}
+.category-head sup {
+  display: inline-block;
+  margin-left: 0.12em;
+  font-size: 0.28em;
+  letter-spacing: -0.02em;
+  vertical-align: top;
+  line-height: 1;
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
+}
+.category-head p {
+  max-width: 52ch;
+  margin-top: 20px;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--fg-soft);
+}
+
+/* Filters: quick date chips on the left, city and sort on the right. */
+.category-filters {
+  position: sticky;
+  top: 124px; /* height of .site-header with the category row */
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  background: var(--bg);
+}
+.chip-row,
+.select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chip-row {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+.chip-row button {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.chip-row button:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+.chip-row button:active {
+  transform: scale(0.97);
+}
+.chip-row button[aria-pressed="true"] {
+  background: var(--hl);
+  color: #000;
+}
+.pill-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 6px 0 16px;
+  border-radius: var(--pill);
+  background: var(--chip);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.pill-select > span {
+  color: var(--muted);
+}
+.pill-select select {
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  padding: 10px 6px;
+  max-width: 190px;
+}
+.pill-select select option {
+  color: #000;
+  text-transform: none;
+}
+.pill-select:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.pill-select select:focus-visible {
+  outline: none;
+}
+
+/* Spotlight: the soonest event as a wide card. */
+.spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  width: 100%;
+  margin-bottom: 40px;
+  padding: 0;
+  text-align: left;
+  background: var(--panel);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: hero-in 500ms 80ms var(--ease-out) both;
+}
+.spotlight-image {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+}
+.spotlight-image img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  transition: transform 450ms var(--ease-out);
+}
+@media (hover: hover) {
+  .spotlight:hover .spotlight-image img {
+    transform: scale(1.03);
+  }
+}
+.spotlight-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px;
+}
+.spotlight-tag {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--pill);
+  background: var(--hl);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.spotlight h2 {
+  font-size: clamp(32px, 3.6vw, 52px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  overflow-wrap: anywhere;
+}
+.spotlight dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.spotlight dd {
+  margin: 0;
+  font-size: 15px;
+}
+.spotlight dl > div:first-child dd {
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
+}
+.spotlight-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.spotlight-foot strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.spotlight-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: var(--pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.spotlight:hover .spotlight-cta {
+  background: var(--hl);
+  color: #000;
+}
+.spotlight:hover .spotlight-cta .arrow {
+  transform: translate(2px, -2px);
+}
+.spotlight:active {
+  transform: scale(0.995);
+}
+
+.more-row {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin-top: 48px;
+}
+.more-row p {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Other categories: big uppercase links, DICE-style list. */
+.explore {
+  margin-top: 80px;
+}
+.explore h2 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding-bottom: 12px;
+}
+.explore ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.explore a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  font-size: clamp(22px, 2.4vw, 32px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  transition: color var(--t-ui) var(--ease-out);
+}
+.explore a:hover {
+  color: var(--hl);
+}
+
+@media (max-width: 1000px) {
+  .category-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .select-row > * {
+    flex: 1;
+  }
+  .pill-select select {
+    max-width: none;
+    width: 100%;
+  }
+  .spotlight {
+    grid-template-columns: 1fr;
+  }
+  .spotlight-image {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+}
+@media (max-width: 800px) {
+  .category-filters {
+    position: static;
+  }
+}
+@media (max-width: 600px) {
+  .crumbs {
+    padding-top: 16px;
+  }
+  .category-head {
+    padding-bottom: 24px;
+  }
+  .category-head h1 {
+    font-size: clamp(44px, 14vw, 72px);
+  }
+  .category-head p {
+    font-size: 16px;
+  }
+  .select-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .spotlight-body {
+    padding: 20px;
+  }
+  .spotlight-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .spotlight-cta {
+    justify-content: center;
+  }
+  .explore {
+    margin-top: 56px;
+  }
+  .explore ul {
+    grid-template-columns: 1fr;
+  }
+}
+/* Search queries can be long: smaller, mixed-case heading. */
+.category-head h1.is-query {
+  font-size: clamp(40px, 6vw, 88px);
+  text-transform: none;
+}
