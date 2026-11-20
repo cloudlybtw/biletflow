@@ -12,15 +12,14 @@ export function Link({ to, children, className = "" }) {
     </a>
   );
 }
-export function Topbar() {
+// contained: align the bar with the 1320px page column (buyer account).
+export function Topbar({ contained = false }) {
   const { user } = useSession();
   const locale = useLocale();
   const [error, setError] = useState("");
   const here = typeof location === "undefined" ? "" : location.hash.slice(1);
   const current = (to) =>
-    here === to || (to !== "/account" && here.startsWith(to))
-      ? "page"
-      : undefined;
+    here === to || here.startsWith(`${to}/`) ? "page" : undefined;
   async function signOut() {
     try {
       await logout();
@@ -30,7 +29,7 @@ export function Topbar() {
     }
   }
   return (
-    <header className="bf-top ws-top">
+    <header className={`bf-top ws-top${contained ? " is-contained" : ""}`}>
       <button
         className="bf-skip"
         onClick={() => {

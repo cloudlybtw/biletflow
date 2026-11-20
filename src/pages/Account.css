@@ -1,0 +1,705 @@
+/* Buyer account (#/account/*): dark DICE style, same column as the public pages. */
+.acc {
+  padding: 40px 0 80px;
+}
+header.bf-top.ws-top.is-contained {
+  padding-inline: max(24px, calc((100% - 1320px) / 2));
+}
+@media (max-width: 600px) {
+  header.bf-top.ws-top.is-contained {
+    padding-inline: 16px;
+  }
+}
+.acc-head {
+  animation: hero-in 500ms var(--ease-out) both;
+}
+.acc-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.acc-head h1 {
+  margin-top: 12px;
+  font-size: clamp(48px, 7.6vw, 112px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  overflow-wrap: anywhere;
+}
+.acc-head h1 em {
+  font-style: normal;
+  color: var(--hl);
+}
+
+/* Tabs */
+.acc-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 28px 0 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.acc-tabs::-webkit-scrollbar {
+  display: none;
+}
+.acc-tabs a {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out);
+}
+.acc-tabs a:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+.acc-tabs a[aria-current="page"] {
+  background: var(--hl);
+  color: #000;
+}
+
+/* Shared bits */
+.acc-section + .acc-section {
+  margin-top: 48px;
+}
+.acc-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.acc-label span {
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
+}
+.acc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.acc-button:hover {
+  background: var(--hl);
+  color: #000;
+}
+.acc-button:active {
+  transform: scale(0.97);
+}
+.acc-button-ghost {
+  background: var(--chip);
+  color: var(--fg);
+}
+.acc-back {
+  display: inline-flex;
+  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.acc-back:hover {
+  color: var(--fg);
+}
+.acc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.acc-chip.is-valid,
+.acc-chip.is-completed,
+.acc-chip.is-paid {
+  background: var(--hl);
+  color: #000;
+}
+.acc-chip.is-awaiting_payment,
+.acc-chip.is-pending {
+  background: #fff;
+  color: #000;
+}
+.acc-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 40px;
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.acc-empty h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.acc-empty p {
+  max-width: 48ch;
+  color: var(--muted);
+}
+.acc-skeleton {
+  height: 132px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--panel), var(--chip), var(--panel));
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+}
+.acc-alert {
+  margin-bottom: 16px;
+  color: #ff6b6b;
+}
+
+/* Overview stats */
+.acc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 48px;
+}
+.acc-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.acc-stat:hover {
+  background: var(--chip);
+}
+.acc-stat strong {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.acc-stat span {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Ticket cards: date block, details, yellow stub */
+.acc-tickets {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.acc-ticket {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 190px;
+  min-height: 132px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+  transition: transform var(--t-press) var(--ease-out);
+}
+.acc-ticket:active {
+  transform: scale(0.995);
+}
+.acc-ticket-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-right: 1px solid var(--line);
+  text-transform: uppercase;
+}
+.acc-ticket-date strong {
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.acc-ticket-date span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--hl);
+}
+.acc-ticket-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 24px;
+}
+.acc-ticket-body h3 {
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.acc-ticket-body p {
+  font-size: 14px;
+  color: var(--fg-soft);
+}
+.acc-ticket-body .acc-ticket-meta {
+  color: var(--muted);
+}
+.acc-ticket-stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  background: #f2ef1d;
+  color: #000;
+  border-left: 2px dashed rgb(0 0 0 / 0.3);
+}
+.acc-ticket-stub::before,
+.acc-ticket-stub::after {
+  content: "";
+  position: absolute;
+  left: -11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.acc-ticket-stub::before {
+  top: -10px;
+}
+.acc-ticket-stub::after {
+  bottom: -10px;
+}
+.acc-ticket-stub .acc-chip {
+  background: #000;
+  color: #f2ef1d;
+}
+.acc-ticket-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.acc-ticket:hover .acc-ticket-open .arrow {
+  transform: translate(2px, -2px);
+}
+.acc-ticket.is-off .acc-ticket-stub {
+  background: var(--chip);
+  color: var(--fg);
+  border-left-color: var(--line);
+}
+.acc-ticket.is-off .acc-ticket-stub .acc-chip {
+  background: var(--bg);
+  color: var(--fg);
+}
+.acc-ticket.is-off .acc-ticket-body h3 {
+  color: var(--muted);
+}
+
+/* Ticket detail: pass with QR */
+.acc-pass {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+.acc-pass-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 32px;
+}
+.acc-pass-main h2 {
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  overflow-wrap: anywhere;
+}
+.acc-pass dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+  width: 100%;
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.acc-pass dt {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.acc-pass dd {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.acc-pass-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  background: #f2ef1d;
+  color: #000;
+  border-left: 2px dashed rgb(0 0 0 / 0.3);
+  text-align: center;
+}
+.acc-pass-qr img {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: #fff;
+}
+.acc-pass-qr code {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.acc-pass-qr p {
+  font-size: 13px;
+}
+
+/* Rows: orders and notifications */
+.acc-rows {
+  margin: -20px 0 0; /* first row sits right under the tabs' divider */
+  padding: 0;
+  list-style: none;
+}
+.acc-rows > li {
+  border-bottom: 1px solid var(--line);
+}
+.acc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 140px 32px;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 0;
+  transition: color var(--t-ui) var(--ease-out);
+}
+.acc-row > div {
+  display: grid;
+  gap: 4px;
+}
+.acc-row strong {
+  font-size: 17px;
+}
+.acc-row small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.acc-row-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.acc-row-go {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--chip);
+}
+.acc-row:hover .acc-row-go {
+  background: var(--hl);
+  color: #000;
+}
+.acc-note {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding: 20px 0;
+}
+.acc-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+}
+.acc-note.is-new .acc-dot {
+  background: var(--hl);
+}
+.acc-note strong {
+  font-size: 16px;
+}
+.acc-note p {
+  margin-top: 4px;
+  color: var(--fg-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.acc-note small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.acc-note:not(.is-new) strong {
+  color: var(--muted);
+}
+
+/* Settings and links */
+.acc-narrow {
+  max-width: 560px;
+}
+.acc-links {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  margin-top: 16px;
+}
+.acc-links a {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.acc-links a:hover {
+  color: var(--hl);
+}
+
+/* Older shared components (order summary, payment, support chat, forms)
+   rendered inside the dark account. */
+.acc-legacy .bf-panel {
+  background: var(--panel);
+  border: 0;
+  box-shadow: none;
+  color: var(--fg);
+}
+.acc-legacy .bf-panel h2,
+.acc-legacy .bf-panel h3 {
+  color: var(--fg);
+}
+.acc-legacy .bf-details dt,
+.acc-legacy .bf-form label,
+.acc-legacy th {
+  color: var(--muted);
+}
+.acc-legacy .bf-details dd,
+.acc-legacy td {
+  color: var(--fg);
+}
+.acc-legacy table,
+.acc-legacy th,
+.acc-legacy td,
+.acc-legacy tr {
+  background: transparent;
+  border-color: var(--line);
+}
+.acc-legacy input,
+.acc-legacy select,
+.acc-legacy textarea {
+  background: var(--chip);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--fg);
+}
+.acc-legacy input:focus,
+.acc-legacy select:focus,
+.acc-legacy textarea:focus {
+  border-color: var(--hl);
+}
+.acc-legacy select option {
+  color: #000;
+}
+.acc-legacy .bf-button,
+.acc-legacy .bf-panel .bf-button,
+.acc-legacy .bf-form .bf-button {
+  /* ProductApp.css forces .bf-button text to white with !important */
+  color: var(--btn-fg) !important;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 700;
+}
+.acc-legacy .bf-outline-button,
+.acc-legacy .bf-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  margin: 4px 8px 4px 0;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.acc-legacy .bf-outline-button:hover,
+.acc-legacy .bf-button:hover {
+  background: var(--hl);
+  color: #000;
+}
+.acc-legacy .bf-bubble {
+  background: var(--chip);
+  color: var(--fg);
+  border: 0;
+}
+.acc-legacy .bf-note {
+  background: #3a3a1a;
+}
+.acc-legacy [role="alert"] {
+  color: #ff8a8a;
+}
+.acc-legacy [role="status"] {
+  color: var(--hl);
+}
+.acc-legacy a {
+  color: var(--fg);
+}
+
+@media (max-width: 900px) {
+  .acc-ticket {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .acc-ticket-stub {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 20px;
+    border-left: 0;
+    border-top: 2px dashed rgb(0 0 0 / 0.3);
+  }
+  .acc-ticket-stub::before,
+  .acc-ticket-stub::after {
+    display: none;
+  }
+  .acc-pass {
+    grid-template-columns: 1fr;
+  }
+  .acc-pass-qr {
+    border-left: 0;
+    border-top: 2px dashed rgb(0 0 0 / 0.3);
+  }
+}
+@media (max-width: 600px) {
+  .acc {
+    padding-top: 24px;
+  }
+  .acc-head h1 {
+    font-size: clamp(40px, 13vw, 64px);
+  }
+  .acc-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .acc-stat:first-child {
+    grid-column: 1 / -1;
+  }
+  .acc-stat {
+    padding: 18px;
+  }
+  .acc-ticket-date strong {
+    font-size: 30px;
+  }
+  .acc-ticket-body {
+    padding: 16px;
+  }
+  .acc-ticket-body h3 {
+    white-space: normal;
+  }
+  .acc-pass-main,
+  .acc-pass-qr {
+    padding: 20px;
+  }
+  .acc-pass dl {
+    grid-template-columns: 1fr;
+  }
+  .acc-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 16px;
+  }
+  .acc-row .acc-chip {
+    grid-row: 2;
+    justify-self: start;
+  }
+  .acc-row-amount {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .acc-row-go {
+    display: none;
+  }
+  .acc-note {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+  .acc-note .acc-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .acc-empty {
+    padding: 24px;
+  }
+}

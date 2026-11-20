@@ -35,7 +35,9 @@ export default function App() {
   const eventPage =
     /^\/(events|e|preview)\/./.test(path || "") ||
     new URLSearchParams(route?.split("?")[1] || "").has("c");
-  const dark = !route || category || eventPage;
+  // The buyer account is customer-facing, so it is dark too.
+  const account = /^\/account(\/|$)/.test(path || "");
+  const dark = !route || category || eventPage || account;
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
