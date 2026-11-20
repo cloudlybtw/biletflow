@@ -22,6 +22,16 @@ const categoryMap = {
   student: "campus",
   students: "campus",
 };
+// Seed category slug -> local key used for labels and fallback images.
+export const localCategory = (slug) => categoryMap[slug] || "other";
+// Public image URL: relative API paths get the API origin; anything else
+// that is not http(s) is dropped so callers fall back to a stock image.
+export function publicImage(url) {
+  let image = url;
+  if (image?.startsWith("/"))
+    image = new URL(apiBase, window.location.origin).origin + image;
+  return image && /^https?:\/\//i.test(image) ? image : null;
+}
 export async function loadEvents(signal) {
   const [events, venues, categories] = await Promise.all([
     all("/events", signal),
@@ -44,17 +54,14 @@ export async function loadEvents(signal) {
           ) ||
           venue?.city ||
           "";
-        const category =
-          categoryMap[categories.find((c) => c.id === e.category_id)?.slug] ||
-          "other";
+        const category = localCategory(
+          categories.find((c) => c.id === e.category_id)?.slug,
+        );
         const cover = images.find((i) => i.is_cover) || images[0];
         const prices = tickets
           .filter((t) => !t.is_hidden && t.currency === "KZT")
           .map((t) => t.price_amount);
-        let image = cover?.url;
-        if (image?.startsWith("/"))
-          image = new URL(apiBase, window.location.origin).origin + image;
-        if (image && !/^https?:\/\//i.test(image)) image = null;
+        const image = publicImage(cover?.url);
         return {
           id: e.id,
           slug: e.slug,

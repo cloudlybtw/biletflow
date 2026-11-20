@@ -30,11 +30,15 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [path]);
-  // Discovery pages are dark (DICE-style); workspace and form pages stay light.
+  // Discovery pages (home, listings, event pages) are dark (DICE-style);
+  // workspace, checkout and form pages stay light.
+  const eventPage =
+    /^\/(events|e|preview)\/./.test(path || "") ||
+    new URLSearchParams(route?.split("?")[1] || "").has("c");
+  const dark = !route || category || eventPage;
   useEffect(() => {
-    document.documentElement.dataset.theme =
-      !route || category ? "dark" : "light";
-  }, [route, category]);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, [dark]);
   return (
     <SessionProvider>
       {category ? (

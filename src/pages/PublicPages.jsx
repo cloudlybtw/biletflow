@@ -2,13 +2,14 @@ import CalendarLinks from "./CalendarLinks";
 import SeatMap from "./SeatMap";
 import { t as translate, dateTime } from "../lib/locale";
 import { useState } from "react";
-import { api, apiPath, login } from "../lib/client";
+import { api, login } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { useSession } from "../lib/session-context";
 import { Link, LanguagePicker } from "./app-shared";
 import SiteHeader from "../components/Navbar/Navbar";
+import EventPage from "./Event/EventPage";
 import { NotFound } from "../components/States/States";
-import { Form, State, Action, OrderSummary, SecureImage } from "./live-shared";
+import { Form, State, Action, OrderSummary } from "./live-shared";
 import { money } from "./app-data";
 function AuthPage({ path, params }) {
   const next = params.get("next");
@@ -182,82 +183,6 @@ function AuthPage({ path, params }) {
     </main>
   );
 }
-function EventDetail({ slug, id, promo }) {
-  const resource = useResource(
-    id ? `/events/${id}` : `/events/by-slug/${encodeURIComponent(slug)}`,
-  );
-  const event = resource.data;
-  return (
-    <State resource={resource}>
-      {event && (
-        <>
-          <h1>{event.title}</h1>
-          <p>{event.description}</p>
-          <p>
-            {dateTime(event.starts_at, {
-              timeZone: event.timezone,
-            })}{" "}
-            · {event.timezone}
-          </p>
-          <EventImages id={event.id} />
-          <TicketChoices event={event} promo={promo} />
-          <CalendarLinks id={event.id} />
-          <ReportEvent id={event.id} />
-        </>
-      )}
-    </State>
-  );
-}
-function EventImages({ id }) {
-  const images = useResource(`/events/${id}/images`, true);
-  return (
-    <div className="bf-event-grid">
-      {images.data?.map((image) => (
-        <SecureImage
-          key={image.id}
-          path={apiPath(image.url)}
-          alt={image.alt_text || translate("Event image")}
-        />
-      ))}
-    </div>
-  );
-}
-function TicketChoices({ event, promo }) {
-  const tickets = useResource(`/events/${event.id}/ticket-types`, true);
-  return (
-    <State resource={tickets}>
-      <div className="bf-panel">
-        <h2>{translate("Ticket types")}</h2>
-        {tickets.data
-          ?.filter((t) => !t.is_hidden)
-          .map((t) => (
-            <div className="bf-ticket-type" key={t.id}>
-              <span>
-                {t.name} · {money(t.price_amount)} ·{" "}
-                {Math.max(
-                  0,
-                  t.quantity_total - t.quantity_sold - t.quantity_reserved,
-                )}{" "}
-                {translate("available")}
-              </span>
-              {event.status === "published" ? (
-                <Link
-                  className="bf-button"
-                  to={`/checkout/${event.id}?ticket=${t.id}&promo=${encodeURIComponent(promo || "")}`}
-                >
-                  {translate("Choose tickets")}
-                </Link>
-              ) : (
-                <span>
-                  {translate("Preview only \u2014 registration is not open.")}
-                </span>
-              )}
-            </div>
-          ))}
-      </div>
-    </State>
-  );
-}
 function Campaign({ token }) {
   const resource = useResource(`/campaign-links/${encodeURIComponent(token)}`);
   return (
@@ -268,7 +193,7 @@ function Campaign({ token }) {
             {translate("Promotion applied: ")}
             {resource.data.promo_code}
           </p>
-          <EventDetail
+          <EventPage
             slug={resource.data.event_slug}
             promo={resource.data.promo_code}
           />
@@ -599,9 +524,9 @@ export default function PublicPages({ route, path }) {
         ) : campaign ? (
           <Campaign token={campaign} />
         ) : path.startsWith("/preview/") ? (
-          <EventDetail id={path.split("/")[2]} />
+          <EventPage id={path.split("/")[2]} />
         ) : path.startsWith("/events/") || path.startsWith("/e/") ? (
-          <EventDetail
+          <EventPage
             slug={decodeURIComponent(path.split("/")[2])}
             promo={params.get("promo")}
           />
@@ -611,30 +536,4 @@ export default function PublicPages({ route, path }) {
       </main>
     </>
   );
-}
-function ReportEvent({ id }) {
-  const { user } = useSession();
-  return user ? (
-    <details className="bf-panel">
-      <summary>{translate("Report this event")}</summary>
-      <Form
-        fields={[
-          {
-            name: "reason",
-            label: translate("Report reason"),
-            type: "textarea",
-            required: true,
-            maxLength: 2000,
-          },
-        ]}
-        label="Send report"
-        submit={(body) =>
-          api(`/events/${id}/reports`, {
-            method: "POST",
-            body,
-          })
-        }
-      />
-    </details>
-  ) : null;
 }
