@@ -5,6 +5,7 @@ import Navbar from "../../components/Navbar/Navbar";
 import ExperienceHero from "../../components/ExperienceHero/ExperienceHero";
 import TicketCarousel from "../../components/TicketCarousel/TicketCarousel";
 import EventCard from "../../components/EventCard/EventCard";
+import Dropdown from "../../components/Dropdown/Dropdown";
 import {
   formatEventDate,
   formatEventPrice,
@@ -216,21 +217,39 @@ export default function Home() {
                 onChange={(e) => update("q", e.target.value)}
               />
             </label>
-            <label className="filter-select">
-              <span>{t.city}</span>
-              <select value={city} onChange={(e) => setCity(e.target.value)}>
-                <option value="">{t.allCities}</option>
-                {Object.keys(cities).map((c) => (
-                  <option key={c} value={c}>
-                    {cityLabel(c, lang)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="filter-select">
+              <Dropdown
+                variant="stacked"
+                align="left"
+                label={t.city}
+                value={city}
+                onChange={setCity}
+                icon={<span className="dropdown-prefix">{t.city}</span>}
+                options={[
+                  { value: "", label: t.allCities },
+                  ...Object.keys(cities).map((c) => ({
+                    value: c,
+                    label: cityLabel(c, lang),
+                  })),
+                ]}
+              />
+            </div>
             <details className="date-filter">
               <summary>
                 {t.dates}
-                <span aria-hidden="true">⌄</span>
+                <svg
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="m1 1 4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  />
+                </svg>
                 {(filters.from || filters.to) && <i />}
               </summary>
               <div className="date-popover">
@@ -253,20 +272,23 @@ export default function Home() {
                 </label>
               </div>
             </details>
-            <label className="filter-select category-select">
-              <span>{t.category}</span>
-              <select
+            <div className="filter-select category-select">
+              <Dropdown
+                variant="stacked"
+                align="left"
+                label={t.category}
                 value={filters.category}
-                onChange={(e) => update("category", e.target.value)}
-              >
-                <option value="">{t.allCategories}</option>
-                {[...Object.keys(symbols), "other"].map((c) => (
-                  <option key={c} value={c}>
-                    {t[c]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={(value) => update("category", value)}
+                icon={<span className="dropdown-prefix">{t.category}</span>}
+                options={[
+                  { value: "", label: t.allCategories },
+                  ...[...Object.keys(symbols), "other"].map((c) => ({
+                    value: c,
+                    label: t[c],
+                  })),
+                ]}
+              />
+            </div>
             <label className="free-toggle">
               <input
                 type="checkbox"

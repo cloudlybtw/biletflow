@@ -106,3 +106,45 @@
   color: var(--muted);
   text-transform: uppercase;
 }
+/* Stacked: small label above the value, fills its container (Home filters). */
+.dropdown-stacked,
+.dropdown-stacked .dropdown-button {
+  width: 100%;
+  height: 100%;
+}
+.dropdown-stacked .dropdown-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  min-height: 52px;
+  padding: 6px 16px;
+  border-radius: var(--radius);
+  background: transparent;
+  text-align: left;
+}
+.dropdown-stacked .dropdown-button:hover,
+.dropdown-stacked .dropdown-button[aria-expanded="true"] {
+  background: rgb(255 255 255 / 0.06);
+}
+.dropdown-stacked .dropdown-prefix {
+  grid-column: 1;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.dropdown-stacked .dropdown-value {
+  grid-column: 1;
+  font-size: 14px;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dropdown-stacked .dropdown-chevron {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.dropdown-stacked .dropdown-list {
+  min-width: max(100%, 240px);
+}
