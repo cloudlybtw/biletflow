@@ -1,5 +1,5 @@
 import { t as translate, useLocale, setLocale, dateTime } from "../lib/locale";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { money, navGroups } from "./app-data";
 import { useSession } from "../lib/session-context";
 import { logout } from "../lib/client";
@@ -138,6 +138,17 @@ export function Topbar({ contained = false }) {
   );
 }
 export function Shell({ role = "attendee", path, title, subtitle, children }) {
+  // The page heading names the open section; the workspace name sits above it.
+  const current = navGroups[role]
+    .filter(([, to]) => path === to || path.startsWith(`${to}/`))
+    .sort((x, y) => y[1].length - x[1].length)[0];
+  const heading =
+    current && current[1] !== navGroups[role][0][1] ? current[0] : title;
+  useEffect(() => {
+    document
+      .querySelector(".bf-side-link.active")
+      ?.scrollIntoView?.({ block: "nearest", inline: "center" });
+  }, [path]);
   return (
     <>
       <Topbar />
@@ -148,7 +159,7 @@ export function Shell({ role = "attendee", path, title, subtitle, children }) {
             <Link
               key={to}
               to={to}
-              className={`bf-side-link ${path === to ? "active" : ""}`}
+              className={`bf-side-link ${current?.[1] === to ? "active" : ""}`}
             >
               {translate(label)}
             </Link>
@@ -158,7 +169,10 @@ export function Shell({ role = "attendee", path, title, subtitle, children }) {
         <main className="bf-main">
           <div className="bf-page-head">
             <div>
-              <h1>{translate(title)}</h1>
+              {heading !== title && (
+                <p className="bf-page-kicker">{translate(title)}</p>
+              )}
+              <h1>{translate(heading)}</h1>
               {subtitle && <p>{translate(subtitle)}</p>}
             </div>
           </div>

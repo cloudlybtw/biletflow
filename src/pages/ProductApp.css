@@ -624,3 +624,428 @@ main.bf-auth.auth {
     font-size: 0; /* keep the select's accessible name, drop the visible word */
   }
 }
+
+/* Organizer and admin workspaces: light DICE style. Black and white,
+   uppercase headings, pill buttons, 8px panels without shadows. */
+.bf-shell {
+  background: #fff;
+  min-height: calc(100vh - 72px);
+}
+.bf-shell .bf-side {
+  width: 248px;
+  flex-basis: 248px;
+  padding: 32px 16px 24px 24px;
+  background: #fff;
+  border-right: 1px solid var(--line);
+  gap: 2px;
+}
+.bf-shell .bf-side-label {
+  padding: 0 12px 14px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.bf-shell .bf-side-link {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #333;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out);
+}
+.bf-shell .bf-side-link:hover {
+  background: var(--panel);
+  color: #000;
+}
+.bf-shell .bf-side-link.active {
+  background: #000;
+  color: #fff;
+}
+.bf-shell .bf-side-link.active::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #f2ef1d;
+}
+.bf-shell .bf-side > a:last-child:not(.bf-side-link) {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+.bf-shell .bf-main {
+  padding: 40px clamp(24px, 4vw, 56px) 80px;
+}
+.bf-shell .bf-page-head {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.bf-shell .bf-page-kicker {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.bf-shell .bf-page-head h1 {
+  font-size: clamp(36px, 4.4vw, 64px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  color: #000;
+}
+.bf-shell .bf-main > p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Panels, details, stats */
+.bf-shell .bf-panel {
+  padding: 24px;
+  margin-bottom: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+.bf-shell .bf-panel h2 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.bf-shell .bf-stats {
+  gap: 12px;
+  margin: 0 0 24px;
+}
+.bf-shell .bf-stat {
+  min-height: 0;
+  padding: 20px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.bf-shell .bf-stat span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.bf-shell .bf-stat strong {
+  margin-top: 10px;
+  font-size: clamp(32px, 3.4vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #000;
+  font-variant-numeric: tabular-nums;
+}
+.bf-shell .bf-details dt {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.bf-shell .bf-details dd {
+  font-size: 15px;
+  color: #000;
+}
+
+/* Tables */
+.bf-shell .bf-table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+.bf-shell table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.bf-shell th {
+  padding: 14px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.bf-shell td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #000;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.bf-shell tbody tr:last-child td {
+  border-bottom: 0;
+}
+.bf-shell tbody tr {
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.bf-shell tbody tr:hover {
+  background: #fafafa;
+}
+.bf-shell td a:not(.bf-button):not(.bf-outline-button) {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Forms */
+.bf-shell .bf-form label {
+  margin: 14px 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+}
+.bf-shell .bf-form input:not([type="checkbox"]):not([type="radio"]),
+.bf-shell .bf-form select,
+.bf-shell .bf-form textarea,
+.bf-shell .bf-filter-row input,
+.bf-shell .bf-filter-row select {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: #000;
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.bf-shell .bf-form textarea {
+  min-height: 110px;
+}
+.bf-shell .bf-form input:focus,
+.bf-shell .bf-form select:focus,
+.bf-shell .bf-form textarea:focus {
+  border-color: #000;
+  background: #fff;
+}
+.bf-shell .bf-form .bf-check {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+  color: #000;
+}
+
+/* Buttons */
+.bf-shell .bf-button {
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: var(--pill);
+  background: #000;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.bf-shell .bf-button:hover {
+  background: #333;
+}
+.bf-shell .bf-button:active,
+.bf-shell .bf-outline-button:active {
+  transform: scale(0.97);
+}
+.bf-shell .bf-outline-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.bf-shell .bf-outline-button:hover {
+  background: #f2ef1d;
+}
+.bf-shell .bf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Status badges */
+.bf-shell .bf-badge {
+  margin-left: 0;
+  padding: 5px 10px;
+  border-radius: var(--pill);
+  background: #f2ef1d;
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.bf-shell .bf-badge.draft,
+.bf-shell .bf-badge.open,
+.bf-shell .bf-badge.pending,
+.bf-shell .bf-badge.in-progress,
+.bf-shell .bf-badge.escalated {
+  background: var(--chip);
+  color: #000;
+}
+.bf-shell .bf-badge.flagged,
+.bf-shell .bf-badge.suspended,
+.bf-shell .bf-badge.cancelled {
+  background: #000;
+  color: #fff;
+}
+
+/* Event cards and sub-navigation inside the organizer workspace */
+.bf-shell .bf-event-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.bf-shell .bf-event-subnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.bf-shell .bf-event-subnav a:hover,
+.bf-shell .bf-event-subnav a.active,
+.bf-shell .bf-event-subnav a[aria-current="page"] {
+  background: #000;
+  color: #fff;
+}
+.bf-shell [role="alert"] {
+  color: #b00020;
+}
+.bf-shell [role="status"] {
+  color: #237b58;
+}
+@media (max-width: 900px) {
+  .bf-shell .bf-main {
+    padding: 24px 16px 64px;
+  }
+  .bf-shell .bf-page-head h1 {
+    font-size: clamp(32px, 10vw, 48px);
+  }
+}
+/* Workspace forms: two columns on wide screens; long fields and actions span both. */
+@media (min-width: 1100px) {
+  .bf-shell .bf-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+    align-items: start;
+  }
+  .bf-shell .bf-form > * {
+    grid-column: 1 / -1;
+  }
+  .bf-shell .bf-form > label:not(:has(textarea)):not(.bf-check) {
+    grid-column: auto;
+  }
+}
+.bf-shell .bf-form > .bf-button {
+  justify-self: start;
+  margin-top: 8px;
+}
+/* Phones/tablets: the workspace menu becomes a scrollable row of chips. */
+@media (max-width: 900px) {
+  .bf-shell {
+    flex-direction: column;
+  }
+  .bf-shell .bf-side {
+    width: auto;
+    flex: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bf-shell .bf-side::-webkit-scrollbar {
+    display: none;
+  }
+  .bf-shell .bf-side-label {
+    display: none;
+  }
+  .bf-shell .bf-side-link {
+    flex-shrink: 0;
+    background: var(--panel);
+    white-space: nowrap;
+  }
+  .bf-shell .bf-side-link.active::after {
+    margin-left: 8px;
+  }
+  .bf-shell .bf-side > a:last-child:not(.bf-side-link) {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 10px 12px;
+    border-top: 0;
+    white-space: nowrap;
+  }
+}
+/* Loose fields outside forms (e.g. the organizer's event picker). */
+.bf-shell .bf-main > label {
+  display: grid;
+  gap: 8px;
+  max-width: 420px;
+  margin-bottom: 24px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+}
+.bf-shell .bf-main > label select,
+.bf-shell .bf-main > label input {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: #000;
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: 0;
+}
