@@ -35,8 +35,8 @@ export default function App() {
   const eventPage =
     /^\/(events|e|preview)\/./.test(path || "") ||
     new URLSearchParams(route?.split("?")[1] || "").has("c");
-  // The buyer account is customer-facing, so it is dark too.
-  const account = /^\/account(\/|$)/.test(path || "");
+  // The buyer account and checkout are customer-facing, so they are dark too.
+  const account = /^\/(account|checkout)(\/|$)/.test(path || "");
   const dark = !route || category || eventPage || account;
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";

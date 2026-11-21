@@ -581,8 +581,7 @@ header.bf-top.ws-top.is-contained {
   font-size: 12px;
   font-weight: 700;
 }
-.acc-legacy .bf-outline-button,
-.acc-legacy .bf-action {
+.acc-legacy .bf-outline-button {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
