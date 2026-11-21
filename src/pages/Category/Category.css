@@ -108,45 +108,12 @@
   background: var(--hl);
   color: #000;
 }
-.pill-select {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 6px 0 16px;
-  border-radius: var(--pill);
-  background: var(--chip);
-  font-size: 12px;
-  font-weight: 700;
+/* City and sort use the shared Dropdown: taller pill to match the chips. */
+.select-row .dropdown-button {
+  height: 40px;
+  padding: 0 16px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
 }
-.pill-select > span {
-  color: var(--muted);
-}
-.pill-select select {
-  border: 0;
-  background: transparent;
-  color: var(--fg);
-  font: inherit;
-  text-transform: inherit;
-  letter-spacing: inherit;
-  padding: 10px 6px;
-  max-width: 190px;
-}
-.pill-select select option {
-  color: #000;
-  text-transform: none;
-}
-.pill-select:focus-within {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-.pill-select select:focus-visible {
-  outline: none;
-}
-
 /* Spotlight: the soonest event as a wide card. */
 .spotlight {
   display: grid;
@@ -312,8 +279,13 @@
   .select-row > * {
     flex: 1;
   }
-  .pill-select select {
-    max-width: none;
+  .select-row .dropdown-button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .select-row .dropdown-list {
+    left: 0;
+    right: auto;
     width: 100%;
   }
   .spotlight {

@@ -101,3 +101,8 @@
 .dropdown-plain .dropdown-button[aria-expanded="true"] {
   background: var(--chip);
 }
+/* Optional muted label before the value ("City  All cities"). */
+.dropdown-prefix {
+  color: var(--muted);
+  text-transform: uppercase;
+}

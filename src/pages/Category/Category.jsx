@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import EventCard from "../../components/EventCard/EventCard";
 import Arrow from "../../components/Icons/Arrow";
+import Dropdown from "../../components/Dropdown/Dropdown";
 import {
   EventCardSkeleton,
   EmptyState,
@@ -311,28 +312,30 @@ export default function Category({ route }) {
             </button>
           </div>
           <div className="select-row">
-            <label className="pill-select">
-              <span>{t.city}</span>
-              <select value={city} onChange={(e) => setCity(e.target.value)}>
-                <option value="">{t.allCities}</option>
-                {Object.keys(cities).map((c) => (
-                  <option key={c} value={c}>
-                    {cityLabel(c, lang)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="pill-select">
-              <span>{t.sort}</span>
-              <select
-                value={filters.sort}
-                onChange={(e) => setFilter("sort", e.target.value)}
-              >
-                <option value="date">{t.byDate}</option>
-                <option value="cheap">{t.cheap}</option>
-                <option value="pricey">{t.pricey}</option>
-              </select>
-            </label>
+            <Dropdown
+              label={t.city}
+              value={city}
+              onChange={setCity}
+              icon={<span className="dropdown-prefix">{t.city}</span>}
+              options={[
+                { value: "", label: t.allCities },
+                ...Object.keys(cities).map((c) => ({
+                  value: c,
+                  label: cityLabel(c, lang),
+                })),
+              ]}
+            />
+            <Dropdown
+              label={t.sort}
+              value={filters.sort}
+              onChange={(value) => setFilter("sort", value)}
+              icon={<span className="dropdown-prefix">{t.sort}</span>}
+              options={[
+                { value: "date", label: t.byDate },
+                { value: "cheap", label: t.cheap },
+                { value: "pricey", label: t.pricey },
+              ]}
+            />
           </div>
         </div>
 
