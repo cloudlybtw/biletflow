@@ -1,0 +1,310 @@
+/* Static pages (#/cms/*, #/for/organizers): dark DICE style. */
+.static {
+  padding-bottom: 80px;
+}
+.static-head {
+  display: grid;
+  justify-items: start;
+  gap: 20px;
+  padding: 20px 0 40px;
+  border-bottom: 1px solid var(--line);
+  animation: hero-in 500ms var(--ease-out) both;
+}
+.static-head h1 {
+  font-size: clamp(48px, 8vw, 128px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  max-width: 14ch;
+  overflow-wrap: anywhere;
+}
+.static-head p {
+  max-width: 56ch;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--fg-soft);
+}
+.static-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: var(--pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.static-button:hover {
+  background: var(--hl);
+  color: #000;
+}
+.static-button:active {
+  transform: scale(0.97);
+}
+.static-button-ghost {
+  background: var(--chip);
+  color: var(--fg);
+}
+
+/* Article + side list */
+.static-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 64px;
+  align-items: start;
+  padding-top: 40px;
+}
+.static-article {
+  max-width: 720px;
+}
+.static-article section + section {
+  margin-top: 36px;
+}
+.static-article h2 {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.static-article p {
+  margin-top: 12px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--fg-soft);
+}
+.static-draft {
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--muted) !important;
+  font-size: 14px !important;
+}
+.static-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--hl);
+}
+.static-side {
+  position: sticky;
+  top: 140px;
+}
+.static-side h2,
+.static-label {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.static-side ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.static-side a {
+  display: block;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  transition: color var(--t-ui) var(--ease-out);
+}
+.static-side a:hover {
+  color: var(--hl);
+}
+
+/* FAQ accordion */
+.static-faq {
+  border-top: 1px solid var(--line);
+}
+.static-faq details {
+  border-bottom: 1px solid var(--line);
+}
+.static-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0;
+  list-style: none;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.static-faq summary::-webkit-details-marker {
+  display: none;
+}
+.static-faq summary span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 18px;
+  transition:
+    transform var(--t-ui) var(--ease-out),
+    background-color var(--t-ui) var(--ease-out);
+}
+.static-faq details[open] summary span {
+  transform: rotate(45deg);
+  background: var(--hl);
+  color: #000;
+}
+.static-faq summary:hover {
+  color: var(--hl);
+}
+.static-faq details p {
+  margin: 0 0 22px;
+  max-width: 62ch;
+}
+
+/* Organizer landing */
+.static-block {
+  padding-top: 48px;
+}
+.static-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.static-benefit {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.static-benefit span {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hl);
+}
+.static-benefit h3 {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.static-benefit p {
+  color: var(--fg-soft);
+  line-height: 1.5;
+}
+.static-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.static-steps li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: baseline;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  counter-increment: step;
+}
+.static-steps li::before {
+  content: counter(step, decimal-leading-zero);
+  font-size: 14px;
+  color: var(--hl);
+  letter-spacing: 0;
+}
+.static-steps li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.static-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 56px;
+  padding: 40px;
+  border-radius: var(--radius);
+  background: var(--hl);
+  color: #000;
+}
+.static-cta h2 {
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+.static-cta div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.static-cta .static-button {
+  background: #000;
+  color: #fff;
+}
+.static-cta .static-button-ghost {
+  background: rgb(0 0 0 / 0.12);
+  color: #000;
+}
+.static-cta .static-button:hover {
+  background: #fff;
+  color: #000;
+}
+
+@media (max-width: 1000px) {
+  .static-body {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .static-side {
+    position: static;
+  }
+  .static-benefits {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .static-head h1 {
+    font-size: clamp(40px, 13vw, 64px);
+  }
+  .static-head p {
+    font-size: 17px;
+  }
+  .static-steps li {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+  .static-cta {
+    padding: 24px;
+  }
+  .static-benefit {
+    padding: 20px;
+  }
+}

@@ -1,6 +1,7 @@
 import Home from "./pages/Home/Home";
 import ProductApp from "./pages/ProductApp";
 import Category from "./pages/Category/Category";
+import Static from "./pages/Static/Static";
 import SiteFooter from "./components/SiteFooter/SiteFooter";
 import SessionProvider from "./components/SessionProvider";
 import { useEffect, useState } from "react";
@@ -37,6 +38,8 @@ export default function App() {
     new URLSearchParams(route?.split("?")[1] || "").has("c");
   // The buyer account and checkout are customer-facing, so they are dark too.
   const account = /^\/(account|checkout)(\/|$)/.test(path || "");
+  // Static pages: #/cms/{slug} and the organizer landing.
+  const staticPage = /^\/cms\/./.test(path || "") || path === "/for/organizers";
   const auth = [
     "/login",
     "/register",
@@ -44,7 +47,7 @@ export default function App() {
     "/reset-password",
     "/verify-email",
   ].includes(path);
-  const dark = !route || category || eventPage || account || auth;
+  const dark = !route || category || eventPage || account || staticPage || auth;
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
@@ -52,6 +55,8 @@ export default function App() {
     <SessionProvider>
       {category ? (
         <Category key={route.split("?")[0]} route={route} />
+      ) : staticPage ? (
+        <Static path={path} />
       ) : route ? (
         <ProductApp key={route} route={route} />
       ) : (
