@@ -37,7 +37,14 @@ export default function App() {
     new URLSearchParams(route?.split("?")[1] || "").has("c");
   // The buyer account and checkout are customer-facing, so they are dark too.
   const account = /^\/(account|checkout)(\/|$)/.test(path || "");
-  const dark = !route || category || eventPage || account;
+  const auth = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+  ].includes(path);
+  const dark = !route || category || eventPage || account || auth;
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);

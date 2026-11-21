@@ -401,3 +401,226 @@ header.ws-top .bf-top-right [role="alert"] {
 .bf-side > a:last-child:not(.bf-side-link):hover {
   color: #0d0d0d;
 }
+
+/* Auth pages (#/login, #/register, …): dark split layout. Big type on the
+   left, form on the right; collapses to the form only on phones. */
+main.bf-auth.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: stretch;
+  flex-direction: initial;
+  gap: 0;
+  min-height: 100vh;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+.auth-art {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px;
+  background:
+    radial-gradient(circle at 20% 20%, rgb(242 239 29 / 0.16), transparent 45%),
+    var(--panel);
+  overflow: hidden;
+}
+.auth-art-line {
+  font-size: clamp(56px, 8vw, 132px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.88;
+  animation: hero-in 600ms var(--ease-out) both;
+}
+.auth-art-line em {
+  font-style: normal;
+  color: var(--hl);
+}
+.auth-art-sticker {
+  position: absolute;
+  top: 48px;
+  right: 48px;
+  padding: 10px 16px;
+  border-radius: var(--pill);
+  background: var(--hl);
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transform: rotate(6deg);
+}
+.auth-side {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 40px clamp(24px, 5vw, 72px);
+}
+.auth .bf-auth-top {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.auth .bf-auth-top .wordmark {
+  color: var(--fg);
+  text-decoration: none;
+}
+.auth .bf-language {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.auth .bf-language select {
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--chip);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+}
+.auth .bf-language select option {
+  color: #000;
+}
+.auth .bf-auth-card {
+  width: 100%;
+  max-width: 440px;
+  margin: auto 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.auth .bf-auth-card h1 {
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+.auth-switch {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  padding: 4px;
+  border-radius: var(--pill);
+  background: var(--chip);
+}
+.auth .auth-switch a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 18px;
+  border-radius: var(--pill);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.auth .auth-switch a[aria-current="page"] {
+  background: var(--hl);
+  color: #000;
+}
+.auth .bf-auth-card [role="status"] {
+  margin-top: 16px;
+  color: var(--hl);
+}
+.auth .bf-form {
+  margin-top: 20px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.auth .bf-form label {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.auth .bf-form input,
+.auth .bf-form select {
+  height: 50px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 16px;
+}
+.auth .bf-form input:focus,
+.auth .bf-form select:focus {
+  border-color: var(--hl);
+}
+.auth .bf-form select option {
+  color: #000;
+}
+.auth .bf-form [role="alert"] {
+  color: #ff8a8a;
+}
+.auth .bf-form .bf-button {
+  color: #000 !important; /* ProductApp.css forces white */
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  border-radius: var(--pill);
+  background: #f2ef1d;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    background-color var(--t-ui) var(--ease-out),
+    transform var(--t-press) var(--ease-out);
+}
+.auth .bf-form .bf-button:hover {
+  background: #fff;
+}
+.auth .bf-form .bf-button:active {
+  transform: scale(0.98);
+}
+.auth .bf-form + .bf-form {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.auth .bf-form + .bf-form .bf-button {
+  background: var(--chip);
+  color: var(--fg) !important;
+}
+.auth .bf-bridge-links {
+  justify-content: flex-start;
+  gap: 8px 24px;
+  margin-top: 24px;
+}
+.auth .bf-bridge-links a {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.auth .bf-bridge-links a:hover {
+  color: var(--hl);
+}
+@media (max-width: 900px) {
+  main.bf-auth.auth {
+    grid-template-columns: 1fr;
+  }
+  .auth-art {
+    display: none;
+  }
+  .auth-side {
+    padding: 24px 16px 48px;
+  }
+  .auth .bf-language {
+    font-size: 0; /* keep the select's accessible name, drop the visible word */
+  }
+}
