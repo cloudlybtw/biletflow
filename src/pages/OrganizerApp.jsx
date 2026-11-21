@@ -3,6 +3,7 @@ import { api, apiPath, download, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Shell, Link, Stat } from "./app-shared";
 import {
+  EnumText,
   Form,
   State,
   Action,
@@ -911,7 +912,8 @@ function EventWorkspace({ id, tab = "details" }) {
           <>
             <h2>{event.title}</h2>
             <p>
-              {event.status} · Paid sales: {event.paid_sales_status}
+              <EnumText value={event.status} /> · Paid sales:{" "}
+              <EnumText value={event.paid_sales_status} />
             </p>
             <Link to={`/preview/${event.id}`}>Preview event</Link>
             <div className="bf-actions">

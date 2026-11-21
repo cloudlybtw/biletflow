@@ -246,6 +246,33 @@ export function DataTable({ rows = [], columns, actions }) {
     </div>
   );
 }
+// Server enum values (awaiting_payment, platform_admin, …) shown as words:
+// translated when product.json has the value, otherwise "Awaiting payment".
+const enumKeys = [
+  "status",
+  "sender_role",
+  "case_type",
+  "category",
+  "platform_role",
+  "role",
+  "visibility",
+  "seating_mode",
+  "paid_sales_status",
+  "discount_type",
+  "type",
+  "channel",
+];
+function enumLabel(value) {
+  const translated = translate(value);
+  if (translated !== value || !/^[a-z]+(_[a-z]+)*$/.test(value))
+    return translated;
+  const words = value.replaceAll("_", " ");
+  return words[0].toUpperCase() + words.slice(1);
+}
+// Inline readable enum value, for places that render a raw field.
+export function EnumText({ value }) {
+  return value ? enumLabel(value) : "—";
+}
 function show(value, key = "") {
   if (
     value != null &&
@@ -254,16 +281,8 @@ function show(value, key = "") {
   )
     return dateTime(value);
   if (typeof value === "number") return number(value);
-  if (
-    [
-      "status",
-      "sender_role",
-      "case_type",
-      "category",
-      "platform_role",
-    ].includes(key)
-  )
-    return translate(value);
+  if (enumKeys.includes(key) && typeof value === "string")
+    return enumLabel(value);
   return value == null
     ? "—"
     : typeof value === "boolean"
