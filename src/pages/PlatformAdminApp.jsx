@@ -1,3 +1,4 @@
+import { t as translate } from "../lib/locale";
 import { useState } from "react";
 import { api, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
@@ -261,23 +262,35 @@ export default function PlatformAdminApp({ path }) {
       ) : columns[kind] ? (
         <Resource key={kind} kind={kind} />
       ) : (
-        <div className="bf-panel">
-          <h2>Operations</h2>
-          <p>
-            Search retained records, moderate events and users, and manage
-            platform settings.
+        <>
+          <p className="bf-admin-lead">
+            {translate(
+              "Search retained records, moderate events and users, and manage platform settings.",
+            )}
           </p>
-          {Object.keys(columns).map((k) => (
-            <p key={k}>
-              <Link to={`/admin/${k}`}>{k}</Link>
-            </p>
-          ))}
-        </div>
+          <div className="bf-admin-grid">
+            {Object.keys(columns).map((k) => (
+              <Link key={k} className="bf-admin-card" to={`/admin/${k}`}>
+                <strong>{translate(adminCards[k]?.[0] || k)}</strong>
+                <small>{translate(adminCards[k]?.[1] || "")}</small>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </Shell>
   );
 }
 
+// Overview cards: title and one line on what each record list is for.
+const adminCards = {
+  users: ["Users", "Accounts, roles and suspensions"],
+  events: ["Events", "Every event on the platform"],
+  orders: ["Orders", "Purchases and their payment state"],
+  payments: ["Payments", "Simulated payment records"],
+  refunds: ["Refunds", "Returned money and its status"],
+  activations: ["Activations", "Organizer activation fees"],
+};
 function OperationalQueue({ kind }) {
   const resource = useResource(`/admin/${kind}`, true);
   const [selected, setSelected] = useState(null);

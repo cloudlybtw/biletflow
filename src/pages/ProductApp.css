@@ -474,18 +474,20 @@ main.bf-auth.auth {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.auth .bf-language select {
-  height: 36px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--pill);
-  background: var(--chip);
-  color: var(--fg);
-  font-size: 12px;
-  font-weight: 700;
+.auth .bf-language {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.auth .bf-language select option {
-  color: #000;
+.bf-language-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
 }
 .auth .bf-auth-card {
   width: 100%;
@@ -620,8 +622,8 @@ main.bf-auth.auth {
   .auth-side {
     padding: 24px 16px 48px;
   }
-  .auth .bf-language {
-    font-size: 0; /* keep the select's accessible name, drop the visible word */
+  .auth .bf-language > span[aria-hidden] {
+    display: none;
   }
 }
 
@@ -1048,4 +1050,246 @@ main.bf-auth.auth {
   font-size: 15px;
   text-transform: none;
   letter-spacing: 0;
+}
+/* Workspace selects: drop the native Safari/Chrome look so they match the text fields. */
+.bf-shell .bf-main select:not([multiple]) {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+  padding-right: 42px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px 8px;
+  font-weight: 400;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.bf-shell .bf-main > label select {
+  width: 100%;
+}
+.bf-shell .bf-form input[type="number"] {
+  -moz-appearance: textfield;
+}
+/* The event title is the main field: give it the full row. */
+@media (min-width: 1100px) {
+  .bf-shell .bf-form > label:has(input[name="title"]) {
+    grid-column: 1 / -1;
+  }
+}
+.bf-shell .bf-form input,
+.bf-shell .bf-form textarea,
+.bf-shell .bf-main > label input,
+.bf-shell .bf-filter-row input {
+  font-weight: 400;
+}
+/* Gate: sign-in needed, no access, become organizer, restoring session.
+   Uses theme tokens, so it is dark on /account and /checkout, light on workspaces. */
+.bf-gate {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 72px);
+  padding: 48px 16px 96px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.bf-gate-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 36px 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.bf-gate-card h1 {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 6vw, 44px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.bf-gate-card > p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.bf-gate-card > p[role="status"] {
+  margin: 0;
+}
+.bf-gate-card > p[role="alert"] {
+  color: #ff6b6b;
+}
+.bf-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bf-gate .bf-button,
+.bf-gate .bf-outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--pill);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform var(--t-press) var(--ease-out);
+}
+.bf-gate .bf-button {
+  background: var(--btn-bg);
+  color: var(--btn-fg) !important;
+}
+.bf-gate .bf-outline-button {
+  background: var(--chip);
+  color: var(--fg);
+}
+.bf-gate .bf-button:active,
+.bf-gate .bf-outline-button:active {
+  transform: scale(0.97);
+}
+.bf-gate .bf-form label {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bf-gate .bf-form input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 15px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.bf-gate .bf-form input:focus {
+  border-color: var(--focus);
+  outline: none;
+}
+@media (max-width: 520px) {
+  .bf-gate-card {
+    padding: 28px 20px;
+  }
+  .bf-gate-actions > * {
+    flex: 1;
+  }
+}
+/* Auth success actions (email verified). */
+.auth .auth-done {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.auth .auth-done .bf-button,
+.auth .auth-done .bf-outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--pill);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.auth .auth-done .bf-button {
+  background: var(--hl);
+  color: #000 !important;
+}
+.auth .auth-done .bf-outline-button {
+  background: var(--chip);
+  color: var(--fg);
+}
+.bf-gate form {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.bf-gate form .bf-button {
+  margin-top: 8px;
+}
+.bf-shell textarea,
+.bf-gate textarea {
+  font-family: inherit;
+  line-height: 1.5;
+}
+/* Form errors on dark pages (auth, account, checkout, gate): readable, not pink-on-pink. */
+html[data-theme="dark"] .bf-form [role="alert"],
+html[data-theme="dark"] .auth [role="alert"] {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #ff6b6b;
+  border-radius: var(--radius);
+  background: rgb(255 107 107 / 0.12);
+  color: #ffb4b4;
+  font-size: 14px;
+  line-height: 1.4;
+}
+/* Admin overview cards */
+.bf-admin-lead {
+  max-width: 60ch;
+  margin: 0 0 20px;
+  color: #555;
+  font-size: 15px;
+}
+.bf-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.bf-admin-card {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: #000;
+  text-decoration: none;
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.bf-admin-card:hover {
+  background: #f2ef1d;
+}
+.bf-admin-card strong {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.bf-admin-card small {
+  color: #555;
+  font-size: 13px;
+}
+/* Workspace fields: one clean focus ring (border), not border + global outline. */
+.bf-shell .bf-form input:focus-visible,
+.bf-shell .bf-form select:focus-visible,
+.bf-shell .bf-form textarea:focus-visible,
+.bf-shell .bf-main > label select:focus-visible {
+  outline: none;
+  border-color: #000;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px #000;
+}
+.bf-shell .bf-form textarea {
+  resize: vertical;
 }

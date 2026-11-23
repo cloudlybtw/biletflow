@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t as translate } from "../lib/locale";
 import { api, apiPath, download, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Shell, Link, Stat } from "./app-shared";
@@ -132,7 +133,11 @@ function EventForm({ event, done }) {
           label: "Visibility",
           default: "public",
           required: true,
-          options: ["public", "unlisted", "private"].map((v) => [v, v]),
+          options: [
+            ["public", "Public"],
+            ["unlisted", "Unlisted (link only)"],
+            ["private", "Private"],
+          ],
         },
         {
           name: "capacity",
@@ -500,7 +505,7 @@ function Campaigns({ base }) {
                   }
                   done={resource.reload}
                 >
-                  {action}
+                  {translate(action === "activate" ? "Activate" : "Disable")}
                 </Action>
               ))}
               <Action
@@ -901,6 +906,19 @@ function Settings() {
     </>
   );
 }
+// Which status changes make sense from each event status.
+const eventActions = {
+  draft: ["publish", "duplicate"],
+  published: ["unpublish", "cancel", "duplicate"],
+  unpublished: ["publish", "cancel", "duplicate"],
+  cancelled: ["duplicate"],
+};
+const actionLabels = {
+  publish: "Publish",
+  unpublish: "Unpublish",
+  cancel: "Cancel event",
+  duplicate: "Duplicate",
+};
 function EventWorkspace({ id, tab = "details" }) {
   const base = `/events/${id}`;
   const resource = useResource(base);
@@ -915,9 +933,11 @@ function EventWorkspace({ id, tab = "details" }) {
               <EnumText value={event.status} /> · Paid sales:{" "}
               <EnumText value={event.paid_sales_status} />
             </p>
-            <Link to={`/preview/${event.id}`}>Preview event</Link>
             <div className="bf-actions">
-              {["publish", "unpublish", "cancel", "duplicate"].map((action) => (
+              <Link className="bf-outline-button" to={`/preview/${event.id}`}>
+                {translate("Preview event")}
+              </Link>
+              {(eventActions[event.status] || ["duplicate"]).map((action) => (
                 <Action
                   key={action}
                   confirm={
@@ -934,7 +954,7 @@ function EventWorkspace({ id, tab = "details" }) {
                   }}
                   done={resource.reload}
                 >
-                  {action}
+                  {translate(actionLabels[action])}
                 </Action>
               ))}
               {event.status === "draft" && (
@@ -945,7 +965,7 @@ function EventWorkspace({ id, tab = "details" }) {
                     location.hash = "/organizer/events";
                   }}
                 >
-                  Delete draft
+                  {translate("Delete draft")}
                 </Action>
               )}
             </div>
@@ -969,10 +989,11 @@ function EventWorkspace({ id, tab = "details" }) {
         ].map((t) => (
           <Link
             key={t}
-            className={tab === t ? "bf-button" : ""}
+            className={tab === t ? "active" : ""}
+            aria-current={tab === t ? "page" : undefined}
             to={`/organizer/events/${id}/${t}`}
           >
-            {t}
+            {translate(t[0].toUpperCase() + t.slice(1))}
           </Link>
         ))}
       </nav>
