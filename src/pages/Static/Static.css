@@ -45,7 +45,7 @@
 }
 .static-button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .static-button:active {
   transform: scale(0.97);
@@ -171,7 +171,7 @@
 .static-faq details[open] summary span {
   transform: rotate(45deg);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .static-faq summary:hover {
   color: var(--hl);
@@ -252,7 +252,7 @@
   padding: 40px;
   border-radius: var(--radius);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .static-cta h2 {
   font-size: clamp(32px, 4vw, 56px);
@@ -267,16 +267,16 @@
   gap: 8px;
 }
 .static-cta .static-button {
-  background: #000;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
 }
 .static-cta .static-button-ghost {
   background: rgb(0 0 0 / 0.12);
-  color: #000;
+  color: var(--ink);
 }
 .static-cta .static-button:hover {
-  background: #fff;
-  color: #000;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 @media (max-width: 1000px) {

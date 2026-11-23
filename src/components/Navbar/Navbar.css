@@ -137,7 +137,7 @@ html:not([data-theme="dark"]) .nav-link:hover {
 }
 .sign-in:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .sign-in:active {
   transform: scale(0.97);
@@ -179,7 +179,7 @@ html:not([data-theme="dark"]) .nav-link:hover {
   letter-spacing: 0;
 }
 html[data-theme="dark"] .user-initial {
-  color: #000;
+  color: var(--ink);
 }
 .user-name {
   overflow: hidden;
@@ -250,7 +250,7 @@ html[data-theme="dark"] .user-initial {
 }
 .category-nav a[aria-current="page"] {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .nav-error {
   margin: 0;

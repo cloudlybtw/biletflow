@@ -62,7 +62,7 @@
 }
 .acc-tabs a[aria-current="page"] {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 
 /* Shared bits */
@@ -107,7 +107,7 @@
 }
 .acc-button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .acc-button:active {
   transform: scale(0.97);
@@ -145,12 +145,12 @@
 .acc-chip.is-completed,
 .acc-chip.is-paid {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .acc-chip.is-awaiting_payment,
 .acc-chip.is-pending {
-  background: #fff;
-  color: #000;
+  background: var(--paper);
+  color: var(--ink);
 }
 .acc-empty {
   display: grid;
@@ -290,8 +290,8 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 20px;
-  background: #f2ef1d;
-  color: #000;
+  background: var(--yellow);
+  color: var(--ink);
   border-left: 2px dashed rgb(0 0 0 / 0.3);
 }
 .acc-ticket-stub::before,
@@ -311,8 +311,8 @@
   bottom: -10px;
 }
 .acc-ticket-stub .acc-chip {
-  background: #000;
-  color: #f2ef1d;
+  background: var(--ink);
+  color: var(--yellow);
 }
 .acc-ticket-open {
   display: inline-flex;
@@ -486,7 +486,7 @@
   min-width: 0;
   padding: 40px 28px;
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   border-left: 2px dashed #20202080;
   text-align: center;
 }
@@ -573,7 +573,7 @@
 }
 .acc-row:hover .acc-row-go {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .acc-note {
   display: grid;
@@ -673,7 +673,7 @@
   border-color: var(--hl);
 }
 .acc-legacy select option {
-  color: #000;
+  color: var(--ink);
 }
 .acc-legacy .bf-button,
 .acc-legacy .bf-panel .bf-button,
@@ -710,7 +710,7 @@
 .acc-legacy .bf-outline-button:hover,
 .acc-legacy .bf-button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .acc-legacy .bf-bubble {
   background: var(--chip);
@@ -857,7 +857,7 @@
   padding: 14px 16px 14px 20px;
   border-radius: var(--radius);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   font-size: 14px;
   font-weight: 600;
 }
@@ -867,8 +867,8 @@
   min-height: 36px;
   padding: 0 16px;
   border-radius: var(--pill);
-  background: #000;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -961,7 +961,7 @@
 }
 .acc-legacy .acc-receipt-tickets .acc-button {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   text-decoration: none;
 }
 .acc-legacy .acc-receipt-title {

@@ -52,7 +52,7 @@
 }
 .carousel-categories button[aria-pressed="true"] {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .carousel-navigation {
   display: flex;
@@ -109,7 +109,7 @@
   position: relative;
   min-width: 0;
   background: var(--panel);
-  color: #fff;
+  color: var(--paper);
   border-radius: var(--radius) 0 0 var(--radius);
   overflow: hidden;
 }
@@ -154,8 +154,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: #fff;
-  color: #000;
+  background: var(--paper);
+  color: var(--ink);
   padding: 6px 12px;
   border-radius: var(--pill);
 }
@@ -164,7 +164,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #f2ef1d;
+  color: var(--yellow);
   margin: 22px 0 10px;
 }
 .ticket-headline {
@@ -213,8 +213,8 @@
   min-height: 44px;
   padding: 0 22px;
   border-radius: var(--pill);
-  background: #fff;
-  color: #000;
+  background: var(--paper);
+  color: var(--ink);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -225,14 +225,14 @@
     transform var(--t-press) var(--ease-out);
 }
 .ticket-bottom button:hover {
-  background: #f2ef1d;
+  background: var(--yellow);
 }
 .ticket-bottom button:active {
   transform: scale(0.97);
 }
 .event-ticket-stub {
-  background: #f2ef1d;
-  color: #000;
+  background: var(--yellow);
+  color: var(--ink);
   padding: 28px 22px;
   border-radius: 0 var(--radius) var(--radius) 0;
   position: relative;

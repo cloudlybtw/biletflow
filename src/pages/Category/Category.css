@@ -106,7 +106,7 @@
 }
 .chip-row button[aria-pressed="true"] {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 /* City and sort use the shared Dropdown: taller pill to match the chips. */
 .select-row .dropdown-button {
@@ -154,7 +154,7 @@
   padding: 6px 12px;
   border-radius: var(--pill);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -211,7 +211,7 @@
 }
 .spotlight:hover .spotlight-cta {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .spotlight:hover .spotlight-cta .arrow {
   transform: translate(2px, -2px);

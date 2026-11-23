@@ -50,7 +50,7 @@
   gap: 16px;
   padding: 12px;
   border-radius: 6px;
-  color: #fff;
+  color: var(--paper);
   font-size: 15px;
   cursor: pointer;
 }
@@ -64,14 +64,14 @@
   background: #333;
 }
 .dropdown-list li[aria-selected="true"] {
-  background: #f2ef1d;
-  color: #000;
+  background: var(--yellow);
+  color: var(--ink);
 }
 .dropdown-list li[aria-selected="true"] small {
-  color: #000;
+  color: var(--ink);
 }
 .dropdown-list:focus-visible li.is-active {
-  outline: 2px solid #f2ef1d;
+  outline: 2px solid var(--yellow);
   outline-offset: -2px;
 }
 @keyframes dropdown-in {

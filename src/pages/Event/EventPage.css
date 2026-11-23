@@ -29,7 +29,7 @@
 }
 .ev-notice-hl {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 
 /* Hero */
@@ -125,7 +125,7 @@
 }
 .ev-button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .ev-button:active {
   transform: scale(0.97);

@@ -24,7 +24,7 @@
   padding: 8px 14px;
   border-radius: var(--pill);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -37,7 +37,7 @@
   color: #ffb4b4;
 }
 .co-alert a {
-  color: #fff;
+  color: var(--paper);
   text-decoration: underline;
 }
 .co-muted {
@@ -115,7 +115,7 @@
   width: 20px;
   height: 20px;
   margin: 0;
-  accent-color: #f2ef1d;
+  accent-color: var(--yellow);
 }
 .co-type:focus-within {
   outline: 2px solid var(--focus);
@@ -189,7 +189,7 @@
 }
 .co-stepper button:hover:not(:disabled) {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .co-stepper button:active:not(:disabled) {
   transform: scale(0.94);
@@ -270,7 +270,7 @@
 }
 .co-button:hover:not(:disabled) {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .co-button:active:not(:disabled) {
   transform: scale(0.97);
@@ -292,9 +292,9 @@
   border-radius: 6px;
 }
 .co .bf-spatial-seats label[data-state="selected"] {
-  background: #f2ef1d;
-  border-color: #f2ef1d;
-  color: #000;
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
 }
 .co .bf-spatial-seats label[data-state="held"] {
   background: #3a2f0c;
@@ -360,12 +360,12 @@
 }
 .co-legacy .bf-form .bf-button {
   /* ProductApp.css forces .bf-button text to white with !important */
-  color: #000 !important;
+  color: var(--ink) !important;
   width: 100%;
   min-height: 52px;
   margin-top: 12px;
   border-radius: var(--pill);
-  background: #f2ef1d;
+  background: var(--yellow);
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -374,7 +374,7 @@
     transform var(--t-press) var(--ease-out);
 }
 .co-legacy .bf-form .bf-button:hover {
-  background: #fff;
+  background: var(--paper);
 }
 .co-legacy .bf-form .bf-button:active {
   transform: scale(0.98);
@@ -461,13 +461,13 @@
   padding: 28px;
   border-radius: var(--radius);
   background: var(--panel);
-  border: 2px dashed rgb(242 239 29 / 0.5);
+  border: 2px dashed rgb(230 220 94 / 0.5);
 }
 .co-pay-tag {
   padding: 6px 12px;
   border-radius: var(--pill);
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
   font-size: 11px;
   font-weight: 700;
 }

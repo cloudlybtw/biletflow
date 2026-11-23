@@ -47,13 +47,6 @@
   font-style: normal;
   color: var(--hl);
 }
-.experience-subtitle {
-  font-size: 18px;
-  line-height: 1.4;
-  max-width: 34ch;
-  margin-top: 24px;
-  color: var(--fg);
-}
 .experience-search {
   display: flex;
   align-items: center;
@@ -100,7 +93,7 @@
 }
 .experience-search button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .experience-search button:active {
   transform: scale(0.95);
@@ -139,7 +132,7 @@
 .experience-actions a:hover,
 .experience-actions button:hover {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .experience-actions a:active,
 .experience-actions button:active {
@@ -174,14 +167,14 @@
   flex-direction: column;
   padding: 36px 14px 14px;
   background: linear-gradient(transparent, rgb(0 0 0 / 0.85));
-  color: #fff;
+  color: var(--paper);
 }
 .scene-caption small {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #f2ef1d;
+  color: var(--yellow);
 }
 .scene-caption strong {
   font-size: 22px;
@@ -319,9 +312,6 @@
   .experience-content h1 {
     font-size: clamp(52px, 17vw, 80px);
   }
-  .experience-subtitle {
-    font-size: 16px;
-  }
   .experience-art {
     grid-template-columns: 1fr 1fr;
   }
@@ -340,8 +330,8 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #fff;
-  color: #000;
+  background: var(--paper);
+  color: var(--ink);
 }
 .flip-back {
   position: absolute;
@@ -412,8 +402,8 @@
   min-height: 36px;
   padding: 0 14px;
   border-radius: var(--pill);
-  background: #000;
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;

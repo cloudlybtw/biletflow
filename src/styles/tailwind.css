@@ -22,7 +22,7 @@
   --color-muted-foreground: var(--muted);
   --color-accent: var(--chip);
   --color-accent-foreground: var(--fg);
-  --color-highlight: #f2ef1d;
+  --color-highlight: var(--yellow);
   --color-border: var(--line);
   --color-input: var(--line);
   --color-ring: var(--focus);

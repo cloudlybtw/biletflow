@@ -148,7 +148,7 @@ export default function ExperienceHero({ t, query, onQueryChange, onCreate, onSe
             rotateAmplitude={12}
             scaleOnHover={1.04}
             glare={0.45}
-            glareColor="#f2ef1d"
+            glareColor="#e6dc5e"
             shadow={0.6}
             floating
             gyroscope={false}

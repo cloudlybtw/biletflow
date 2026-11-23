@@ -204,7 +204,7 @@
 }
 .category-tabs button.selected {
   background: var(--hl);
-  color: #000;
+  color: var(--ink);
 }
 .catalog-status {
   font-size: 14px;
