@@ -61,9 +61,8 @@ function TileBack({ event, scene, onDetails }) {
       <small>{scene.title}</small>
       <h3>{event.title}</h3>
       <dl>
-        <div><dt>{b.date}</dt><dd>{date}</dd></div>
-        <div><dt>{b.time}</dt><dd>{time}</dd></div>
-        {place && <div><dt>{b.place}</dt><dd>{place}</dd></div>}
+        <div><dt>{b.date}</dt><dd>{date}, {time}</dd></div>
+        {place && <div className="flip-place"><dt>{b.place}</dt><dd>{place}</dd></div>}
         <div><dt>{b.price}</dt><dd>{formatEventPrice(event, lang)}</dd></div>
       </dl>
       <button

@@ -338,12 +338,42 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  background: #f2ef1d;
-  color: #000;
+  gap: 6px;
+  padding: 14px;
+  background: var(--yellow);
+  color: var(--ink);
   text-align: left;
   cursor: default;
+  container-type: size;
+}
+/* Cards under ~270px tall: drop the kicker and place row, one line per value. */
+@container (max-height: 240px) {
+  .flip-back > small {
+    display: none;
+  }
+  .flip-back h3 {
+    font-size: 15px;
+  }
+  .flip-back dl {
+    gap: 2px;
+  }
+  .flip-back dl > div {
+    grid-template-columns: 48px 1fr;
+    padding-top: 4px;
+  }
+  .flip-back dd {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .flip-back .flip-place {
+    display: none;
+  }
+  .flip-back .flip-action {
+    min-height: 30px;
+    font-size: 10px;
+  }
 }
 .flip-back > small {
   font-size: 11px;
@@ -355,17 +385,21 @@
   font-size: clamp(18px, 1.7vw, 24px);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
+  letter-spacing: -0.02em;
+  /* Never shrink: the flex column used to squash and clip long titles. */
+  flex-shrink: 0;
+  line-height: 1.1;
+  padding-bottom: 2px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .flip-back dl {
   margin: 0;
   display: grid;
-  gap: 6px;
+  gap: 4px;
+  flex-shrink: 0;
   margin-top: auto;
 }
 .flip-back dl > div {
