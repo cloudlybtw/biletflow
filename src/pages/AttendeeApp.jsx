@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 import { publicImage } from "../lib/api";
 import CalendarLinks from "./CalendarLinks";
-import { t as translate, useLocale, errorText } from "../lib/locale";
+import { t as translate, useLocale, setLocale, errorText } from "../lib/locale";
 import { useSession } from "../lib/session-context";
 import { api, apiPath, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
@@ -702,7 +702,11 @@ function Profile({ t }) {
             body,
           })
         }
-        done={() => window.dispatchEvent(new Event("biletflow-session"))}
+        done={(updated) => {
+          // Saving a profile language switches the site language too.
+          if (updated?.locale) setLocale(updated.locale);
+          window.dispatchEvent(new Event("biletflow-session"));
+        }}
       />
       <div className="acc-links">
         <Link to="/forgot-password">{t.password}</Link>

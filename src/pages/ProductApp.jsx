@@ -1,4 +1,4 @@
-import { useLocale, setLocale, t as translate } from "../lib/locale";
+import { useLocale, t as translate } from "../lib/locale";
 import { useEffect } from "react";
 import PublicPages from "./PublicPages";
 import AttendeeApp from "./AttendeeApp";
@@ -29,9 +29,12 @@ function Gate({ children }) {
 export default function ProductApp({ route }) {
   const { user, loading, error } = useSession();
   const locale = useLocale();
+  // The language picked on the site wins; it used to be reset to the profile
+  // locale on every protected page. Keep the profile (emails) in sync instead.
   useEffect(() => {
-    if (user?.locale) setLocale(user.locale);
-  }, [user?.locale]);
+    if (!user || !user.locale || user.locale === locale) return;
+    api("/me", { method: "PATCH", body: { locale } }).catch(() => {});
+  }, [user, locale]);
   const path = route.split("?")[0];
   useEffect(() => {
     document.documentElement.lang = locale;

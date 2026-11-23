@@ -6,7 +6,8 @@ import SiteFooter from "./components/SiteFooter/SiteFooter";
 import SessionProvider from "./components/SessionProvider";
 import { useEffect, useState } from "react";
 function currentRoute() {
-  return window.location.hash.startsWith("#/")
+  // "#/" alone is the home page, not an unknown route.
+  return window.location.hash.startsWith("#/") && window.location.hash !== "#/"
     ? window.location.hash.slice(1)
     : window.location.pathname !== "/"
       ? window.location.pathname + window.location.search
