@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     smtp_password: SecretStr | None = None
     smtp_from: str = "no-reply@biletflow.local"
     smtp_timeout_seconds: float = Field(default=10, ge=1, le=60)
+    # Optional HTTPS delivery for hosts that block outbound SMTP. When both are
+    # set, email goes through Mailjet's Send API (port 443) instead of SMTP.
+    mailjet_api_key: str | None = None
+    mailjet_api_secret: SecretStr | None = None
     media_root: Path = Path(__file__).resolve().parents[2] / "media"
     image_max_bytes: int = 5 * 1024 * 1024
 
@@ -69,6 +73,8 @@ class Settings(BaseSettings):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together.")
         if self.smtp_username and self.smtp_security == "none":
             raise ValueError("Authenticated SMTP requires starttls or ssl.")
+        if bool(self.mailjet_api_key) != bool(self.mailjet_api_secret):
+            raise ValueError("MAILJET_API_KEY and MAILJET_API_SECRET must be configured together.")
         return self
 
 

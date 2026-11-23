@@ -5,12 +5,15 @@ can cause redelivery. Failed rows retain their payload for explicit operator ret
 """
 
 import asyncio
+import base64
+import json
 import smtplib
 import ssl
 import uuid
 from datetime import UTC, datetime
 from email.message import EmailMessage
 from urllib.parse import parse_qsl, urlsplit
+from urllib.request import Request, urlopen
 
 from sqlalchemy import select
 
@@ -66,10 +69,61 @@ def _smtp_send(message: EmailMessage) -> None:
         smtp.send_message(message)
 
 
+MAILJET_SEND_URL = "https://api.mailjet.com/v3.1/send"
+
+
+def _mailjet_payload(message: EmailMessage) -> dict:
+    body = message.get_body(preferencelist=("plain",))
+    mail = {
+        "From": {"Email": message["From"]},
+        "To": [{"Email": message["To"]}],
+        "Subject": message["Subject"],
+        "TextPart": body.get_content() if body else "",
+        "CustomID": str(message["Message-ID"] or "").strip("<>"),
+    }
+    attachments = [
+        {
+            "ContentType": part.get_content_type(),
+            "Filename": part.get_filename(),
+            "Base64Content": base64.b64encode(part.get_payload(decode=True)).decode("ascii"),
+        }
+        for part in message.iter_attachments()
+    ]
+    if attachments:
+        mail["Attachments"] = attachments
+    return {"Messages": [mail]}
+
+
+def _mailjet_send(message: EmailMessage) -> None:
+    """Send over HTTPS (443). Raises on any non-success so the row is marked failed."""
+    settings = get_settings()
+    credentials = f"{settings.mailjet_api_key}:{settings.mailjet_api_secret.get_secret_value()}"
+    request = Request(
+        MAILJET_SEND_URL,
+        data=json.dumps(_mailjet_payload(message)).encode(),
+        headers={
+            "Authorization": "Basic " + base64.b64encode(credentials.encode()).decode("ascii"),
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urlopen(request, timeout=settings.smtp_timeout_seconds) as response:  # noqa: S310
+        result = json.load(response)
+    if any(item.get("Status") != "success" for item in result.get("Messages", [])):
+        raise RuntimeError("Mailjet did not accept the message.")
+
+
+def _transport(message: EmailMessage) -> None:
+    if get_settings().mailjet_api_key:
+        _mailjet_send(message)
+    else:
+        _smtp_send(message)
+
+
 async def send_email(message: EmailMessage) -> None:
     # Shield the bounded thread so shutdown cannot release its row lock while
-    # SMTP is still sending. Cancellation is propagated after that send finishes.
-    task = asyncio.create_task(asyncio.to_thread(_smtp_send, message))
+    # the send is still in flight. Cancellation is propagated after that send finishes.
+    task = asyncio.create_task(asyncio.to_thread(_transport, message))
     try:
         await asyncio.shield(task)
     except asyncio.CancelledError:
