@@ -5,9 +5,9 @@ import { useSession } from "../lib/session-context";
 import { logout } from "../lib/client";
 import Dropdown from "../components/Dropdown/Dropdown";
 import { languageOptions } from "../data/languages";
-export function Link({ to, children, className = "" }) {
+export function Link({ to, children, className = "", ...rest }) {
   return (
-    <a className={className} href={`/#${to}`}>
+    <a {...rest} className={className} href={`/#${to}`}>
       {children}
     </a>
   );
@@ -227,13 +227,28 @@ export function EventCard({ event }) {
 export function LanguagePicker() {
   const locale = useLocale();
   return (
-    <label className="bf-language">
-      {translate("Language")}
-      <select value={locale} onChange={(e) => setLocale(e.target.value)}>
-        <option value="kk">Қазақша</option>
-        <option value="ru">Русский</option>
-        <option value="en">English</option>
+    <div className="bf-language">
+      <span aria-hidden="true">{translate("Language")}</span>
+      <Dropdown
+        label={translate("Language")}
+        value={locale}
+        onChange={setLocale}
+        options={languageOptions}
+      />
+      {/* Hidden native fallback: same state, kept out of the tab order. */}
+      <select
+        className="bf-language-native"
+        aria-hidden="true"
+        tabIndex={-1}
+        value={locale}
+        onChange={(e) => setLocale(e.target.value)}
+      >
+        {languageOptions.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
       </select>
-    </label>
+    </div>
   );
 }
