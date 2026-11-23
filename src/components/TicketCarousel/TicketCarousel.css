@@ -21,7 +21,8 @@
 .carousel-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Arrows sit right after the category tabs, not pushed to the far edge. */
+  justify-content: flex-start;
   gap: 16px;
   min-height: 56px;
 }
@@ -67,7 +68,7 @@
 .carousel-navigation > span span {
   color: var(--muted);
 }
-.carousel-navigation button {
+.ticket-side-nav {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -78,14 +79,30 @@
     color var(--t-ui) var(--ease-out),
     transform var(--t-press) var(--ease-out);
 }
-.carousel-navigation button:hover:not(:disabled) {
+/* Arrows sit in the side gutters on wide screens, over the card edge otherwise. */
+.ticket-side-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  translate: 0 -50%;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+}
+.ticket-side-nav.prev {
+  left: max(8px, calc((100% - 1320px) / 2 - 54px));
+}
+.ticket-side-nav.next {
+  right: max(8px, calc((100% - 1320px) / 2 - 54px));
+}
+.ticket-side-nav:hover {
   background: var(--fg);
   color: var(--bg);
 }
-.carousel-navigation button:active:not(:disabled) {
+.ticket-side-nav:active {
   transform: scale(0.95);
 }
 .ticket-viewport {
+  position: relative;
   padding: 12px 0 16px;
   overflow: hidden;
   touch-action: pan-y pinch-zoom;

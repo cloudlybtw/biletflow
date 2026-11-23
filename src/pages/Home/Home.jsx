@@ -195,7 +195,6 @@ export default function Home() {
           loading={data.state === "loading"}
           introFinished={introFinished}
           searchPaused={searchPaused}
-          onResume={() => setSearchPaused(false)}
           onDetails={(event) => setModal({ type: "event", event })}
         />
         <section

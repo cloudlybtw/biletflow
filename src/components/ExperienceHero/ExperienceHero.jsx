@@ -172,7 +172,6 @@ export default function ExperienceHero({ t, query, onQueryChange, onCreate, onSe
     </div>
     <div className="experience-content" onFocus={() => setFinished(true)}>
       <h1 id="experience-title" lang="en"><Words text="Life happens" /><br /><em><Words text="out there." start={2} /></em></h1>
-      <p className="experience-subtitle">{t.intro}</p>
       <form className="experience-search" onSubmit={discover} onFocus={onSearchInteraction} role="search" aria-label={t.discover}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg><input ref={searchRef} type="search" aria-label={t.search} placeholder={t.search} value={query} onChange={(e) => onQueryChange(e.target.value)} /><button type="submit" aria-label={t.explore}><Arrow size={20} /></button></form>
       <div className="experience-actions"><a href="#discover" onClick={discover}>{t.explore} <Arrow size={17} /></a><button onClick={onCreate}>{t.create}</button></div>
     </div>

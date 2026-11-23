@@ -5,7 +5,7 @@ import { cityLabel, locales } from "../../data/i18n";
 import "./TicketCarousel.css";
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export default function TicketCarousel({ t, lang, events, loading, introFinished, searchPaused, onResume, onDetails }) {
+export default function TicketCarousel({ t, lang, events, loading, introFinished, searchPaused, onDetails }) {
   const [category, setCategory] = useState("upcoming");
   const [playing, setPlaying] = useState(() => !reducedMotion());
   const filtered = showcaseEvents(events, category);
@@ -14,12 +14,12 @@ export default function TicketCarousel({ t, lang, events, loading, introFinished
   const h = heroCopy[lang];
   return <section className="ticket-showcase" aria-labelledby="showcase-title">
     <h2 id="showcase-title" className="showcase-heading">{h.showcase}</h2>
-    <EventTrack key={inventoryKey} {...{ t, lang, h, category, playing, setPlaying, introFinished, searchPaused, onResume, onDetails, loading }} events={filtered} onCategory={(key) => { setPlaying(false); setCategory(key); }} />
+    <EventTrack key={inventoryKey} {...{ t, lang, h, category, playing, setPlaying, introFinished, searchPaused, onDetails, loading }} events={filtered} onCategory={(key) => { setPlaying(false); setCategory(key); }} />
     <p className="showcase-note">{events.some((event) => event.demo) ? t.demoNotice : t.timezone}</p>
   </section>;
 }
 
-function EventTrack({ t, lang, h, category, playing, setPlaying, introFinished, searchPaused, onResume, onDetails, loading, events, onCategory }) {
+function EventTrack({ t, lang, h, category, playing, setPlaying, introFinished, searchPaused, onDetails, loading, events, onCategory }) {
   const [reduced, setReduced] = useState(reducedMotion);
   const [slide, setSlide] = useState({ index: 0, target: null, direction: 1 });
   const [hovered, setHovered] = useState(false);
@@ -52,7 +52,6 @@ function EventTrack({ t, lang, h, category, playing, setPlaying, introFinished, 
     setSlide({ ...slide, target: wrap(slide.index + direction), direction });
   }
   const active = slide.target ?? slide.index;
-  const running = playing && !reduced && !searchPaused;
   function ticket(index, slot) {
     const event = events[index];
     const theme = heroThemes.find((item) => item.category === event.category) || heroThemes[0];
@@ -73,9 +72,9 @@ function EventTrack({ t, lang, h, category, playing, setPlaying, introFinished, 
     </article>;
   }
   return <div className="ticket-carousel" role="region" aria-roledescription="carousel" aria-label={h.showcase} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false); }}>
-    <div className="carousel-toolbar"><div className="carousel-categories" aria-label={t.category}>{heroThemes.map((theme) => <button key={theme.key} aria-pressed={category === theme.key} onClick={() => onCategory(theme.key)}>{h[theme.key]}</button>)}</div><div className="carousel-navigation"><span aria-live="off">{count ? String(active + 1).padStart(2, "0") : "00"}<span> / {String(count).padStart(2, "0")}</span></span><button disabled={count < 2} aria-label={h.previous} onClick={() => navigate(-1)}>←</button><button disabled={count < 2} aria-label={h.next} onClick={() => navigate(1)}>→</button><button aria-label={running ? h.pause : h.play} aria-pressed={running} disabled={reduced || count < 2} onClick={() => { setPlaying(!running); onResume(); }}>{running ? "Ⅱ" : "▷"}</button></div></div>
+    <div className="carousel-toolbar"><div className="carousel-categories" aria-label={t.category}>{heroThemes.map((theme) => <button key={theme.key} aria-pressed={category === theme.key} onClick={() => onCategory(theme.key)}>{h[theme.key]}</button>)}</div><div className="carousel-navigation"><span aria-live="off">{count ? String(active + 1).padStart(2, "0") : "00"}<span> / {String(count).padStart(2, "0")}</span></span></div></div>
     {count ? <div className="ticket-viewport" onTouchStart={(e) => { const p = e.touches[0]; touch.current = { x: p.clientX, y: p.clientY }; }} onTouchCancel={() => { touch.current = null; }} onTouchEnd={(e) => { if (!touch.current) return; const p = e.changedTouches[0]; const dx = p.clientX - touch.current.x; const dy = p.clientY - touch.current.y; touch.current = null; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) navigate(dx < 0 ? 1 : -1); }}>
-      <div className={`ticket-track ${slide.target !== null ? "is-moving" : ""}`} style={{ "--travel": slide.target === null ? 0 : -slide.direction }}>{(count > 1 ? [-1, 0, 1] : [0]).map((slot) => ticket(wrap(slide.index + slot), slot))}</div>
+      {count > 1 && <><button className="ticket-side-nav prev" aria-label={h.previous} onClick={() => navigate(-1)}>←</button><button className="ticket-side-nav next" aria-label={h.next} onClick={() => navigate(1)}>→</button></>}<div className={`ticket-track ${slide.target !== null ? "is-moving" : ""}`} style={{ "--travel": slide.target === null ? 0 : -slide.direction }}>{(count > 1 ? [-1, 0, 1] : [0]).map((slot) => ticket(wrap(slide.index + slot), slot))}</div>
     </div> : <div className="showcase-empty" role="status"><h3>{loading ? t.loading : t.empty}</h3>{!loading && <p>{h.emptyCategory}</p>}</div>}
   </div>;
 }
