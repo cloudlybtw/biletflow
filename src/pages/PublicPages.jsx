@@ -13,6 +13,8 @@ function AuthPage({ path, params }) {
   const safeNext =
     next?.startsWith("/") && !next.startsWith("//") ? next : "/account";
   const [message, setMessage] = useState("");
+  const [verified, setVerified] = useState(false);
+  const keepNext = next ? `?next=${encodeURIComponent(safeNext)}` : "";
   const locale = useLocale();
   const loginPage = path === "/login";
   const register = path === "/register";
@@ -37,17 +39,6 @@ function AuthPage({ path, params }) {
                 label: translate("Full name"),
                 required: true,
                 maxLength: 200,
-              },
-              {
-                name: "locale",
-                label: translate("Language"),
-                options: [
-                  ["en", "English"],
-                  ["kk", "Қазақша"],
-                  ["ru", "Русский"],
-                ],
-                default: "en",
-                required: true,
               },
             ]
           : []),
@@ -108,11 +99,14 @@ function AuthPage({ path, params }) {
         <div className="bf-auth-card">
           {(loginPage || register) && (
             <nav className="auth-switch" aria-label={translate("Account")}>
-              <a href="/#/login" aria-current={loginPage ? "page" : undefined}>
+              <a
+                href={`/#/login${keepNext}`}
+                aria-current={loginPage ? "page" : undefined}
+              >
                 {translate("Sign in")}
               </a>
               <a
-                href="/#/register"
+                href={`/#/register${keepNext}`}
                 aria-current={register ? "page" : undefined}
               >
                 {translate("Register")}
@@ -121,60 +115,80 @@ function AuthPage({ path, params }) {
           )}
           <h1>{title}</h1>
           {message && <p role="status">{translate(message)}</p>}
-          <Form
-            fields={fields}
-            label={loginPage ? translate("Sign in") : title}
-            submit={async (body) => {
-              if (loginPage) {
-                await login(body.email, body.password);
-                location.hash = safeNext;
-                return;
-              }
-              if (register) {
-                await api("/auth/register", {
+          {verified ? (
+            <div className="auth-done">
+              <Link className="bf-button" to="/events">
+                {translate("Explore events")}
+              </Link>
+              <Link className="bf-outline-button" to="/account">
+                {translate("My account")}
+              </Link>
+            </div>
+          ) : (
+            <Form
+              fields={fields}
+              label={loginPage ? translate("Sign in") : title}
+              submit={async (body) => {
+                if (loginPage) {
+                  await login(body.email, body.password);
+                  location.hash = safeNext;
+                  return;
+                }
+                if (register) {
+                  await api("/auth/register", {
+                    method: "POST",
+                    auth: false,
+                    body: { ...body, locale },
+                  });
+                  // The API does not sign in on register, but unverified accounts may
+                  // sign in, so do it now and land on the account page.
+                  try {
+                    await login(body.email, body.password);
+                  } catch {
+                    setMessage(
+                      "Account created. Check your email for the verification link, then sign in.",
+                    );
+                    return;
+                  }
+                  location.hash = safeNext;
+                  return;
+                }
+                if (verify) {
+                  await api("/auth/verify-email", {
+                    method: "POST",
+                    auth: false,
+                    body: {
+                      token: token || body.token,
+                    },
+                  });
+                  window.dispatchEvent(new Event("biletflow-session"));
+                  setMessage("Email verified. You can now book tickets.");
+                  setVerified(true);
+                  return;
+                }
+                if (reset) {
+                  await api("/auth/password/reset", {
+                    method: "POST",
+                    auth: false,
+                    body: {
+                      ...body,
+                      token,
+                    },
+                  });
+                  history.replaceState(null, "", "/#/login");
+                  window.dispatchEvent(new Event("hashchange"));
+                  return;
+                }
+                await api("/auth/password/forgot", {
                   method: "POST",
                   auth: false,
                   body,
                 });
-                setMessage(
-                  "Account created. Check your email for the verification link, then sign in.",
-                );
-                return;
-              }
-              if (verify) {
-                await api("/auth/verify-email", {
-                  method: "POST",
-                  auth: false,
-                  body: {
-                    token: token || body.token,
-                  },
-                });
-                window.dispatchEvent(new Event("biletflow-session"));
-                setMessage("Email verified. You can now book tickets.");
-                return;
-              }
-              if (reset) {
-                await api("/auth/password/reset", {
-                  method: "POST",
-                  auth: false,
-                  body: {
-                    ...body,
-                    token,
-                  },
-                });
-                history.replaceState(null, "", "/#/login");
-                window.dispatchEvent(new Event("hashchange"));
-                return;
-              }
-              await api("/auth/password/forgot", {
-                method: "POST",
-                auth: false,
-                body,
-              });
-              setMessage("If an account exists, a reset link has been sent.");
-            }}
-          />
-          {verify && (
+                setMessage("If an account exists, a reset link has been sent.");
+              }}
+            />
+          )}
+          {verify && !verified && (
             <Form
               fields={[
                 {

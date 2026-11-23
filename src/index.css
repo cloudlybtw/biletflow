@@ -40,7 +40,9 @@
   --t-press: 140ms;
   --t-ui: 200ms;
 }
-html[data-theme="dark"] {
+/* Sign-in / access gates are public-facing, so dark even on workspace routes. */
+html[data-theme="dark"],
+html:has(.bf-gate) {
   color-scheme: dark;
   --bg: #000;
   --fg: #fff;
