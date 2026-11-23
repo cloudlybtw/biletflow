@@ -1,3 +1,4 @@
+import DateTimePicker from "../components/DateTimePicker/DateTimePicker";
 import { t as translate, dateTime, number, errorText } from "../lib/locale";
 import { useState, useEffect, useId, useRef } from "react";
 import { api, download } from "../lib/client";
@@ -120,6 +121,17 @@ export function Form({
           {translate(field.label)}
           {field.options ? (
             <SelectInput field={field} initial={initial[field.name]} />
+          ) : field.type === "datetime-local" ? (
+            <DateTimePicker
+              name={field.name}
+              required={field.required}
+              describedBy={status.error ? feedbackId : undefined}
+              defaultValue={
+                initial[field.name]
+                  ? localTime(initial[field.name])
+                  : (field.default ?? "")
+              }
+            />
           ) : field.type === "textarea" ? (
             <textarea
               name={field.name}
