@@ -1,0 +1,33 @@
+/* Tailwind for shadcn/ui components only.
+   No preflight: the site keeps its own base styles in index.css.
+   shadcn color names map to the BiletFlow tokens, so components follow
+   the light (workspace) and dark (public) themes automatically. */
+@import "tailwindcss/theme.css" layer(theme);
+/* Unlayered on purpose: layered rules lose to the site's unlayered
+   element rules (button, a, input), so utilities would not apply. */
+@import "tailwindcss/utilities.css";
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-popover: var(--bg);
+  --color-popover-foreground: var(--fg);
+  --color-card: var(--panel);
+  --color-card-foreground: var(--fg);
+  --color-primary: var(--fg);
+  --color-primary-foreground: var(--bg);
+  --color-secondary: var(--chip);
+  --color-secondary-foreground: var(--fg);
+  --color-muted: var(--panel);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--chip);
+  --color-accent-foreground: var(--fg);
+  --color-highlight: #f2ef1d;
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--focus);
+  --radius-sm: 6px;
+  --radius-md: var(--radius);
+  --radius-lg: 12px;
+  --font-sans: inherit;
+}
