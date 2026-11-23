@@ -1,4 +1,5 @@
-import { useLocale } from "../../lib/locale";
+import { useLocale, errorText } from "../../lib/locale";
+import { api } from "../../lib/client";
 import { useEffect, useRef, useState } from "react";
 import Arrow from "../../components/Icons/Arrow";
 import Navbar from "../../components/Navbar/Navbar";
@@ -134,25 +135,46 @@ export default function Home() {
       .getElementById("collections")
       .scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  // One handler for both modal modes. Register does not sign in on the API,
+  // so sign in right after it (unverified accounts may sign in).
   async function signIn(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    const email = form.get("email");
+    const password = form.get("password");
     setAuth((a) => ({ ...a, busy: true, error: false }));
     try {
-      const result = await login(form.get("email"), form.get("password"));
+      if (modal?.type === "register")
+        await api("/auth/register", {
+          method: "POST",
+          auth: false,
+          body: {
+            email,
+            password,
+            full_name: form.get("full_name"),
+            locale: lang,
+          },
+        });
+      const result = await login(email, password);
       setAuth({ busy: false, error: false, user: result.user });
       location.hash = "/account";
-    } catch {
-      setAuth((a) => ({ ...a, busy: false, error: true }));
+    } catch (error) {
+      setAuth((a) => ({
+        ...a,
+        busy: false,
+        error: error?.status ? errorText(error) : t.loginError,
+      }));
     }
   }
+  const openAuth = (type) => {
+    setAuth((a) => ({ ...a, error: false }));
+    setModal({ type });
+  };
   return (
     <>
       <Navbar
         onSignIn={() =>
-          session.user
-            ? (location.hash = "/account")
-            : setModal({ type: "login" })
+          session.user ? (location.hash = "/account") : openAuth("login")
         }
       />
       <main id="home">
@@ -426,7 +448,9 @@ export default function Home() {
               ? modal.event.title
               : modal.type === "login"
                 ? t.signIn
-                : t.organizerInfo
+                : modal.type === "register"
+                  ? t.createAccount
+                  : t.organizerInfo
           }
           onClose={() => setModal(null)}
           t={t}
@@ -467,19 +491,30 @@ export default function Home() {
               <p>{t.organizerDetail}</p>
               <button
                 className="button button-purple"
-                onClick={() => setModal({ type: "login" })}
+                onClick={() => openAuth("login")}
               >
                 {t.signIn} <Arrow size={17} />
               </button>
             </>
           )}
-          {modal.type === "login" &&
+          {(modal.type === "login" || modal.type === "register") &&
             (auth.user ? (
               <p role="status">
                 {t.signedIn} {auth.user.full_name}
               </p>
             ) : (
-              <form className="login-form" onSubmit={signIn}>
+              <form className="login-form" onSubmit={signIn} key={modal.type}>
+                {modal.type === "register" && (
+                  <label>
+                    {t.fullName}
+                    <input
+                      required
+                      name="full_name"
+                      autoComplete="name"
+                      maxLength="200"
+                    />
+                  </label>
+                )}
                 <label>
                   {t.email}
                   <input
@@ -495,18 +530,42 @@ export default function Home() {
                     required
                     name="password"
                     type="password"
-                    autoComplete="current-password"
-                    maxLength="1024"
+                    autoComplete={
+                      modal.type === "register"
+                        ? "new-password"
+                        : "current-password"
+                    }
+                    minLength={modal.type === "register" ? 8 : undefined}
+                    maxLength={modal.type === "register" ? 128 : 1024}
                   />
                 </label>
+                {modal.type === "register" && (
+                  <p className="login-hint">{t.passwordHint}</p>
+                )}
                 {auth.error && (
                   <p role="alert" className="error">
-                    {t.loginError}
+                    {auth.error === true ? t.loginError : auth.error}
                   </p>
                 )}
                 <button disabled={auth.busy} className="button button-purple">
-                  {auth.busy ? t.working : t.signIn} <Arrow size={17} />
+                  {auth.busy
+                    ? t.working
+                    : modal.type === "register"
+                      ? t.createAccount
+                      : t.signIn}{" "}
+                  <Arrow size={17} />
                 </button>
+                <p className="login-switch">
+                  {modal.type === "register" ? t.haveAccount : t.noAccount}{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openAuth(modal.type === "register" ? "login" : "register")
+                    }
+                  >
+                    {modal.type === "register" ? t.signIn : t.createAccount}
+                  </button>
+                </p>
               </form>
             ))}
         </Modal>
