@@ -40,6 +40,9 @@ class UserOut(BaseModel):
 
 
 class MeOut(UserOut):
+    verification_email_sent_at: datetime | None = None
+    verification_email_resend_at: datetime | None = None
+
     is_organizer: bool = Field(
         description="True once the user has an organizer profile (`POST /organizers/me`)."
     )

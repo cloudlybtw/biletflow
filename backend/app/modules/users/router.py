@@ -14,7 +14,7 @@ router = APIRouter(prefix="/me", tags=["users"])
 async def get_me(
     user: User = Depends(current_user), session: AsyncSession = Depends(get_session)
 ) -> MeOut:
-    return MeOut.from_user_and_role(user, await service.is_organizer(session, user.id))
+    return await service.me_output(session, user)
 
 
 @router.patch(
@@ -29,4 +29,4 @@ async def update_me(
     session: AsyncSession = Depends(get_session),
 ) -> MeOut:
     user = await service.update_me(session, user, data)
-    return MeOut.from_user_and_role(user, await service.is_organizer(session, user.id))
+    return await service.me_output(session, user)

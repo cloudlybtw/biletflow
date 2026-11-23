@@ -6,6 +6,11 @@ import OrganizerApp from "./OrganizerApp";
 import PlatformAdminApp from "./PlatformAdminApp";
 import { useSession } from "../lib/session-context";
 import { Link, Topbar } from "./app-shared";
+import {
+  organizerDraft,
+  saveOrganizerDraft,
+  clearOrganizerDraft,
+} from "../lib/organizer-draft";
 import { Form } from "./live-shared";
 import { api } from "../lib/client";
 import "./ProductApp.css";
@@ -123,14 +128,19 @@ export default function ProductApp({ route }) {
           ]}
           initial={{
             contact_email: user.email,
+            ...organizerDraft(user.id),
           }}
-          submit={(body) =>
-            api("/organizers/me", {
-              method: "POST",
-              body,
-            })
-          }
-          done={() => window.dispatchEvent(new Event("biletflow-session"))}
+          submit={async (body) => {
+            try {
+              await api("/organizers/me", { method: "POST", body });
+              clearOrganizerDraft(user.id);
+              window.dispatchEvent(new Event("biletflow-session"));
+            } catch (error) {
+              if (error.code !== "EMAIL_NOT_VERIFIED") throw error;
+              saveOrganizerDraft(user.id, body);
+              location.hash = "/verify-email?next=%2Forganizer";
+            }
+          }}
           label="Create organizer profile"
         />
       </Gate>

@@ -106,3 +106,32 @@ async def test_patch_me_requires_authentication(client: AsyncClient):
     response = await client.patch(URL, json={"full_name": "X"})
 
     assert response.status_code == 401
+
+
+async def test_me_reports_registration_verification_delivery_and_cooldown(client: AsyncClient):
+    from datetime import datetime
+
+    from app.core.config import get_settings
+
+    email = "verification-state@example.com"
+    response = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "test-password-2026",
+            "full_name": "Organizer",
+            "locale": "en",
+        },
+    )
+    assert response.status_code == 201
+    login = await client.post(
+        "/api/v1/auth/login", json={"email": email, "password": "test-password-2026"}
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    state = (await client.get(URL, headers=headers)).json()
+    sent = datetime.fromisoformat(state["verification_email_sent_at"])
+    resend = datetime.fromisoformat(state["verification_email_resend_at"])
+    assert (resend - sent).total_seconds() == get_settings().email_verify_resend_cooldown_seconds
+    await client.post("/api/v1/auth/verify-email/resend", json={"email": email})
+    repeated = (await client.get(URL, headers=headers)).json()
+    assert repeated["verification_email_sent_at"] == state["verification_email_sent_at"]

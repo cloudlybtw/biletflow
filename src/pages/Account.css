@@ -347,78 +347,196 @@ header.bf-top.ws-top.is-contained {
   color: var(--muted);
 }
 
-/* Ticket detail: pass with QR */
+/* Ticket detail: one event panel and a perforated admission stub. */
+.acc-detail .acc-head h1 {
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.acc-detail .acc-kicker {
+  display: none;
+}
+.acc-ticket-detail {
+  max-width: 1200px;
+  margin-inline: auto;
+}
+.acc-pass-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.acc-pass-actions .acc-back {
+  margin: 0;
+  min-height: 44px;
+  align-items: center;
+  color: var(--fg);
+}
+.acc-pass-actions .bf-action {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
 .acc-pass {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  border-radius: var(--radius);
-  background: var(--panel);
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  border-radius: 22px;
   overflow: hidden;
+  background: #202020;
+  color: #fff;
 }
 .acc-pass-main {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
-  padding: 32px;
+  gap: 28px;
+  min-width: 0;
+  padding: 46px 48px;
+}
+.acc-pass-art {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  filter: grayscale(1);
+  opacity: 0.5;
+  mask-image: linear-gradient(90deg, transparent 10%, #000 100%);
+}
+.acc-pass-main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #202020 5%, transparent 100%);
+  pointer-events: none;
+}
+.acc-pass-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.acc-pass-status .acc-chip {
+  padding: 8px 18px;
+  font-size: 14px;
+  white-space: normal;
+}
+.acc-pass-status .acc-pass-demo {
+  background: transparent;
+  color: #ddd;
+  box-shadow: inset 0 0 0 1px #aaa;
 }
 .acc-pass-main h2 {
-  font-size: clamp(32px, 4.4vw, 64px);
+  font-size: clamp(34px, 4.5vw, 68px);
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: -0.04em;
-  line-height: 0.92;
+  line-height: 1.05;
   overflow-wrap: anywhere;
+}
+.acc-pass-event {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.acc-pass-date {
+  font-size: clamp(24px, 2.7vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.acc-pass-venue {
+  margin-top: 8px;
+  color: #ddd;
+  font-size: clamp(18px, 2vw, 26px);
+  line-height: 1.35;
+}
+.acc-pass-address {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #bbb;
 }
 .acc-pass dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 24px;
+  gap: 20px 32px;
   width: 100%;
-  margin: 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
+  margin: auto 0 0;
+  padding-top: 26px;
+  border-top: 1px solid #ffffff60;
 }
 .acc-pass dt {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: #bbb;
 }
 .acc-pass dd {
-  margin: 4px 0 0;
-  font-size: 15px;
-  line-height: 1.4;
+  margin: 6px 0 0;
+  font-size: 22px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.acc-pass-seat {
+  grid-column: 1 / -1;
 }
 .acc-pass-qr {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 32px;
-  background: #f2ef1d;
+  gap: 26px;
+  min-width: 0;
+  padding: 40px 28px;
+  background: var(--hl);
   color: #000;
-  border-left: 2px dashed rgb(0 0 0 / 0.3);
+  border-left: 2px dashed #20202080;
   text-align: center;
 }
+.acc-pass-qr::before,
+.acc-pass-qr::after {
+  content: "";
+  position: absolute;
+  left: -17px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.acc-pass-qr::before {
+  top: -16px;
+}
+.acc-pass-qr::after {
+  bottom: -16px;
+}
 .acc-pass-qr img {
+  display: block;
   width: 100%;
-  max-width: 240px;
+  max-width: 256px;
   aspect-ratio: 1;
   object-fit: contain;
-  padding: 12px;
-  border-radius: var(--radius);
+  padding: 16px;
+  border-radius: 12px;
   background: #fff;
+  image-rendering: pixelated;
 }
 .acc-pass-qr code {
-  font-size: 15px;
+  max-width: 100%;
+  font-family: monospace;
+  font-size: clamp(18px, 2vw, 28px);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
 }
 .acc-pass-qr p {
-  font-size: 13px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 /* Rows: orders and notifications */
@@ -642,6 +760,18 @@ header.bf-top.ws-top.is-contained {
   .acc-pass-qr {
     border-left: 0;
     border-top: 2px dashed rgb(0 0 0 / 0.3);
+    padding: 28px;
+    gap: 20px;
+  }
+  .acc-pass-qr::before {
+    top: -17px;
+    left: -16px;
+  }
+  .acc-pass-qr::after {
+    top: -17px;
+    bottom: auto;
+    left: auto;
+    right: -16px;
   }
 }
 @media (max-width: 600px) {
@@ -673,8 +803,30 @@ header.bf-top.ws-top.is-contained {
   .acc-pass-qr {
     padding: 20px;
   }
+  .acc-pass-main {
+    gap: 22px;
+    padding-block: 28px;
+  }
   .acc-pass dl {
-    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-top: 20px;
+  }
+  .acc-pass dd {
+    font-size: 17px;
+  }
+  .acc-pass dt {
+    font-size: 10px;
+  }
+  .acc-pass-actions {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .acc-pass-actions .acc-button {
+    padding-inline: 14px;
+    font-size: 10px;
+  }
+  .acc-pass-actions .acc-back {
+    font-size: 10px;
   }
   .acc-row {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -26,11 +26,23 @@ export default function SessionProvider({ children }) {
           setSession({ user: null, loading: false, error: error.message });
       }
     }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") restore();
+    };
+    const onStorage = (event) => {
+      if (event.key === "biletflow-email-verified") restore();
+    };
+    window.addEventListener("focus", restore);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("storage", onStorage);
     restore();
     window.addEventListener("biletflow-session", restore);
     return () => {
       alive = false;
       generation++;
+      window.removeEventListener("focus", restore);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("storage", onStorage);
       window.removeEventListener("biletflow-session", restore);
     };
   }, []);

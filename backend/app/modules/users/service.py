@@ -1,13 +1,16 @@
 import uuid
 from dataclasses import dataclass
+from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
+from app.modules.auth.models import UserToken, UserTokenPurpose
 from app.modules.events.models import Event
 from app.modules.organizers.models import OrganizerProfile
 from app.modules.users.models import StaffAssignment, StaffRole, User
-from app.modules.users.schemas import UpdateMeRequest
+from app.modules.users.schemas import MeOut, UpdateMeRequest
 
 
 @dataclass(frozen=True)
@@ -55,3 +58,20 @@ async def get_event_relation(
         )
     )
     return EventRelation(is_owner=row[0] == user_id, staff_roles=frozenset(roles.all()))
+
+
+async def me_output(session: AsyncSession, user: User) -> MeOut:
+    result = MeOut.from_user_and_role(user, await is_organizer(session, user.id))
+    if user.email_verified_at is None:
+        sent_at = await session.scalar(
+            select(func.max(UserToken.created_at)).where(
+                UserToken.user_id == user.id,
+                UserToken.purpose == UserTokenPurpose.EMAIL_VERIFY,
+            )
+        )
+        result.verification_email_sent_at = sent_at
+        if sent_at is not None:
+            result.verification_email_resend_at = sent_at + timedelta(
+                seconds=get_settings().email_verify_resend_cooldown_seconds
+            )
+    return result

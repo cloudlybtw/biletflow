@@ -1,3 +1,4 @@
+import EmailVerification from "./EmailVerification";
 import { t as translate, useLocale } from "../lib/locale";
 import { useState } from "react";
 import { api, login } from "../lib/client";
@@ -13,7 +14,6 @@ function AuthPage({ path, params }) {
   const safeNext =
     next?.startsWith("/") && !next.startsWith("//") ? next : "/account";
   const [message, setMessage] = useState("");
-  const [verified, setVerified] = useState(false);
   const keepNext = next ? `?next=${encodeURIComponent(safeNext)}` : "";
   const locale = useLocale();
   const loginPage = path === "/login";
@@ -21,53 +21,41 @@ function AuthPage({ path, params }) {
   const verify = path === "/verify-email";
   const reset = path === "/reset-password";
   const token = params.get("token") || "";
-  const fields = verify
-    ? token
-      ? []
-      : [
+  const fields = [
+    ...(register
+      ? [
           {
-            name: "token",
-            label: translate("Verification token"),
+            name: "full_name",
+            label: translate("Full name"),
+            required: true,
+            maxLength: 200,
+          },
+        ]
+      : []),
+    ...(!reset
+      ? [
+          {
+            name: "email",
+            label: translate("Email"),
+            type: "email",
             required: true,
           },
         ]
-    : [
-        ...(register
-          ? [
-              {
-                name: "full_name",
-                label: translate("Full name"),
-                required: true,
-                maxLength: 200,
-              },
-            ]
-          : []),
-        ...(!reset
-          ? [
-              {
-                name: "email",
-                label: translate("Email"),
-                type: "email",
-                required: true,
-              },
-            ]
-          : []),
-        ...(loginPage || register || reset
-          ? [
-              {
-                name: reset ? "new_password" : "password",
-                label: reset
-                  ? translate("New password")
-                  : translate("Password"),
-                type: "password",
-                autoComplete: loginPage ? "current-password" : "new-password",
-                required: true,
-                minLength: loginPage ? 1 : 8,
-                maxLength: 128,
-              },
-            ]
-          : []),
-      ];
+      : []),
+    ...(loginPage || register || reset
+      ? [
+          {
+            name: reset ? "new_password" : "password",
+            label: reset ? translate("New password") : translate("Password"),
+            type: "password",
+            autoComplete: loginPage ? "current-password" : "new-password",
+            required: true,
+            minLength: loginPage ? 1 : 8,
+            maxLength: 128,
+          },
+        ]
+      : []),
+  ];
   const title = loginPage
     ? translate("Welcome back")
     : register
@@ -75,6 +63,23 @@ function AuthPage({ path, params }) {
       : verify
         ? translate("Verify your email")
         : translate("Reset your password");
+  if (verify)
+    return (
+      <main className="bf-auth auth auth-verification">
+        <section
+          className="bf-auth-card verification-card"
+          aria-label={translate("Verify your email")}
+        >
+          <a href="/" className="wordmark" aria-label="BiletFlow">
+            <span className="brand-icon" aria-hidden="true">
+              b<span>f</span>
+            </span>
+            BiletFlow<span className="brand-dot">.</span>
+          </a>
+          <EmailVerification token={token} next={safeNext} />
+        </section>
+      </main>
+    );
   const art = authArt[locale] || authArt.en;
   return (
     <main className="bf-auth auth">
@@ -115,15 +120,8 @@ function AuthPage({ path, params }) {
           )}
           <h1>{title}</h1>
           {message && <p role="status">{translate(message)}</p>}
-          {verified ? (
-            <div className="auth-done">
-              <Link className="bf-button" to="/events">
-                {translate("Explore events")}
-              </Link>
-              <Link className="bf-outline-button" to="/account">
-                {translate("My account")}
-              </Link>
-            </div>
+          {verify ? (
+            <EmailVerification token={token} next={safeNext} />
           ) : (
             <Form
               fields={fields}
@@ -153,19 +151,6 @@ function AuthPage({ path, params }) {
                   location.hash = safeNext;
                   return;
                 }
-                if (verify) {
-                  await api("/auth/verify-email", {
-                    method: "POST",
-                    auth: false,
-                    body: {
-                      token: token || body.token,
-                    },
-                  });
-                  window.dispatchEvent(new Event("biletflow-session"));
-                  setMessage("Email verified. You can now book tickets.");
-                  setVerified(true);
-                  return;
-                }
                 if (reset) {
                   await api("/auth/password/reset", {
                     method: "POST",
@@ -186,26 +171,6 @@ function AuthPage({ path, params }) {
                 });
                 setMessage("If an account exists, a reset link has been sent.");
               }}
-            />
-          )}
-          {verify && !verified && (
-            <Form
-              fields={[
-                {
-                  name: "email",
-                  label: translate("Email"),
-                  type: "email",
-                  required: true,
-                },
-              ]}
-              label="Resend verification"
-              submit={(body) =>
-                api("/auth/verify-email/resend", {
-                  method: "POST",
-                  auth: false,
-                  body,
-                })
-              }
             />
           )}
           <div className="bf-bridge-links">

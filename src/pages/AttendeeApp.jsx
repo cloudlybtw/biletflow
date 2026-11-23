@@ -1,3 +1,5 @@
+import { Download } from "lucide-react";
+import { publicImage } from "../lib/api";
 import CalendarLinks from "./CalendarLinks";
 import { t as translate, useLocale, errorText } from "../lib/locale";
 import { useSession } from "../lib/session-context";
@@ -45,7 +47,8 @@ const text = {
     when: "When",
     where: "Where",
     pdf: "Download PDF",
-    showQr: "Show this QR code at the entrance.",
+    showQr: "Show at the entrance",
+    demo: "Demo",
     noOrders: "No orders yet",
     order: "Order",
     subtotal: "Subtotal",
@@ -104,7 +107,8 @@ const text = {
     when: "Когда",
     where: "Где",
     pdf: "Скачать PDF",
-    showQr: "Покажите этот QR-код на входе.",
+    showQr: "Покажите на входе",
+    demo: "Демо",
     noOrders: "Заказов пока нет",
     order: "Заказ",
     subtotal: "Сумма",
@@ -163,7 +167,8 @@ const text = {
     when: "Қашан",
     where: "Қайда",
     pdf: "PDF жүктеу",
-    showQr: "Кіреберісте осы QR-кодты көрсетіңіз.",
+    showQr: "Кіреберісте көрсетіңіз",
+    demo: "Демо",
     noOrders: "Әзірге тапсырыс жоқ",
     order: "Тапсырыс",
     subtotal: "Сома",
@@ -204,15 +209,6 @@ const dayMonth = (v, lang, tz) => ({
   day: fmt(v, lang, tz, { day: "numeric" }),
   month: fmt(v, lang, tz, { month: "short" }).replace(".", ""),
 });
-const dateTime = (v, lang, tz) =>
-  fmt(v, lang, tz, {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
 const tenge = (amount, lang) =>
   `${new Intl.NumberFormat(locales[lang]).format(amount || 0)} ₸`;
 const isUpcoming = (ticket) =>
@@ -355,30 +351,64 @@ function Ticket({ id, lang, t }) {
   const resource = useResource(`/tickets/${id}`);
   const ticket = resource.data;
   const e = ticket?.event || {};
+  const images = useResource(e.id ? `/events/${e.id}/images` : null, true);
+  const cover =
+    images.data?.find((image) => image.is_cover) || images.data?.[0];
+  const image = publicImage(cover?.url);
   return (
-    <>
-      <Link className="acc-back" to="/account/tickets">
-        ← {t.all}
-      </Link>
+    <div className="acc-ticket-detail">
+      <div className="acc-pass-actions">
+        <Link className="acc-back" to="/account/tickets">
+          ← {t.all}
+        </Link>
+        {ticket && (
+          <Action
+            className="acc-button"
+            perform={() =>
+              download(apiPath(ticket.pdf_url), `${ticket.ticket_code}.pdf`)
+            }
+          >
+            <Download size={18} aria-hidden="true" />
+            {t.pdf}
+          </Action>
+        )}
+      </div>
       <State resource={resource}>
         {ticket && (
           <article className="acc-pass">
             <div className="acc-pass-main">
-              <StatusChip status={ticket.status} t={t} />
+              {image && <img className="acc-pass-art" src={image} alt="" />}
+              <div className="acc-pass-status">
+                <StatusChip status={ticket.status} t={t} />
+                {ticket.is_demo === true && (
+                  <span className="acc-chip acc-pass-demo">{t.demo}</span>
+                )}
+              </div>
               <h2>{e.title}</h2>
+              <div className="acc-pass-event">
+                <p className="acc-pass-date">
+                  <time dateTime={e.starts_at}>
+                    {fmt(e.starts_at, lang, e.timezone, {
+                      day: "numeric",
+                      month: "long",
+                    })}
+                    {" · "}
+                    {fmt(e.starts_at, lang, e.timezone, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </time>
+                </p>
+                <p className="acc-pass-venue">
+                  {[e.venue_name, e.venue_city].filter(Boolean).join(" · ") ||
+                    "—"}
+                </p>
+                {e.venue_address && (
+                  <p className="acc-pass-address">{e.venue_address}</p>
+                )}
+              </div>
               <dl>
-                <div>
-                  <dt>{t.when}</dt>
-                  <dd>{dateTime(e.starts_at, lang, e.timezone)}</dd>
-                </div>
-                <div>
-                  <dt>{t.where}</dt>
-                  <dd>
-                    {[e.venue_name, e.venue_address, e.venue_city]
-                      .filter(Boolean)
-                      .join(", ") || "—"}
-                  </dd>
-                </div>
                 <div>
                   <dt>{t.attendee}</dt>
                   <dd>{ticket.attendee_name}</dd>
@@ -388,7 +418,7 @@ function Ticket({ id, lang, t }) {
                   <dd>{ticket.ticket_type_name}</dd>
                 </div>
                 {ticket.seat_number_label && (
-                  <div>
+                  <div className="acc-pass-seat">
                     <dt>{t.seat}</dt>
                     <dd>
                       {[
@@ -403,27 +433,19 @@ function Ticket({ id, lang, t }) {
                   </div>
                 )}
               </dl>
-              <Action
-                className="acc-button"
-                perform={() =>
-                  download(apiPath(ticket.pdf_url), `${ticket.ticket_code}.pdf`)
-                }
-              >
-                {t.pdf}
-              </Action>
             </div>
             <div className="acc-pass-qr">
+              <p>{t.showQr}</p>
               <SecureImage
                 path={apiPath(ticket.qr_image_url)}
                 alt={translate("Ticket admission QR")}
               />
               <code>{ticket.ticket_code}</code>
-              <p>{t.showQr}</p>
             </div>
           </article>
         )}
       </State>
-    </>
+    </div>
   );
 }
 
@@ -761,7 +783,9 @@ export default function AttendeeApp({ path }) {
   return (
     <>
       <Topbar contained />
-      <main className="acc page-width">
+      <main
+        className={`acc page-width${section === "tickets" && id ? " acc-detail" : ""}`}
+      >
         <header className="acc-head">
           <p className="acc-kicker">{t.account}</p>
           <h1>{title}</h1>

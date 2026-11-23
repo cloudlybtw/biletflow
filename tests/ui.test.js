@@ -756,3 +756,231 @@ test("support conversations preserve keyboard focus and translate submit control
     await act(() => locale.setLocale("en"));
   }
 });
+
+test("organizer verification preserves distinct contact email and only redirects for EMAIL_NOT_VERIFIED", async () => {
+  const draft = await server.ssrLoadModule("/src/lib/organizer-draft.js");
+  const locale = await server.ssrLoadModule("/src/lib/locale.js");
+  await act(() => locale.setLocale("en"));
+  const unverified = {
+    ...user,
+    id: "organizer-onboarding",
+    email: "account@example.com",
+    email_verified: false,
+    is_organizer: false,
+  };
+  handle = () =>
+    json(
+      { error: { code: "EMAIL_NOT_VERIFIED", message: "Verify your email" } },
+      403,
+    );
+  await render(ProductApp, { route: "/organizer" }, unverified);
+  fill(document.querySelector("form"), {
+    display_name: "Concert team",
+    contact_email: "contact@example.com",
+  });
+  await submit(document.querySelector("form"));
+  assert.equal(location.hash, "#/verify-email?next=%2Forganizer");
+  assert.deepEqual(draft.organizerDraft(unverified.id), {
+    display_name: "Concert team",
+    contact_email: "contact@example.com",
+  });
+  await render(
+    PublicPages,
+    { path: "/verify-email", route: "/verify-email?next=%2Forganizer" },
+    unverified,
+  );
+  assert.match(document.body.textContent, /Verify your account email/);
+  assert.match(document.body.textContent, /account@example.com/);
+  assert.equal(document.querySelector(".auth-art"), null);
+  assert.equal(document.querySelector(".bf-bridge-links"), null);
+  assert.equal(document.querySelectorAll(".bf-verification button").length, 1);
+  assert.match(
+    document.body.textContent,
+    /Your organizer contact email may differ/,
+  );
+  assert.equal(
+    document.body.textContent.split("account@example.com").length - 1,
+    1,
+  );
+  assert.doesNotMatch(document.body.textContent, /Check your inbox/);
+
+  assert.doesNotMatch(document.body.textContent, /contact@example.com/);
+  let sentBody;
+  handle = (url, options) => {
+    if (url.endsWith("/resend")) {
+      sentBody = JSON.parse(options.body);
+      return new Response(null, { status: 202 });
+    }
+    if (url === "/api/v1/me")
+      return json({
+        ...unverified,
+        verification_email_sent_at: new Date().toISOString(),
+        verification_email_resend_at: new Date(
+          Date.now() + 60000,
+        ).toISOString(),
+      });
+    throw new Error(url);
+  };
+  await act(async () => {
+    document.querySelector(".bf-verification button").click();
+    await new Promise((r) => setTimeout(r, 20));
+  });
+  assert.deepEqual(sentBody, { email: "account@example.com" });
+  assert.match(document.body.textContent, /Check your inbox/);
+  assert.equal(
+    document.querySelector(".bf-verification").textContent.split("@example.com")
+      .length - 1,
+    1,
+  );
+  assert.equal(
+    document.querySelector(".bf-verification button").disabled,
+    true,
+  );
+  await render(
+    ProductApp,
+    { route: "/organizer" },
+    { ...unverified, email_verified: true },
+  );
+  assert.equal(
+    document.querySelector('[name="display_name"]').value,
+    "Concert team",
+  );
+  assert.equal(
+    document.querySelector('[name="contact_email"]').value,
+    "contact@example.com",
+  );
+  location.hash = "/organizer";
+  handle = () =>
+    json(
+      { error: { code: "VALIDATION_ERROR", message: "Invalid profile" } },
+      422,
+    );
+  await submit(document.querySelector("form"));
+  assert.equal(location.hash, "#/organizer");
+  assert.match(
+    document.querySelector('[role="alert"]').textContent,
+    /Invalid profile/,
+  );
+  draft.clearOrganizerDraft(unverified.id);
+});
+
+test("verification starts in inbox state when registration already sent the email", async () => {
+  await render(
+    PublicPages,
+    { path: "/verify-email", route: "/verify-email?next=%2Forganizer" },
+    {
+      ...user,
+      email_verified: false,
+      verification_email_sent_at: new Date().toISOString(),
+      verification_email_resend_at: new Date(Date.now() + 60000).toISOString(),
+    },
+  );
+  assert.match(document.body.textContent, /Check your inbox/);
+  assert.equal(
+    document.querySelector(".bf-verification").textContent.split("@example.com")
+      .length - 1,
+    1,
+  );
+  assert.match(
+    document.querySelector(".bf-verification button").textContent,
+    /Resend in \d+ s/,
+  );
+  assert.equal(
+    document.querySelector(".bf-verification button").disabled,
+    true,
+  );
+});
+
+test("verification in another tab refreshes the session on storage notification and focus", async () => {
+  let verified = false;
+  handle = (url) => {
+    if (url.endsWith("/auth/login"))
+      return json({ access_token: "access", refresh_token: "refresh", user });
+    if (url.endsWith("/me")) return json({ ...user, email_verified: verified });
+    if (url.endsWith("/auth/logout")) return json(null, 204);
+    throw new Error(url);
+  };
+  function Probe() {
+    const session = React.useContext(SessionContext);
+    return React.createElement(
+      "p",
+      null,
+      session.user?.email_verified ? "Verified" : "Unverified",
+    );
+  }
+  await act(async () => {
+    root.render(
+      React.createElement(SessionProvider, null, React.createElement(Probe)),
+    );
+    await apiClient.login(user.email, "password");
+    await new Promise((r) => setTimeout(r, 15));
+  });
+  assert.match(document.body.textContent, /Unverified/);
+  verified = true;
+  await act(async () => {
+    window.dispatchEvent(
+      new dom.window.StorageEvent("storage", {
+        key: "biletflow-email-verified",
+        newValue: "1",
+      }),
+    );
+    await new Promise((r) => setTimeout(r, 15));
+  });
+  assert.match(document.body.textContent, /Verified/);
+  verified = false;
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    await new Promise((r) => setTimeout(r, 15));
+  });
+  assert.match(document.body.textContent, /Unverified/);
+  await act(async () => {
+    await apiClient.logout();
+  });
+});
+
+test("verification send failure offers retry without claiming delivery", async () => {
+  // Unmount the preceding verification state before starting this scenario.
+  await act(() => root.render(null));
+  const unverified = { ...user, email_verified: false };
+  handle = () =>
+    json(
+      {
+        error: { code: "DELIVERY_FAILED", message: "Mail service unavailable" },
+      },
+      503,
+    );
+  await render(
+    PublicPages,
+    { path: "/verify-email", route: "/verify-email?next=%2Forganizer" },
+    unverified,
+  );
+  const button = () => document.querySelector(".bf-verification button");
+  await act(async () => {
+    button().click();
+    await new Promise((r) => setTimeout(r, 15));
+  });
+  assert.match(
+    document.querySelector('[role="alert"]').textContent,
+    /Mail service unavailable/,
+  );
+  assert.equal(button().textContent, "Try again");
+  assert.equal(button().disabled, false);
+  assert.doesNotMatch(document.body.textContent, /Check your inbox/);
+  handle = (url) =>
+    url.endsWith("/resend")
+      ? new Response(null, { status: 202 })
+      : json({
+          ...unverified,
+          verification_email_sent_at: new Date().toISOString(),
+          verification_email_resend_at: new Date(
+            Date.now() + 36000,
+          ).toISOString(),
+        });
+  await act(async () => {
+    button().click();
+    await new Promise((r) => setTimeout(r, 15));
+  });
+  assert.match(document.body.textContent, /Check your inbox/);
+  assert.match(button().textContent, /Resend in 36 s/);
+  assert.equal(document.querySelector('[role="alert"]'), null);
+});
