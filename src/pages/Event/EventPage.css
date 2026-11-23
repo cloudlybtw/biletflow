@@ -35,9 +35,10 @@
 /* Hero */
 .ev-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 48px;
-  align-items: end;
+  /* Cover capped so the title sits beside it, not under a half-screen poster. */
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
   padding-bottom: 40px;
   border-bottom: 1px solid var(--line);
   animation: hero-in 500ms var(--ease-out) both;
@@ -96,6 +97,11 @@
   padding-top: 20px;
   width: 100%;
   border-top: 1px solid var(--line);
+}
+.ev-buy-note {
+  color: var(--hl);
+  font-size: 15px;
+  font-weight: 700;
 }
 .ev-buy strong {
   font-size: 22px;

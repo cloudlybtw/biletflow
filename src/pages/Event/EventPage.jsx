@@ -196,7 +196,16 @@ function EventView({ event, promo, lang, t }) {
 
   const category = categories.data?.find((c) => c.id === event.category_id);
   const key = category ? localCategory(category.slug) : "other";
-  const menu = category && menuCategories.find((c) => c.match.includes(key));
+  // Breadcrumb section: prefer the closest menu entry (education is
+  // "Knowledge & skills", not "Kids", which also lists workshops).
+  const preferredMenu = {
+    workshop: "knowledge-skills",
+    campus: "knowledge-skills",
+  };
+  const menu =
+    category &&
+    (menuCategories.find((c) => c.slug === preferredMenu[key]) ||
+      menuCategories.find((c) => c.match.includes(key)));
   const categoryName =
     category?.[`name_${lang}`] || category?.name_en || copy[lang][key];
   const sorted = [...(images.data || [])].sort(
@@ -285,11 +294,19 @@ function EventView({ event, promo, lang, t }) {
           )}
           <div className="ev-buy">
             {priceLabel && <strong>{priceLabel}</strong>}
-            {open && visible.length > 0 && (
+            {open && visible.length > 0 && !regNotYet && !regClosed && (
               <a className="ev-button" href="#tickets" onClick={jump}>
                 {t.getTickets}
                 <Arrow size={16} />
               </a>
+            )}
+            {open && regNotYet && (
+              <span className="ev-buy-note">
+                {t.regOpens(shortDate(event.registration_opens_at, lang, tz))}
+              </span>
+            )}
+            {open && !regNotYet && regClosed && (
+              <span className="ev-buy-note">{t.regClosed}</span>
             )}
           </div>
         </div>
@@ -413,7 +430,7 @@ function EventView({ event, promo, lang, t }) {
         </aside>
       </div>
 
-      {open && visible.length > 0 && (
+      {open && visible.length > 0 && !regNotYet && !regClosed && (
         <div className="ev-sticky">
           <span>{priceLabel}</span>
           <a className="ev-button" href="#tickets" onClick={jump}>
