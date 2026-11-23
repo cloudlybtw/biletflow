@@ -2,14 +2,6 @@
 .acc {
   padding: 40px 0 80px;
 }
-header.bf-top.ws-top.is-contained {
-  padding-inline: max(24px, calc((100% - 1320px) / 2));
-}
-@media (max-width: 600px) {
-  header.bf-top.ws-top.is-contained {
-    padding-inline: 16px;
-  }
-}
 .acc-head {
   animation: hero-in 500ms var(--ease-out) both;
 }

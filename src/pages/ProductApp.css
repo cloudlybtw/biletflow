@@ -1341,3 +1341,13 @@ main.bf-auth.auth.auth-verification {
 .auth-verification .bf-verification .bf-button { background: var(--hl); color: #000 !important; border-radius: var(--pill); transition: opacity 160ms ease; }
 .auth-verification .bf-verification .bf-button:hover:not(:disabled) { opacity: .85; }
 .auth-verification .bf-verification .bf-button:disabled { background: var(--chip); color: var(--fg) !important; opacity: .7; }
+
+/* One header for account, organizer and admin: aligned to the 1320px column. */
+header.bf-top.ws-top {
+  padding-inline: max(24px, calc((100% - 1320px) / 2));
+}
+@media (max-width: 600px) {
+  header.bf-top.ws-top {
+    padding-inline: 16px;
+  }
+}

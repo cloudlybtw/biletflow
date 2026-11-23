@@ -12,8 +12,9 @@ export function Link({ to, children, className = "", ...rest }) {
     </a>
   );
 }
-// contained: align the bar with the 1320px page column (buyer account).
-export function Topbar({ contained = false }) {
+// Same bar on every signed-in page: aligned to the 1320px page column,
+// like the public navbar, so it does not jump between account and workspaces.
+export function Topbar() {
   const { user } = useSession();
   const locale = useLocale();
   const [error, setError] = useState("");
@@ -29,7 +30,7 @@ export function Topbar({ contained = false }) {
     }
   }
   return (
-    <header className={`bf-top ws-top${contained ? " is-contained" : ""}`}>
+    <header className="bf-top ws-top">
       <button
         className="bf-skip"
         onClick={() => {

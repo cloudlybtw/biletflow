@@ -782,7 +782,7 @@ export default function AttendeeApp({ path }) {
     );
   return (
     <>
-      <Topbar contained />
+      <Topbar />
       <main
         className={`acc page-width${section === "tickets" && id ? " acc-detail" : ""}`}
       >
