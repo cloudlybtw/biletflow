@@ -4,7 +4,7 @@ import { useSession } from "../lib/session-context";
 import { api, apiPath, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Topbar, Link } from "./app-shared";
-import { State, Form, Action, SecureImage, OrderSummary } from "./live-shared";
+import { State, Form, Action, SecureImage } from "./live-shared";
 import Arrow from "../components/Icons/Arrow";
 import SupportPanel from "./SupportPanel";
 import { Payment } from "./PublicPages";
@@ -48,6 +48,10 @@ const text = {
     showQr: "Show this QR code at the entrance.",
     noOrders: "No orders yet",
     order: "Order",
+    subtotal: "Subtotal",
+    discount: "Discount",
+    fee: "Service fee",
+    total: "Total",
     view: "View",
     noNotes: "No notifications",
     noNotesBody: "Order, ticket and support updates will show up here.",
@@ -55,6 +59,7 @@ const text = {
     back: "Back",
     password: "Change password",
     verify: "Verify email to book tickets",
+    verifyCta: "Verify email",
     status: {
       valid: "Valid",
       checked_in: "Checked in",
@@ -102,6 +107,10 @@ const text = {
     showQr: "Покажите этот QR-код на входе.",
     noOrders: "Заказов пока нет",
     order: "Заказ",
+    subtotal: "Сумма",
+    discount: "Скидка",
+    fee: "Сервисный сбор",
+    total: "Итого",
     view: "Открыть",
     noNotes: "Уведомлений нет",
     noNotesBody: "Здесь появятся новости о заказах, билетах и обращениях.",
@@ -109,6 +118,7 @@ const text = {
     back: "Назад",
     password: "Сменить пароль",
     verify: "Подтвердите почту, чтобы покупать билеты",
+    verifyCta: "Подтвердить",
     status: {
       valid: "Действует",
       checked_in: "Использован",
@@ -156,6 +166,10 @@ const text = {
     showQr: "Кіреберісте осы QR-кодты көрсетіңіз.",
     noOrders: "Әзірге тапсырыс жоқ",
     order: "Тапсырыс",
+    subtotal: "Сома",
+    discount: "Жеңілдік",
+    fee: "Қызмет ақысы",
+    total: "Барлығы",
     view: "Ашу",
     noNotes: "Хабарландыру жоқ",
     noNotesBody: "Тапсырыс, билет және өтініш жаңалықтары осында шығады.",
@@ -163,6 +177,7 @@ const text = {
     back: "Артқа",
     password: "Құпиясөзді өзгерту",
     verify: "Билет алу үшін поштаны растаңыз",
+    verifyCta: "Растау",
     status: {
       valid: "Жарамды",
       checked_in: "Пайдаланылды",
@@ -472,7 +487,7 @@ function Order({ id, t }) {
         <State resource={resource}>
           {resource.data && (
             <>
-              <OrderSummary order={resource.data} />
+              <Receipt order={resource.data} t={t} />
               {resource.data.status === "completed" &&
                 resource.data.event_id && (
                   <CalendarLinks id={resource.data.event_id} />
@@ -491,6 +506,95 @@ function Order({ id, t }) {
         </State>
       </div>
     </>
+  );
+}
+
+// Buyer-facing order receipt: event, status, lines and totals in tenge.
+function Receipt({ order, t }) {
+  const lang = useLocale();
+  const event = useResource(
+    order.event_id ? `/events/${order.event_id}` : null,
+  );
+  const e = event.data;
+  const rows = [
+    [t.subtotal, order.subtotal_amount],
+    order.discount_amount ? [t.discount, -order.discount_amount] : null,
+    order.fee_amount ? [t.fee, order.fee_amount] : null,
+  ].filter(Boolean);
+  return (
+    <section
+      className="acc-receipt"
+      aria-label={`${t.order} ${order.order_number}`}
+    >
+      <header>
+        <div>
+          <p className="acc-receipt-kicker">
+            {t.order} {order.order_number}
+          </p>
+          {e && (
+            <a
+              className="acc-receipt-title"
+              href={`/#/events/${e.slug || e.id}`}
+            >
+              {e.title}
+            </a>
+          )}
+          {e && (
+            <small>
+              {fmt(e.starts_at, lang, e.timezone, {
+                day: "numeric",
+                month: "long",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              {e.venue_name ? ` · ${e.venue_name}` : ""}
+            </small>
+          )}
+        </div>
+        <StatusChip status={order.status} t={t} />
+      </header>
+      {order.items?.length > 0 && (
+        <ul className="acc-receipt-lines">
+          {order.items.map((item) => (
+            <li key={item.id}>
+              <span>
+                {item.name || t.type} × {item.quantity}
+              </span>
+              <span>{tenge(item.line_total, lang)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <dl className="acc-receipt-sum">
+        {rows.map(([label, amount]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>
+              {amount < 0 ? "−" : ""}
+              {tenge(Math.abs(amount), lang)}
+            </dd>
+          </div>
+        ))}
+        <div className="acc-receipt-total">
+          <dt>{t.total}</dt>
+          <dd>{tenge(order.total_amount, lang)}</dd>
+        </div>
+      </dl>
+      {order.ticket_ids?.length > 0 && (
+        <div className="acc-receipt-tickets">
+          {order.ticket_ids.map((ticketId, i) => (
+            <a
+              key={ticketId}
+              className="acc-button"
+              href={`/#/account/tickets/${ticketId}`}
+            >
+              {t.open}
+              {order.ticket_ids.length > 1 ? ` ${i + 1}` : ""}
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -662,6 +766,12 @@ export default function AttendeeApp({ path }) {
           <p className="acc-kicker">{t.account}</p>
           <h1>{title}</h1>
         </header>
+        {user && !user.email_verified && (
+          <p className="acc-verify" role="status">
+            <span>{t.verify}</span>
+            <Link to="/verify-email">{t.verifyCta}</Link>
+          </p>
+        )}
         <nav className="acc-tabs" aria-label={t.account}>
           {Object.entries(t.tabs).map(([key, label]) => (
             <a

@@ -26,6 +26,14 @@ export default function SupportPanel({
   const caseButtons = useRef(new Map());
   const lastSelected = useRef(null);
   const orders = useResource(!staff && !organizer ? "/orders" : null, true);
+  // A brand-new buyer (no orders, no cases) has nothing a case can link to;
+  // the API rejects attendee cases without an order, event or ticket.
+  const nothingToLink =
+    !staff &&
+    !organizer &&
+    !eventId &&
+    orders.data?.length === 0 &&
+    cases.data?.length === 0;
   useEffect(() => {
     if (selected) backButton.current?.focus();
     else caseButtons.current.get(lastSelected.current)?.focus();
@@ -71,7 +79,20 @@ export default function SupportPanel({
           )}
         />
       </State>
-      {!staff && (
+      {nothingToLink && (
+        <div className="bf-panel bf-support-empty">
+          <h2>{translate("Open a support case")}</h2>
+          <p>
+            {translate(
+              "Support requests are linked to an order. Buy a ticket first, or write to us through the contacts page.",
+            )}
+          </p>
+          <a className="bf-button" href="/#/cms/contacts">
+            {translate("Contacts")}
+          </a>
+        </div>
+      )}
+      {!staff && !nothingToLink && (
         <>
           <h2>{translate("Open a support case")}</h2>
           <Form
