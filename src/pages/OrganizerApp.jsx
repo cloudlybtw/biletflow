@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PhotoPicker from "../components/PhotoPicker/PhotoPicker";
 import { t as translate } from "../lib/locale";
 import { api, apiPath, download, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
@@ -73,6 +74,26 @@ const ticketFields = [
 function EventForm({ event, done }) {
   const venues = useResource("/venues", true),
     categories = useResource("/event-categories", true);
+  // New events: photos are picked here and uploaded right after the draft is created.
+  const [photos, setPhotos] = useState([]);
+  async function uploadPhotos(created) {
+    let failed = 0;
+    for (const [index, photo] of photos.entries()) {
+      const data = new FormData();
+      data.append("file", photo.file);
+      data.append("is_cover", String(index === 0));
+      data.append("alt_text", "");
+      try {
+        await api(`/events/${created.id}/images`, {
+          method: "POST",
+          body: data,
+        });
+      } catch {
+        failed += 1;
+      }
+    }
+    return failed;
+  }
   return (
     <Form
       key={event?.updated_at || "new"}
@@ -85,6 +106,16 @@ function EventForm({ event, done }) {
           type: "textarea",
           nullable: true,
         },
+        ...(event
+          ? []
+          : [
+              {
+                name: "photos",
+                render: () => (
+                  <PhotoPicker photos={photos} onChange={setPhotos} />
+                ),
+              },
+            ]),
         {
           name: "starts_at",
           label: "Starts (local time)",
@@ -166,12 +197,14 @@ function EventForm({ event, done }) {
         },
       ]}
       label={event ? "Save event" : "Create draft"}
-      submit={(body) =>
-        api(event ? `/events/${event.id}` : "/events", {
+      submit={async (body) => {
+        const saved = await api(event ? `/events/${event.id}` : "/events", {
           method: event ? "PATCH" : "POST",
           body,
-        })
-      }
+        });
+        if (event || !photos.length) return saved;
+        return { ...saved, photoFailures: await uploadPhotos(saved) };
+      }}
       done={done}
     />
   );
@@ -1065,7 +1098,8 @@ export default function OrganizerApp({ path }) {
   ) : section === "events" && parts[3] === "new" ? (
     <EventForm
       done={(event) => {
-        location.hash = `/organizer/events/${event.id}`;
+        // Failed photo uploads: land on the Images tab to retry them there.
+        location.hash = `/organizer/events/${event.id}${event.photoFailures ? "/images" : ""}`;
       }}
     />
   ) : section === "settings" ? (

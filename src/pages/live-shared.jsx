@@ -1,6 +1,6 @@
 import DateTimePicker from "../components/DateTimePicker/DateTimePicker";
 import { t as translate, dateTime, number, errorText } from "../lib/locale";
-import { useState, useEffect, useId, useRef } from "react";
+import { Fragment, useState, useEffect, useId, useRef } from "react";
 import { api, download } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Link, Badge } from "./app-shared";
@@ -88,6 +88,7 @@ export function Form({
         const values = new FormData(form);
         const body = {};
         for (const field of fields) {
+          if (field.render) continue; // custom block, not a form value
           const value = values.get(field.name);
           if (field.multiple)
             body[field.name] = values.getAll(field.name).filter(Boolean);
@@ -116,68 +117,76 @@ export function Form({
         }
       }}
     >
-      {fields.map((field) => (
-        <label key={field.name}>
-          {translate(field.label)}
-          {field.options ? (
-            <SelectInput field={field} initial={initial[field.name]} />
-          ) : field.type === "datetime-local" ? (
-            <DateTimePicker
-              name={field.name}
-              required={field.required}
-              describedBy={status.error ? feedbackId : undefined}
-              defaultValue={
-                initial[field.name]
-                  ? localTime(initial[field.name])
-                  : (field.default ?? "")
-              }
-            />
-          ) : field.type === "textarea" ? (
-            <textarea
-              name={field.name}
-              aria-describedby={status.error ? feedbackId : undefined}
-              defaultValue={initial[field.name] ?? field.default ?? ""}
-              required={field.required}
-              rows={4}
-              maxLength={field.maxLength}
-            />
-          ) : (
-            <input
-              name={field.name}
-              type={field.type === "integer" ? "number" : field.type || "text"}
-              aria-describedby={status.error ? feedbackId : undefined}
-              autoComplete={
-                field.autoComplete ||
-                {
-                  full_name: "name",
-                  email: "email",
-                  phone: "tel",
-                  password: "current-password",
-                  new_password: "new-password",
-                }[field.name]
-              }
-              defaultValue={
-                field.type === "checkbox"
-                  ? undefined
-                  : field.type === "datetime-local" && initial[field.name]
+      {fields.map((field) =>
+        field.render ? (
+          <Fragment key={field.name}>{field.render()}</Fragment>
+        ) : (
+          <label key={field.name}>
+            {translate(field.label)}
+            {field.options ? (
+              <SelectInput field={field} initial={initial[field.name]} />
+            ) : field.type === "datetime-local" ? (
+              <DateTimePicker
+                name={field.name}
+                required={field.required}
+                describedBy={status.error ? feedbackId : undefined}
+                defaultValue={
+                  initial[field.name]
                     ? localTime(initial[field.name])
-                    : (initial[field.name] ?? field.default ?? "")
-              }
-              defaultChecked={
-                field.type === "checkbox"
-                  ? Boolean(initial[field.name])
-                  : undefined
-              }
-              required={field.required}
-              min={field.min}
-              max={field.max}
-              minLength={field.minLength}
-              maxLength={field.maxLength}
-              step={field.step || (field.type === "number" ? "any" : undefined)}
-            />
-          )}
-        </label>
-      ))}
+                    : (field.default ?? "")
+                }
+              />
+            ) : field.type === "textarea" ? (
+              <textarea
+                name={field.name}
+                aria-describedby={status.error ? feedbackId : undefined}
+                defaultValue={initial[field.name] ?? field.default ?? ""}
+                required={field.required}
+                rows={4}
+                maxLength={field.maxLength}
+              />
+            ) : (
+              <input
+                name={field.name}
+                type={
+                  field.type === "integer" ? "number" : field.type || "text"
+                }
+                aria-describedby={status.error ? feedbackId : undefined}
+                autoComplete={
+                  field.autoComplete ||
+                  {
+                    full_name: "name",
+                    email: "email",
+                    phone: "tel",
+                    password: "current-password",
+                    new_password: "new-password",
+                  }[field.name]
+                }
+                defaultValue={
+                  field.type === "checkbox"
+                    ? undefined
+                    : field.type === "datetime-local" && initial[field.name]
+                      ? localTime(initial[field.name])
+                      : (initial[field.name] ?? field.default ?? "")
+                }
+                defaultChecked={
+                  field.type === "checkbox"
+                    ? Boolean(initial[field.name])
+                    : undefined
+                }
+                required={field.required}
+                min={field.min}
+                max={field.max}
+                minLength={field.minLength}
+                maxLength={field.maxLength}
+                step={
+                  field.step || (field.type === "number" ? "any" : undefined)
+                }
+              />
+            )}
+          </label>
+        ),
+      )}
       {children}
       {status.error && (
         <p id={feedbackId} ref={feedback} tabIndex={-1} role="alert">
