@@ -10,6 +10,7 @@ The generated contract is [`openapi.json`](openapi.json); interactive docs are a
 |---|---|---|
 | Categories (kk/ru/en) | `GET /event-categories` | Public |
 | Venues and seating layout | `GET /venues`, `GET /venues/{venue_id}` | Public |
+| Organizer venue from an address | `POST /venues` | Verified organizer; same name + address returns the existing row |
 | Browse/search | `GET /events` | Published + public only |
 | Event by slug | `GET /events/by-slug/{slug}` | Published public/unlisted; private returns 404 |
 | Create draft | `POST /events` | Verified organizer |

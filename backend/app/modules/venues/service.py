@@ -6,12 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import NOT_FOUND, AppError
 from app.core.pagination import Pagination
 from app.db.pagination import read_page
+from app.modules.organizers import service as organizers
+from app.modules.users.models import User
 from app.modules.venues.models import PriceCategory, Seat, Venue, VenueRow, VenueSection
 from app.modules.venues.schemas import (
     PriceCategoryOut,
     RowOut,
     SeatOut,
     SectionOut,
+    VenueCreate,
     VenueDetail,
     VenueOut,
 )
@@ -19,6 +22,26 @@ from app.modules.venues.schemas import (
 
 async def list_venues(session: AsyncSession, page: Pagination):
     return await read_page(session, select(Venue).order_by(Venue.name, Venue.id), page)
+
+
+async def create_venue(session: AsyncSession, user: User, data: VenueCreate) -> Venue:
+    # Only organizers add venues; adding the same place again reuses their row.
+    await organizers.get_profile(session, user)
+    existing = await session.scalar(
+        select(Venue).where(
+            Venue.created_by == user.id,
+            Venue.name == data.name,
+            Venue.address_line == data.address_line,
+            Venue.city == data.city,
+        )
+    )
+    if existing is not None:
+        return existing
+    venue = Venue(**data.model_dump(), is_predefined=False, created_by=user.id)
+    session.add(venue)
+    await session.commit()
+    await session.refresh(venue)
+    return venue
 
 
 async def detail(session: AsyncSession, venue_id: uuid.UUID) -> VenueDetail:
