@@ -1,48 +1,89 @@
-/* Date-time picker: the trigger looks like the other fields; the popover
-   follows the page theme through the shadcn tokens (see tailwind.css). */
+/* Date-time field: typed date (with calendar button) + typed time.
+   The popover follows the page theme through the shadcn tokens. */
 .bf-dt {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 120px);
+  gap: 8px;
+  min-width: 0;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.bf-dt-field {
   position: relative;
   display: block;
   min-width: 0;
 }
-.bf-dt-trigger {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Beats the workspace/account "every input in a form" rules (0,5,1). */
+.bf-dt.bf-dt .bf-dt-input.bf-dt-input.bf-dt-input.bf-dt-input {
   width: 100%;
   min-height: 44px;
-  padding: 10px 14px;
+  padding: 10px 12px 10px 42px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--fg);
   font: inherit;
   font-size: 15px;
-  font-weight: 400;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  text-align: left;
   text-transform: none;
-  cursor: pointer;
+  outline: none;
   transition: border-color var(--t-ui) var(--ease-out);
 }
-.bf-dt-trigger:hover {
+.bf-dt.bf-dt .bf-dt-input.bf-dt-input.bf-dt-input.bf-dt-input:hover {
   border-color: var(--line);
 }
-.bf-dt-trigger:focus-visible,
-.bf-dt-trigger[data-state="open"] {
+.bf-dt.bf-dt .bf-dt-input.bf-dt-input.bf-dt-input.bf-dt-input:focus {
   border-color: var(--fg);
-  outline: none;
 }
-.bf-dt-trigger.is-empty {
+.bf-dt.bf-dt .bf-dt-input.bf-dt-input.bf-dt-input.bf-dt-input[aria-invalid] {
+  border-color: #c2413a;
+}
+.bf-dt-input::placeholder {
   color: var(--muted);
 }
+.bf-dt-icon,
+.bf-dt-icon-btn {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+}
 .bf-dt-icon {
-  flex: none;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.bf-dt-icon-btn {
+  left: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--fg);
+  transition: background-color var(--t-ui) var(--ease-out);
+}
+.bf-dt-icon-btn:hover,
+.bf-dt-icon-btn[data-state="open"] {
+  background: var(--chip);
+}
+.bf-dt-icon-btn svg {
   width: 18px;
   height: 18px;
 }
+.bf-dt-error {
+  grid-column: 1 / -1;
+  color: #c2413a;
+  font-size: 13px;
+  font-weight: 400;
+}
 /* Proxy keeps form value + required validation; the browser's
-   "fill out this field" bubble points at the trigger area. */
+   "fill out this field" bubble points at the bottom of the field. */
 .bf-dt-proxy {
   position: absolute;
   inset: auto 0 0 0;
@@ -53,45 +94,27 @@
   opacity: 0;
   pointer-events: none;
 }
+.bf-form .bf-dt .bf-dt-proxy,
+.bf-shell .bf-form .bf-dt .bf-dt-proxy,
+.acc .acc-legacy .bf-form .bf-dt .bf-dt-proxy {
+  min-height: 0;
+  height: 1px;
+  padding: 0;
+  border: 0;
+}
 .bf-dt-pop {
   font-family: inherit;
 }
 .bf-dt-body {
-  display: flex;
+  padding: 12px 12px 4px;
+}
+.bf-dt-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
-  padding: 12px;
+  padding: 8px 12px 12px;
 }
-.bf-dt-time {
-  display: flex;
-  flex-direction: column;
-  padding-left: 12px;
-  border-left: 1px solid var(--line);
-}
-.bf-dt-time-label {
-  margin: 4px 0 8px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-align: center;
-  text-transform: uppercase;
-}
-.bf-dt-cols {
-  display: flex;
-  gap: 4px;
-  height: 272px;
-}
-.bf-dt-col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 52px;
-  padding-right: 2px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-.bf-dt-col button {
-  flex: none;
+.bf-dt-presets button {
   font-variant-numeric: tabular-nums;
 }
 .bf-dt-foot {
@@ -100,29 +123,4 @@
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid var(--line);
-}
-@media (max-width: 520px) {
-  .bf-dt-body {
-    flex-direction: column;
-  }
-  .bf-dt-time {
-    padding: 12px 0 0;
-    border-top: 1px solid var(--line);
-    border-left: 0;
-  }
-  .bf-dt-cols {
-    height: 160px;
-  }
-  .bf-dt-col {
-    flex: 1;
-  }
-}
-/* Workspace/account field rules target every input in a form; keep the proxy invisible. */
-.bf-form .bf-dt .bf-dt-proxy,
-.bf-shell .bf-form .bf-dt .bf-dt-proxy,
-.acc .acc-legacy .bf-form .bf-dt .bf-dt-proxy {
-  min-height: 0;
-  height: 1px;
-  padding: 0;
-  border: 0;
 }
