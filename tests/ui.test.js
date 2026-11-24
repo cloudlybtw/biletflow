@@ -449,7 +449,7 @@ test("Russian and Kazakh customer flows translate labels, errors and status with
   const locale = await server.ssrLoadModule("/src/lib/locale.js");
   try {
     for (const [language, heading, email, error] of [
-      ["ru", "С возвращением", "Email", "Проверьте введённые данные."],
+      ["ru", "С\u00a0возвращением", "Email", "Проверьте введённые данные."],
       [
         "kk",
         "Қайта қош келдіңіз",

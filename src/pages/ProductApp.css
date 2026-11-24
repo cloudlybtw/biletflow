@@ -416,6 +416,7 @@ main.bf-auth.auth {
   color: var(--fg);
 }
 .auth-art {
+  container-type: inline-size;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -427,7 +428,8 @@ main.bf-auth.auth {
   overflow: hidden;
 }
 .auth-art-line {
-  font-size: clamp(56px, 8vw, 132px);
+  /* Scales with the art column, so long ru/kk words never hit its edge. */
+  font-size: clamp(44px, 12.5cqi, 132px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: -0.045em;
@@ -499,11 +501,14 @@ main.bf-auth.auth {
   box-shadow: none;
 }
 .auth .bf-auth-card h1 {
-  font-size: clamp(36px, 4vw, 56px);
+  /* Sized to the 440px card so the sign-in, register and reset headings fit
+     one line in every language (with room for wider Firefox rendering). */
+  font-size: clamp(28px, 2.8vw, 38px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: -0.04em;
   line-height: 0.95;
+  text-wrap: balance;
 }
 .auth-switch {
   display: inline-flex;

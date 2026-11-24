@@ -197,8 +197,8 @@ const authArt = {
     sticker: "Tickets · QR · Kazakhstan",
   },
   ru: {
-    line1: "Следующий",
-    line2: "вечер — ваш.",
+    line1: "Ваш следующий",
+    line2: "вечер.",
     sticker: "Билеты · QR · Казахстан",
   },
   kk: {
