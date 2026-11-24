@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PhotoPicker from "../components/PhotoPicker/PhotoPicker";
+import VenuePicker from "../components/VenuePicker/VenuePicker";
 import { t as translate } from "../lib/locale";
 import { api, apiPath, download, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
@@ -76,6 +77,47 @@ function EventForm({ event, done }) {
     categories = useResource("/event-categories", true);
   // New events: photos are picked here and uploaded right after the draft is created.
   const [photos, setPhotos] = useState([]);
+  // Venue: undefined = untouched (show the event's current venue), null = none.
+  const [place, setPlace] = useState(undefined);
+  const currentVenue = useResource(
+    event?.venue_id ? `/venues/${event.venue_id}` : null,
+  );
+  const chosenVenue =
+    place !== undefined
+      ? place
+      : currentVenue.data
+        ? {
+            ...currentVenue.data,
+            latitude:
+              currentVenue.data.latitude == null
+                ? null
+                : Number(currentVenue.data.latitude),
+            longitude:
+              currentVenue.data.longitude == null
+                ? null
+                : Number(currentVenue.data.longitude),
+          }
+        : null;
+  // A new address becomes a venue (POST /venues) right before the event is saved.
+  async function venueId() {
+    if (place === undefined) return event?.venue_id ?? null;
+    if (!place) return null;
+    if (place.id) return place.id;
+    const created = await api("/venues", {
+      method: "POST",
+      body: {
+        name: place.name.trim() || place.address_line,
+        address_line: place.address_line || place.name,
+        city: place.city || "—",
+        country: place.country || "KZ",
+        latitude: place.latitude,
+        longitude: place.longitude,
+      },
+    });
+    // Keep numeric coordinates for the map (the API returns decimals as strings).
+    setPlace({ ...place, id: created.id });
+    return created.id;
+  }
   async function uploadPhotos(created) {
     let failed = 0;
     for (const [index, photo] of photos.entries()) {
@@ -145,13 +187,14 @@ function EventForm({ event, done }) {
           required: true,
         },
         {
-          name: "venue_id",
-          label: "Venue",
-          nullable: true,
-          options: (venues.data || []).map((v) => [
-            v.id,
-            `${v.name}, ${v.city}`,
-          ]),
+          name: "venue",
+          render: () => (
+            <VenuePicker
+              venues={(venues.data || []).filter((v) => v.is_predefined)}
+              value={chosenVenue}
+              onChange={setPlace}
+            />
+          ),
         },
         {
           name: "category_id",
@@ -198,6 +241,7 @@ function EventForm({ event, done }) {
       ]}
       label={event ? "Save event" : "Create draft"}
       submit={async (body) => {
+        body.venue_id = await venueId();
         const saved = await api(event ? `/events/${event.id}` : "/events", {
           method: event ? "PATCH" : "POST",
           body,

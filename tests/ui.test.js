@@ -409,6 +409,18 @@ test("editing an event preserves a saved venue when its options arrive later", a
         visibility: "public",
         capacity: 10,
       });
+    if (url.startsWith("/api/v1/venues/venue-1")) {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return json({
+        id: "venue-1",
+        name: "Demo hall",
+        address_line: "Abay Ave 1",
+        city: "Almaty",
+        latitude: "43.238900",
+        longitude: "76.889700",
+        is_predefined: true,
+      });
+    }
     if (url.startsWith("/api/v1/venues")) {
       await new Promise((resolve) => setTimeout(resolve, 30));
       return json({
@@ -428,7 +440,7 @@ test("editing an event preserves a saved venue when its options arrive later", a
     await new Promise((resolve) => setTimeout(resolve, 45));
   });
   const form = document.querySelector("form");
-  assert.equal(form.elements.venue_id.value, "venue-1");
+  assert.match(form.querySelector(".bf-venue-picked").textContent, /Demo hall/);
   await submit(form);
   assert.equal(saved, true);
 });

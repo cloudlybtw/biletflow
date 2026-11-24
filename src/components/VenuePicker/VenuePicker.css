@@ -1,0 +1,196 @@
+.bf-venue {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  grid-column: 1 / -1;
+}
+.bf-venue-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #545454;
+}
+.bf-venue-search {
+  position: relative;
+}
+/* Beats the workspace "every input in a form" rule (0,5,1). */
+.bf-venue.bf-venue .bf-venue-search input[type="search"][role="combobox"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 40px 10px 42px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: 0;
+  outline: none;
+}
+.bf-venue.bf-venue
+  .bf-venue-search
+  input[type="search"][role="combobox"]:focus {
+  border-color: var(--fg);
+}
+.bf-venue-icon,
+.bf-venue-spin {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.bf-venue-icon {
+  left: 14px;
+}
+.bf-venue-spin {
+  right: 14px;
+  animation: bf-venue-spin 0.8s linear infinite;
+}
+@keyframes bf-venue-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.bf-venue-list {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.12);
+}
+.bf-venue-list button {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.bf-venue-list button:hover,
+.bf-venue-list button:focus-visible {
+  background: var(--panel);
+}
+.bf-venue-list b {
+  font-size: 14px;
+}
+.bf-venue-list small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bf-venue-empty {
+  padding: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.bf-venue-picked {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.bf-venue-picked > svg {
+  width: 20px;
+  height: 20px;
+}
+.bf-venue-picked div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bf-venue-picked small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.bf-venue.bf-venue .bf-venue-picked input.bf-venue-name {
+  min-height: 0;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+}
+.bf-venue.bf-venue .bf-venue-picked input.bf-venue-name:focus {
+  border-color: var(--line);
+  background: var(--bg);
+}
+.bf-venue-clear {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.bf-venue-clear:hover {
+  background: var(--chip);
+}
+.bf-venue-clear svg {
+  width: 16px;
+  height: 16px;
+}
+.bf-venue-map {
+  height: 260px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  z-index: 0;
+}
+.bf-venue-map.is-broken {
+  display: none;
+}
+.bf-venue-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+/* Pin: a dark teardrop with a yellow centre (no image assets needed). */
+.bf-venue-pin span {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 0;
+  background: #1c1c1f;
+  rotate: -45deg;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.bf-venue-pin span::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+.leaflet-marker-draggable.bf-venue-pin {
+  cursor: grab;
+}
