@@ -9,7 +9,7 @@ const maxPhotos = 10;
 
 // Photos chosen while the event does not exist yet; the parent uploads them
 // once the draft is created. `photos` items: { id, file, url }; first = cover.
-export default function PhotoPicker({ photos, onChange }) {
+export default function PhotoPicker({ photos, onChange, label = "Photos" }) {
   const input = useRef(null);
   const [drag, setDrag] = useState(false);
   const [error, setError] = useState("");
@@ -63,7 +63,7 @@ export default function PhotoPicker({ photos, onChange }) {
 
   return (
     <div className="bf-photos">
-      <span className="bf-photos-label">{translate("Photos")}</span>
+      <span className="bf-photos-label">{translate(label)}</span>
       <div
         className={`bf-photos-drop${drag ? " is-drag" : ""}`}
         onDragOver={(e) => {

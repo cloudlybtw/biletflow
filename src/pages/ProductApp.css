@@ -1356,3 +1356,222 @@ header.bf-top.ws-top {
     padding-inline: 16px;
   }
 }
+
+/* Create-event wizard: numbered steps joined by a line; the current step's
+   circle is larger, finished ones are filled, upcoming ones outlined. */
+.bf-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 4px 0 28px;
+  padding: 0;
+  list-style: none;
+}
+.bf-step {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.bf-step:last-child {
+  flex: 0 0 auto;
+}
+/* Connector after every step but the last. */
+.bf-step:not(:last-child)::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  margin: 0 14px;
+  border-radius: 2px;
+  background: #dcdcd7;
+}
+.bf-step.is-done::after {
+  background: #1c1c1f;
+}
+.bf-step > button,
+.bf-step-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+.bf-step > button {
+  cursor: pointer;
+  border-radius: 100px;
+}
+.bf-step > button:hover .bf-step-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.bf-step-dot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #c9c9c3;
+  border-radius: 50%;
+  background: #fff;
+  color: #6b6b72;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition:
+    width 200ms var(--ease-out),
+    height 200ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+.bf-step.is-done .bf-step-dot {
+  border-color: #1c1c1f;
+  background: #1c1c1f;
+  color: #f6f6f3;
+}
+.bf-step.is-active .bf-step-dot {
+  width: 42px;
+  height: 42px;
+  border-color: #1c1c1f;
+  background: #1c1c1f;
+  color: var(--yellow);
+  font-size: 17px;
+  box-shadow: 0 0 0 5px rgb(230 220 94 / 0.35);
+}
+.bf-step-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b6b72;
+}
+.bf-step.is-active .bf-step-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1f;
+}
+.bf-step.is-done .bf-step-label {
+  color: #1c1c1f;
+}
+@media (max-width: 700px) {
+  /* Narrow screens: circles in a row, the current step's name on a line
+     of its own underneath (so it never runs into the next circle). */
+  .bf-steps {
+    position: relative;
+    padding-bottom: 30px;
+  }
+  .bf-step.is-active .bf-step-label {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    font-size: 15px;
+  }
+  .bf-step:not(.is-active) .bf-step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .bf-step:not(:last-child)::after {
+    margin: 0 8px;
+  }
+}
+.bf-wizard-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--bf-line);
+}
+.bf-wizard-nav > .bf-button:last-child,
+.bf-wizard-nav > .bf-action:last-child {
+  margin-left: auto;
+}
+.bf-wizard-spacer {
+  flex: 1;
+}
+.bf-wizard-hint {
+  margin: 0;
+  color: #6b6b72;
+  font-size: 13px;
+}
+.bf-wizard-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.bf-wizard-cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0f0ec;
+  color: #6b6b72;
+  font-size: 13px;
+}
+.bf-wizard-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bf-wizard-summary h2 {
+  margin: 6px 0 16px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+.bf-wizard-summary h3 {
+  margin: 20px 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b6b72;
+}
+.bf-wizard-summary dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.bf-wizard-summary dl > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 14px;
+}
+.bf-wizard-summary dt {
+  color: #6b6b72;
+}
+.bf-wizard-summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+.bf-wizard-tickets {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bf-wizard-tickets li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f6f6f3;
+  font-size: 14px;
+}
+.bf-wizard-tickets small {
+  color: #6b6b72;
+}
+@media (max-width: 760px) {
+  .bf-wizard-preview {
+    grid-template-columns: 1fr;
+  }
+}

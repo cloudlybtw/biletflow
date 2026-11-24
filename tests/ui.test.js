@@ -199,7 +199,7 @@ test("checkout creates a real order with selected type, promo, and attendees", a
   assert.equal(created, true);
   assert.equal(location.hash, "#/account/orders/order-1");
 });
-test("organizer creation persists a draft and opens the returned event", async () => {
+test("organizer creation persists a draft and continues to its ticket step", async () => {
   let saved = false;
   handle = (url, options) => {
     if (options.method === "POST" && url === "/api/v1/events") {
@@ -228,7 +228,8 @@ test("organizer creation persists a draft and opens the returned event", async (
   });
   await submit(form);
   assert.equal(saved, true);
-  assert.equal(location.hash, "#/organizer/events/created-event");
+  // Step 1 of the create wizard saves the draft; step 2 (tickets) comes next.
+  assert.equal(location.hash, "#/organizer/events/created-event/setup/tickets");
 });
 test("public event detail uses server data and links to the actual checkout", async () => {
   handle = (url) => {

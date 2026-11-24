@@ -1,7 +1,8 @@
 import { useState } from "react";
 import PhotoPicker from "../components/PhotoPicker/PhotoPicker";
+import PosterPicker from "../components/PhotoPicker/PosterPicker";
 import VenuePicker from "../components/VenuePicker/VenuePicker";
-import { t as translate } from "../lib/locale";
+import { t as translate, dateTime, number } from "../lib/locale";
 import { api, apiPath, download, query } from "../lib/client";
 import { useResource } from "../lib/use-resource";
 import { Shell, Link, Stat } from "./app-shared";
@@ -72,11 +73,12 @@ const ticketFields = [
   },
   { name: "is_hidden", label: "Hide ticket type", type: "checkbox" },
 ];
-function EventForm({ event, done }) {
+function EventForm({ event, done, submitLabel }) {
   const venues = useResource("/venues", true),
     categories = useResource("/event-categories", true);
   // New events: photos are picked here and uploaded right after the draft is created.
   const [photos, setPhotos] = useState([]);
+  const [poster, setPoster] = useState(null);
   // Venue: undefined = untouched (show the event's current venue), null = none.
   const [place, setPlace] = useState(undefined);
   const currentVenue = useResource(
@@ -120,7 +122,9 @@ function EventForm({ event, done }) {
   }
   async function uploadPhotos(created) {
     let failed = 0;
-    for (const [index, photo] of photos.entries()) {
+    // The poster is the cover; without one, the first photo takes its place.
+    const queue = poster ? [poster, ...photos] : photos;
+    for (const [index, photo] of queue.entries()) {
       const data = new FormData();
       data.append("file", photo.file);
       data.append("is_cover", String(index === 0));
@@ -148,13 +152,26 @@ function EventForm({ event, done }) {
           type: "textarea",
           nullable: true,
         },
+        {
+          name: "poster",
+          render: () =>
+            event ? (
+              <PosterPicker eventId={event.id} />
+            ) : (
+              <PosterPicker value={poster} onChange={setPoster} />
+            ),
+        },
         ...(event
           ? []
           : [
               {
                 name: "photos",
                 render: () => (
-                  <PhotoPicker photos={photos} onChange={setPhotos} />
+                  <PhotoPicker
+                    label="Additional photos"
+                    photos={photos}
+                    onChange={setPhotos}
+                  />
                 ),
               },
             ]),
@@ -239,22 +256,23 @@ function EventForm({ event, done }) {
           nullable: true,
         },
       ]}
-      label={event ? "Save event" : "Create draft"}
+      label={submitLabel || (event ? "Save event" : "Create draft")}
       submit={async (body) => {
         body.venue_id = await venueId();
         const saved = await api(event ? `/events/${event.id}` : "/events", {
           method: event ? "PATCH" : "POST",
           body,
         });
-        if (event || !photos.length) return saved;
+        if (event || (!photos.length && !poster)) return saved;
         return { ...saved, photoFailures: await uploadPhotos(saved) };
       }}
       done={done}
     />
   );
 }
-function TicketTypes({ base }) {
-  const resource = useResource(`${base}/ticket-types`, true);
+function TicketTypes({ base, resource: shared, compact = false }) {
+  const own = useResource(shared ? null : `${base}/ticket-types`, true);
+  const resource = shared || own;
   const [edit, setEdit] = useState(null);
   return (
     <>
@@ -271,26 +289,28 @@ function TicketTypes({ base }) {
           ]}
           actions={(row) => (
             <button className="bf-outline-button" onClick={() => setEdit(row)}>
-              Edit
+              {translate("Edit")}
             </button>
           )}
         />
       </State>
       <SeatConfiguration base={base} tickets={resource.data || []} />
-      <h2>Inventory by ticket type</h2>
-      <RemoteTable
-        path={`${base}/inventory`}
-        columns={[
-          ["name", "Ticket type"],
-          ["available", "Available"],
-          ["reserved", "Reserved"],
-          ["sold", "Sold"],
-          ["refunded", "Refunded"],
-          ["cancelled", "Cancelled"],
-          ["checked_in", "Checked in"],
-        ]}
-      />
-      <h2>{edit ? "Edit ticket type" : "Add ticket type"}</h2>
+      {!compact && <h2>Inventory by ticket type</h2>}
+      {!compact && (
+        <RemoteTable
+          path={`${base}/inventory`}
+          columns={[
+            ["name", "Ticket type"],
+            ["available", "Available"],
+            ["reserved", "Reserved"],
+            ["sold", "Sold"],
+            ["refunded", "Refunded"],
+            ["cancelled", "Cancelled"],
+            ["checked_in", "Checked in"],
+          ]}
+        />
+      )}
+      <h2>{translate(edit ? "Edit ticket type" : "Add ticket type")}</h2>
       <Form
         key={edit?.id || "new"}
         fields={ticketFields}
@@ -996,6 +1016,228 @@ const actionLabels = {
   cancel: "Cancel event",
   duplicate: "Duplicate",
 };
+// Create event as three steps: general info -> tickets -> preview & publish.
+// Step 1 creates the draft, so steps 2-3 live under /organizer/events/{id}/setup.
+const wizardSteps = [
+  ["info", "General info"],
+  ["tickets", "Ticket info"],
+  ["publish", "Preview and publish"],
+];
+function CreateWizard({ id, step = "tickets" }) {
+  const current = id ? step : "info";
+  const index = Math.max(
+    0,
+    wizardSteps.findIndex(([key]) => key === current),
+  );
+  const go = (key) => {
+    location.hash = `/organizer/events/${id}/setup/${key}`;
+  };
+  return (
+    <>
+      <Stepper
+        steps={wizardSteps.map(([, label]) => translate(label))}
+        current={index}
+        // Before the draft exists only step 1 is reachable.
+        onSelect={id ? (i) => go(wizardSteps[i][0]) : null}
+      />
+      {current === "info" ? (
+        id ? (
+          <WizardInfo id={id} />
+        ) : (
+          <EventForm
+            submitLabel="Next"
+            done={(event) => {
+              location.hash = `/organizer/events/${event.id}/setup/tickets`;
+            }}
+          />
+        )
+      ) : current === "tickets" ? (
+        <WizardTickets
+          id={id}
+          onBack={() => go("info")}
+          onNext={() => go("publish")}
+        />
+      ) : (
+        <WizardPublish id={id} onBack={() => go("tickets")} />
+      )}
+    </>
+  );
+}
+function Stepper({ steps, current, onSelect }) {
+  return (
+    <ol className="bf-steps" aria-label={translate("Steps")}>
+      {steps.map((label, i) => {
+        const state = i < current ? "done" : i === current ? "active" : "next";
+        const content = (
+          <>
+            <span className="bf-step-dot" aria-hidden="true">
+              {i + 1}
+            </span>
+            <span className="bf-step-label">{label}</span>
+          </>
+        );
+        return (
+          <li
+            key={label}
+            className={`bf-step is-${state}`}
+            aria-current={state === "active" ? "step" : undefined}
+          >
+            {onSelect && state !== "active" ? (
+              <button type="button" onClick={() => onSelect(i)}>
+                {content}
+              </button>
+            ) : (
+              <span className="bf-step-static">{content}</span>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+function WizardInfo({ id }) {
+  const resource = useResource(`/events/${id}`);
+  return (
+    <State resource={resource}>
+      {resource.data && (
+        <EventForm
+          event={resource.data}
+          submitLabel="Next"
+          done={() => {
+            location.hash = `/organizer/events/${id}/setup/tickets`;
+          }}
+        />
+      )}
+    </State>
+  );
+}
+function WizardTickets({ id, onBack, onNext }) {
+  const base = `/events/${id}`;
+  const tickets = useResource(`${base}/ticket-types`, true);
+  const visible = (tickets.data || []).filter((t) => !t.is_hidden);
+  return (
+    <>
+      <TicketTypes base={base} resource={tickets} compact />
+      <div className="bf-wizard-nav">
+        <button type="button" className="bf-outline-button" onClick={onBack}>
+          ← {translate("Back")}
+        </button>
+        {!tickets.loading && !visible.length && (
+          <p className="bf-wizard-hint">
+            {translate("Add at least one visible ticket type to continue.")}
+          </p>
+        )}
+        <button
+          type="button"
+          className="bf-button"
+          disabled={!visible.length}
+          onClick={onNext}
+        >
+          {translate("Next")} →
+        </button>
+      </div>
+    </>
+  );
+}
+function WizardPublish({ id, onBack }) {
+  const base = `/events/${id}`;
+  const event = useResource(base);
+  const tickets = useResource(`${base}/ticket-types`, true);
+  const images = useResource(`${base}/images`, true);
+  const venue = useResource(
+    event.data?.venue_id ? `/venues/${event.data.venue_id}` : null,
+  );
+  const e = event.data;
+  const cover =
+    images.data?.find((image) => image.is_cover) || images.data?.[0];
+  const visible = (tickets.data || []).filter((t) => !t.is_hidden);
+  const when = (value) =>
+    value ? dateTime(value, { timeZone: e?.timezone || "Asia/Almaty" }) : "—";
+  return (
+    <State resource={event}>
+      {e && (
+        <section className="bf-panel bf-wizard-preview">
+          <div className="bf-wizard-cover">
+            {cover ? (
+              <SecureImage path={apiPath(cover.url)} alt="" />
+            ) : (
+              <span>{translate("No cover photo")}</span>
+            )}
+          </div>
+          <div className="bf-wizard-summary">
+            <p className="bf-kicker">
+              <EnumText value={e.status} /> · <EnumText value={e.visibility} />
+            </p>
+            <h2>{e.title}</h2>
+            <dl>
+              <div>
+                <dt>{translate("Starts")}</dt>
+                <dd>{when(e.starts_at)}</dd>
+              </div>
+              <div>
+                <dt>{translate("Ends")}</dt>
+                <dd>{when(e.ends_at)}</dd>
+              </div>
+              <div>
+                <dt>{translate("Venue")}</dt>
+                <dd>
+                  {venue.data
+                    ? [
+                        venue.data.name,
+                        venue.data.address_line,
+                        venue.data.city,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+            <h3>{translate("Tickets")}</h3>
+            <ul className="bf-wizard-tickets">
+              {visible.map((t) => (
+                <li key={t.id}>
+                  <span>{t.name}</span>
+                  <b>
+                    {t.price_amount
+                      ? `${number(t.price_amount)} ₸`
+                      : translate("Free")}
+                  </b>
+                  <small>
+                    {number(t.quantity_total)} {translate("seats")}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+      <div className="bf-wizard-nav">
+        <button type="button" className="bf-outline-button" onClick={onBack}>
+          ← {translate("Back")}
+        </button>
+        <span className="bf-wizard-spacer" />
+        <Link className="bf-outline-button" to={`/preview/${id}`}>
+          {translate("Preview event")}
+        </Link>
+        <Link className="bf-outline-button" to={`/organizer/events/${id}`}>
+          {translate("Save as draft")}
+        </Link>
+        {e?.status === "draft" || e?.status === "unpublished" ? (
+          <Action
+            className="bf-button"
+            perform={() => api(`${base}/publish`, { method: "POST" })}
+            done={() => {
+              location.hash = `/organizer/events/${id}`;
+            }}
+          >
+            {translate("Publish event")}
+          </Action>
+        ) : null}
+      </div>
+    </State>
+  );
+}
 function EventWorkspace({ id, tab = "details" }) {
   const base = `/events/${id}`;
   const resource = useResource(base);
@@ -1014,6 +1256,14 @@ function EventWorkspace({ id, tab = "details" }) {
               <Link className="bf-outline-button" to={`/preview/${event.id}`}>
                 {translate("Preview event")}
               </Link>
+              {event.status === "draft" && (
+                <Link
+                  className="bf-outline-button"
+                  to={`/organizer/events/${event.id}/setup/tickets`}
+                >
+                  {translate("Continue setup")}
+                </Link>
+              )}
               {(eventActions[event.status] || ["duplicate"]).map((action) => (
                 <Action
                   key={action}
@@ -1137,64 +1387,67 @@ export default function OrganizerApp({ path }) {
   const section = parts[2] || "";
   const id = section === "events" && parts[3] !== "new" ? parts[3] : null;
   const [chosen, setChosen] = useState("");
-  const content = id ? (
-    <EventWorkspace key={`${id}/${parts[4]}`} id={id} tab={parts[4]} />
-  ) : section === "events" && parts[3] === "new" ? (
-    <EventForm
-      done={(event) => {
-        // Failed photo uploads: land on the Images tab to retry them there.
-        location.hash = `/organizer/events/${event.id}${event.photoFailures ? "/images" : ""}`;
-      }}
-    />
-  ) : section === "settings" ? (
-    <Settings />
-  ) : section === "support" ? (
-    <SupportPanel organizer />
-  ) : ["orders", "attendees", "analytics", "campaigns", "history"].includes(
-      section,
-    ) ? (
-    <>
-      <label>
-        Event
-        <select value={chosen} onChange={(e) => setChosen(e.target.value)}>
-          <option value="">Choose an event…</option>
-          {events.data?.map((event) => (
-            <option key={event.id} value={event.id}>
-              {event.title}
-            </option>
-          ))}
-        </select>
-      </label>
-      {chosen && (
-        <EventWorkspace key={chosen + section} id={chosen} tab={section} />
-      )}
-    </>
-  ) : (
-    <>
-      <div className="bf-stats">
-        <Stat label="My events" value={events.data?.length ?? "…"} />
-      </div>
-      <State resource={events}>
-        <DataTable
-          rows={events.data || []}
-          columns={[
-            ["title", "Event"],
-            ["classification", "Period"],
-            ["status", "Status"],
-            ["starts_at", "Starts"],
-          ]}
-          actions={(event) => (
-            <Link to={`/organizer/events/${event.id}`}>Manage event</Link>
-          )}
-        />
-      </State>
-      <Link className="bf-button" to="/organizer/events/new">
-        Create event
-      </Link>
-    </>
-  );
+  const content =
+    id && parts[4] === "setup" ? (
+      <CreateWizard key={`${id}/${parts[5]}`} id={id} step={parts[5]} />
+    ) : id ? (
+      <EventWorkspace key={`${id}/${parts[4]}`} id={id} tab={parts[4]} />
+    ) : section === "events" && parts[3] === "new" ? (
+      <CreateWizard key="new" />
+    ) : section === "settings" ? (
+      <Settings />
+    ) : section === "support" ? (
+      <SupportPanel organizer />
+    ) : ["orders", "attendees", "analytics", "campaigns", "history"].includes(
+        section,
+      ) ? (
+      <>
+        <label>
+          Event
+          <select value={chosen} onChange={(e) => setChosen(e.target.value)}>
+            <option value="">Choose an event…</option>
+            {events.data?.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        {chosen && (
+          <EventWorkspace key={chosen + section} id={chosen} tab={section} />
+        )}
+      </>
+    ) : (
+      <>
+        <div className="bf-stats">
+          <Stat label="My events" value={events.data?.length ?? "…"} />
+        </div>
+        <State resource={events}>
+          <DataTable
+            rows={events.data || []}
+            columns={[
+              ["title", "Event"],
+              ["classification", "Period"],
+              ["status", "Status"],
+              ["starts_at", "Starts"],
+            ]}
+            actions={(event) => (
+              <Link to={`/organizer/events/${event.id}`}>Manage event</Link>
+            )}
+          />
+        </State>
+        <Link className="bf-button" to="/organizer/events/new">
+          Create event
+        </Link>
+      </>
+    );
   return (
-    <Shell role="organizer" path={path} title="Organizer workspace">
+    <Shell
+      role="organizer"
+      // Setting up a new draft is still "Create event" in the nav and heading.
+      path={id && parts[4] === "setup" ? "/organizer/events/new" : path}
+      title="Organizer workspace"
+    >
       {content}
     </Shell>
   );
