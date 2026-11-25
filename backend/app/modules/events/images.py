@@ -5,7 +5,7 @@ import warnings
 from pathlib import Path
 
 from fastapi import UploadFile
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,36 +16,67 @@ from app.modules.events.models import EventImage
 from app.modules.events.schemas import ImageUpdate
 from app.modules.events.service import audit, editable, get_event
 
+# Event photos are downscaled and stored as lossy WebP; originals can be 12 MB+.
+EVENT_IMAGE_MAX_SIDE = 2000
+EVENT_IMAGE_WEBP_QUALITY = 82
+
 
 def image_path(image: EventImage) -> Path:
-    return get_settings().media_root / f"{image.id}.png"
+    root = get_settings().media_root
+    legacy = root / f"{image.id}.png"  # files stored before the WebP change
+    return legacy if legacy.is_file() else root / f"{image.id}.webp"
+
+
+def _open_validated(data: bytes) -> Image.Image:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", Image.DecompressionBombWarning)
+        with Image.open(io.BytesIO(data)) as image:
+            if (
+                image.format not in {"PNG", "JPEG", "WEBP"}
+                or image.width * image.height > 16_000_000
+            ):
+                raise ValueError("Only PNG/JPEG/WebP up to 16 megapixels are allowed.")
+            image.load()
+            # Phone photos carry their rotation in EXIF, which re-encoding drops.
+            image = ImageOps.exif_transpose(image)
+            return image.convert("RGBA" if "A" in image.getbands() else "RGB")
+
+
+def _reject(exc: Exception) -> AppError:
+    return AppError(
+        "INVALID_IMAGE", "Upload a valid PNG, JPEG or WebP image up to 16 megapixels.", 422
+    )
+
+
+_INVALID_IMAGE_ERRORS = (
+    UnidentifiedImageError,
+    OSError,
+    ValueError,
+    Image.DecompressionBombError,
+    Image.DecompressionBombWarning,
+)
 
 
 def normalize_image(data: bytes) -> bytes:
+    """Validate and re-encode as PNG (support screenshots keep full fidelity)."""
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(data)) as image:
-                if (
-                    image.format not in {"PNG", "JPEG", "WEBP"}
-                    or image.width * image.height > 16_000_000
-                ):
-                    raise ValueError("Only PNG/JPEG/WebP up to 16 megapixels are allowed.")
-                image.load()
-                normalized = image.convert("RGBA" if "A" in image.getbands() else "RGB")
-                out = io.BytesIO()
-                normalized.save(out, format="PNG")
-                return out.getvalue()
-    except (
-        UnidentifiedImageError,
-        OSError,
-        ValueError,
-        Image.DecompressionBombError,
-        Image.DecompressionBombWarning,
-    ) as exc:
-        raise AppError(
-            "INVALID_IMAGE", "Upload a valid PNG, JPEG or WebP image up to 16 megapixels.", 422
-        ) from exc
+        out = io.BytesIO()
+        _open_validated(data).save(out, format="PNG")
+        return out.getvalue()
+    except _INVALID_IMAGE_ERRORS as exc:
+        raise _reject(exc) from exc
+
+
+def normalize_event_image(data: bytes) -> bytes:
+    """Validate, downscale to EVENT_IMAGE_MAX_SIDE and re-encode as lossy WebP."""
+    try:
+        image = _open_validated(data)
+        image.thumbnail((EVENT_IMAGE_MAX_SIDE, EVENT_IMAGE_MAX_SIDE), Image.Resampling.LANCZOS)
+        out = io.BytesIO()
+        image.save(out, format="WEBP", quality=EVENT_IMAGE_WEBP_QUALITY, method=4)
+        return out.getvalue()
+    except _INVALID_IMAGE_ERRORS as exc:
+        raise _reject(exc) from exc
 
 
 async def upload(
@@ -61,7 +92,7 @@ async def upload(
     await file.close()
     if len(data) > get_settings().image_max_bytes:
         raise AppError("IMAGE_TOO_LARGE", "Image exceeds the upload size limit.", 413)
-    data = await asyncio.to_thread(normalize_image, data)
+    data = await asyncio.to_thread(normalize_event_image, data)
     if is_cover:
         await session.execute(
             update(EventImage)

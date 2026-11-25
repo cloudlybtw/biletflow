@@ -414,7 +414,7 @@ async def test_images_cover_safety_visibility_and_deletion(
     assert (await client.get(uploads[0]["url"])).status_code == 404
     assert (await client.get(uploads[0]["url"], headers=auth_headers(owner[0]))).headers[
         "content-type"
-    ] == "image/png"
+    ] == "image/webp"
     invalid = await client.post(
         url, files={"file": ("fake.png", b"<script/>", "image/png")}, headers=auth_headers(owner[0])
     )
@@ -435,4 +435,40 @@ async def test_images_cover_safety_visibility_and_deletion(
     assert (
         await client.delete(url + f"/{uploads[0]['id']}", headers=auth_headers(owner[0]))
     ).status_code == 204
-    assert not (tmp_path / f"{uploads[0]['id']}.png").exists()
+    assert not list(tmp_path.glob(f"{uploads[0]['id']}.*"))
+
+
+async def test_event_image_is_downscaled_and_stored_as_webp(client, owner, tmp_path, monkeypatch):
+    monkeypatch.setattr(get_settings(), "media_root", tmp_path)
+    monkeypatch.setattr(get_settings(), "image_max_bytes", 50 * 1024 * 1024)
+    event = await new_event(client, owner)
+    url = f"/api/v1/events/{event['id']}/images"
+    out = io.BytesIO()
+    Image.effect_noise((4000, 3000), 60).convert("RGB").save(out, format="PNG")
+    response = await client.post(
+        url,
+        files={"file": ("big.png", out.getvalue(), "image/png")},
+        headers=auth_headers(owner[0]),
+    )
+    assert response.status_code == 201, response.text
+    stored = list(tmp_path.glob("*.webp"))
+    assert len(stored) == 1 and not list(tmp_path.glob("*.png"))
+    with Image.open(stored[0]) as image:
+        assert image.format == "WEBP" and max(image.size) == 2000
+    assert stored[0].stat().st_size < len(out.getvalue()) / 2
+
+
+async def test_legacy_png_event_image_is_still_served(
+    client, db_session, owner, tmp_path, monkeypatch
+):
+    monkeypatch.setattr(get_settings(), "media_root", tmp_path)
+    event = await new_event(client, owner)
+    image = EventImage(id=uuid.uuid4(), event_id=uuid.UUID(event["id"]), url="", is_cover=False)
+    image.url = f"/api/v1/events/{event['id']}/images/{image.id}/file"
+    db_session.add(image)
+    await db_session.commit()
+    out = io.BytesIO()
+    Image.new("RGB", (4, 4), "blue").save(out, format="PNG")
+    (tmp_path / f"{image.id}.png").write_bytes(out.getvalue())
+    served = await client.get(image.url, headers=auth_headers(owner[0]))
+    assert served.status_code == 200 and served.headers["content-type"] == "image/png"

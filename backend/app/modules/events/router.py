@@ -291,7 +291,7 @@ async def delete_image(
 @router.get(
     "/events/{event_id}/images/{image_id}/file",
     response_class=FileResponse,
-    responses={200: {"content": {"image/png": {}}}},
+    responses={200: {"content": {"image/webp": {}, "image/png": {}}}},
 )
 async def image_file(
     event_id: uuid.UUID,
@@ -306,6 +306,6 @@ async def image_file(
         raise AppError("NOT_FOUND", "Image file not found.", 404)
     return FileResponse(
         path,
-        media_type="image/png",
+        media_type="image/png" if path.suffix == ".png" else "image/webp",
         headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
     )
