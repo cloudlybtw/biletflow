@@ -109,7 +109,7 @@ class _AttendeeSearchScreenState extends ConsumerState<AttendeeSearchScreen> {
     final results = searching ? ref.watch(attendeeSearchProvider(_key)) : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Find attendee')),
+      appBar: AppBar(title: const Text('FIND ATTENDEE')),
       body: Column(
         children: [
           const OfflineBanner(),
@@ -122,13 +122,14 @@ class _AttendeeSearchScreenState extends ConsumerState<AttendeeSearchScreen> {
               onChanged: _onChanged,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Attendee name or order ID',
+                filled: true,
+                hintText: 'Name, email or ticket code',
               ),
             ),
           ),
           Expanded(
             child: results == null
-                ? const _Hint('Type at least 2 characters of a name, or paste an order ID.')
+                ? const _Hint('Enter at least 2 characters of a name, email or ticket code.')
                 : results.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (error, _) => ErrorView(
@@ -179,12 +180,13 @@ class _AttendeeTile extends StatelessWidget {
     ].join(' · ');
 
     return ListTile(
-      title: Text(match.fullName),
+      title: Text(match.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: details.isEmpty
           ? null
           : Text(details, maxLines: 2, overflow: TextOverflow.ellipsis),
       trailing: switch (match.status) {
         TicketStatus.valid => FilledButton.tonal(
+            style: FilledButton.styleFrom(minimumSize: const Size(48, 56)),
             onPressed: busy ? null : onCheckIn,
             child: busy
                 ? const SizedBox.square(
@@ -216,6 +218,7 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Chip(
+        shape: const StadiumBorder(),
         avatar: Icon(Icons.circle, size: 10, color: color),
         label: Text(label),
         visualDensity: VisualDensity.compact,

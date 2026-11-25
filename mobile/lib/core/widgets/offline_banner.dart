@@ -15,17 +15,20 @@ class OfflineBanner extends ConsumerWidget {
           ? const SizedBox.shrink()
           : Material(
               key: const ValueKey('offline'),
-              color: scheme.errorContainer,
+              color: scheme.surfaceContainerHighest,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    Icon(Icons.wifi_off_rounded, color: scheme.onErrorContainer),
+                    Icon(Icons.wifi_off_rounded, color: scheme.onSurface),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        'No internet connection. Tickets cannot be validated until you reconnect.',
-                        style: TextStyle(color: scheme.onErrorContainer),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('OFFLINE', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Reconnect to verify tickets.'),
+                        ],
                       ),
                     ),
                   ],

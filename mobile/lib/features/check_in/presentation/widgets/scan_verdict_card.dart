@@ -57,8 +57,8 @@ class ScanVerdictCard extends StatelessWidget {
       liveRegion: true, 
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: style.color, borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(color: style.color, borderRadius: BorderRadius.circular(8)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -71,7 +71,7 @@ class ScanVerdictCard extends StatelessWidget {
                   child: Text(
                     style.title,
                     style: text.headlineMedium
-                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                        ?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
                   ),
                 ),
               ],

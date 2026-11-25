@@ -87,7 +87,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
   void _hapticFor(ScanState? previous, ScanState next) {
     if (next is ScanDecided && previous is! ScanDecided) {
       unawaited(next.outcome.admitted ? HapticFeedback.mediumImpact() : HapticFeedback.vibrate());
-    } else if (next is ScanNotVerified) {
+    } else if (next is ScanNotVerified && previous is! ScanNotVerified) {
       unawaited(HapticFeedback.vibrate());
     }
   }
@@ -101,7 +101,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Scan tickets'),
+        title: const Text('SCAN TICKETS'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         actions: [
@@ -112,6 +112,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
                 return const SizedBox.shrink();
               }
               return IconButton(
+                constraints: const BoxConstraints.tightFor(width: 48, height: 48),
                 tooltip: 'Flashlight',
                 icon: Icon(camera.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off),
                 onPressed: _camera.toggleTorch,
@@ -119,6 +120,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
             },
           ),
           IconButton(
+            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
             tooltip: 'Find attendee manually',
             icon: const Icon(Icons.person_search),
             onPressed: _openManualSearch,
@@ -174,6 +176,33 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with WidgetsBindi
   }
 }
 
+class _Corners extends CustomPainter {
+  const _Corners(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pen = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    for (final left in [true, false]) {
+      for (final top in [true, false]) {
+        final x = left ? 2.0 : size.width - 2;
+        final y = top ? 2.0 : size.height - 2;
+        final corner = Path()
+          ..moveTo(x + (left ? 24 : -24), y)
+          ..lineTo(x, y)
+          ..lineTo(x, y + (top ? 24 : -24));
+        canvas.drawPath(corner, pen);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Corners oldDelegate) => oldDelegate.color != color;
+}
+
 class _AimingFrame extends StatelessWidget {
   const _AimingFrame();
 
@@ -181,13 +210,9 @@ class _AimingFrame extends StatelessWidget {
   Widget build(BuildContext context) => IgnorePointer(
         child: Align(
           alignment: const Alignment(0, -0.4),
-          child: Container(
-            width: 240,
-            height: 240,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 3),
-              borderRadius: BorderRadius.circular(24),
-            ),
+          child: CustomPaint(
+            size: const Size.square(240),
+            painter: _Corners(Theme.of(context).colorScheme.secondary),
           ),
         ),
       );

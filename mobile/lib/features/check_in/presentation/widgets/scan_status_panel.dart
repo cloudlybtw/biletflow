@@ -110,12 +110,12 @@ class ScanStatusPanel extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Material(
-          color: theme.colorScheme.surface,
-          elevation: 6,
-          borderRadius: BorderRadius.circular(24),
+          color: theme.colorScheme.surfaceContainerHighest,
+          elevation: 0,
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: AnimatedSize(duration: const Duration(milliseconds: 150), child: content),
+            child: SingleChildScrollView(child: content),
           ),
         ),
       ),

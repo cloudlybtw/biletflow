@@ -39,7 +39,7 @@ class CameraErrorView extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   denied ? 'Camera access is turned off' : 'Camera unavailable',
-                  style: theme.textTheme.titleLarge,
+                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),

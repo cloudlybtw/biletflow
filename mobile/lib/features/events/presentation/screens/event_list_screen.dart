@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:biletflow_verify/app/routes.dart';
 import 'package:biletflow_verify/core/error/failure.dart';
@@ -19,7 +20,7 @@ class EventListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your events'),
+        title: const Text('YOUR EVENTS'),
         actions: [
           IconButton(
             tooltip: 'Sign out',
@@ -79,8 +80,17 @@ class _EventCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: const CircleAvatar(child: Icon(Icons.event)),
-        title: Text(event.title, style: Theme.of(context).textTheme.titleMedium),
+        leading: ExcludeSemantics(
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.secondary, borderRadius: BorderRadius.circular(8)),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: FittedBox(child: Text(DateFormat('dd\nMMM').format(event.startsAt.toLocal()).toUpperCase(),
+                textAlign: TextAlign.center, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
+            ),
+          ),
+        ),
+        title: Text(event.title.toUpperCase(), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
         isThreeLine: event.venueName != null,
         trailing: const Icon(Icons.chevron_right),
@@ -102,7 +112,7 @@ class _NoEventsAssigned extends StatelessWidget {
         children: [
           Icon(Icons.event_busy, size: 56, color: theme.colorScheme.outline),
           const SizedBox(height: 16),
-          Text('No events assigned to you', style: theme.textTheme.titleMedium),
+          Text('NO ASSIGNED EVENTS', textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           const Text(
             'Ask the event organizer to add you as check-in staff, then pull down to refresh.',

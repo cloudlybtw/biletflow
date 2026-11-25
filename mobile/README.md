@@ -51,3 +51,6 @@ files are ignored; the auth source files are committed.
 Flutter 3.50 reports existing Material imports as informational deprecations.
 `--no-fatal-infos` preserves these diagnostics; analyzer errors and warnings
 still fail CI. Migration to the new Material package is separate framework work.
+
+## Desgin
+[Design: docs/DESIGN.md](../docs/DESIGN.md)

@@ -129,3 +129,6 @@ public services have been provisioned.
 Assigned-seat pricing, blocked seats and updated calendar exports are documented
 in [seating and calendar workflows](docs/seating-calendar.md). Apply migration
 `0009_seat_configuration` and configure venue price categories before seat sales.
+
+### Design
+[Design: docs/DESIGN.md](docs/DESIGN.md)

@@ -56,17 +56,17 @@ class EventDashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 24),
                     FilledButton.icon(
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(64)),
+                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
                       onPressed: () => _openAndRefresh(context, ref, AppRoutes.scan(eventId)),
                       icon: const Icon(Icons.qr_code_scanner, size: 28),
-                      label: const Text('Scan tickets'),
+                      label: const Text('SCAN TICKETS'),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                       onPressed: () => _openAndRefresh(context, ref, AppRoutes.search(eventId)),
                       icon: const Icon(Icons.person_search),
-                      label: const Text('Find attendee by name or order ID'),
+                      label: const Text('FIND ATTENDEE'),
                     ),
                   ],
                 ),
@@ -88,7 +88,7 @@ class _EventHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(event.title, style: Theme.of(context).textTheme.headlineSmall),
+        Text(event.title.toUpperCase(), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         _IconLine(icon: Icons.schedule, text: formatEventDateTime(event.startsAt)),
         if (event.venueName != null) ...[
@@ -199,18 +199,19 @@ class _Metric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = emphasized ? theme.textTheme.displaySmall : theme.textTheme.headlineSmall;
+    final style = emphasized ? theme.textTheme.displayMedium : theme.textTheme.headlineMedium;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$value',
           style: style?.copyWith(
+            fontFeatures: const [FontFeature.tabularFigures()],
             fontWeight: FontWeight.w700,
             color: emphasized ? theme.colorScheme.primary : null,
           ),
         ),
-        Text(label, style: theme.textTheme.labelMedium),
+        Text(label.toUpperCase(), style: theme.textTheme.labelMedium),
       ],
     );
   }

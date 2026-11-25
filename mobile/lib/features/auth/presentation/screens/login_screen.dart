@@ -66,13 +66,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(Icons.qr_code_scanner_rounded, size: 64, color: theme.colorScheme.primary),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 10,
+                        children: [
+                          Transform.rotate(
+                            angle: -0.14,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: theme.colorScheme.secondary, borderRadius: BorderRadius.circular(7)),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                child: Text('bf', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 28)),
+                              ),
+                            ),
+                          ),
+                          Text('BiletFlow', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                       const SizedBox(height: 16),
-                      Text('BiletFlow Verify',
-                          textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
+                      Text('STAFF CHECK-IN',
+                          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
                       Text('Sign in with your event staff account',
-                          textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+                          style: theme.textTheme.bodyMedium),
                       const SizedBox(height: 32),
                       TextFormField(
                         controller: _email,
@@ -121,11 +137,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 24),
                       FilledButton(
                         onPressed: login.isLoading ? null : _submit,
-                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                        style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(52),
+                              backgroundColor: theme.colorScheme.secondary,
+                              foregroundColor: Colors.black,
+                              ),
                         child: login.isLoading
                             ? const SizedBox.square(
                                 dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-                            : const Text('Sign in'),
+                            : const Text('SIGN IN'),
                       ),
                     ],
                   ),

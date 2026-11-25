@@ -27,8 +27,10 @@ class _UndoCheckInDialogState extends State<_UndoCheckInDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
+        scrollable: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         icon: const Icon(Icons.undo),
-        title: const Text('Undo this check-in?'),
+        title: const Text('UNDO CHECK-IN?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -47,8 +49,8 @@ class _UndoCheckInDialogState extends State<_UndoCheckInDialog> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          FilledButton(onPressed: _confirm, child: const Text('Undo check-in')),
+          OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error), onPressed: _confirm, child: const Text('Undo check-in')),
         ],
       );
 }
