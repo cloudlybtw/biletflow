@@ -9,6 +9,7 @@ import EventPage from "./Event/EventPage";
 import { Checkout, Payment } from "./Checkout/Checkout";
 import { NotFound } from "../components/States/States";
 import { Form, State } from "./live-shared";
+import Logo from "../components/Logo/Logo";
 function AuthPage({ path, params }) {
   const next = params.get("next");
   const safeNext =
@@ -71,10 +72,7 @@ function AuthPage({ path, params }) {
           aria-label={translate("Verify your email")}
         >
           <a href="/" className="wordmark" aria-label="BiletFlow">
-            <span className="brand-icon" aria-hidden="true">
-              b<span>f</span>
-            </span>
-            BiletFlow<span className="brand-dot">.</span>
+            <Logo />
           </a>
           <EmailVerification token={token} next={safeNext} />
         </section>
@@ -94,10 +92,7 @@ function AuthPage({ path, params }) {
       <div className="auth-side">
         <div className="bf-auth-top">
           <a href="/" className="wordmark" aria-label="BiletFlow">
-            <span className="brand-icon" aria-hidden="true">
-              b<span>f</span>
-            </span>
-            BiletFlow<span className="brand-dot">.</span>
+            <Logo />
           </a>
           <LanguagePicker />
         </div>

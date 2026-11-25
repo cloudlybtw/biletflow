@@ -8,6 +8,7 @@ import { languageOptions } from "../../data/languages";
 import { useSession } from "../../lib/session-context";
 import { logout } from "../../lib/client";
 import "./Navbar.css";
+import Logo from "../Logo/Logo";
 const text = {
   en: {
     search: "Search events",
@@ -111,10 +112,7 @@ export default function Navbar({ onSignIn }) {
       </button>
       <nav className="nav-inner" aria-label="BiletFlow">
         <a href="/" className="wordmark" aria-label="BiletFlow">
-          <span className="brand-icon" aria-hidden="true">
-            b<span>f</span>
-          </span>
-          BiletFlow<span className="brand-dot">.</span>
+          <Logo />
         </a>
         <div className="nav-search" role="search">
           <svg

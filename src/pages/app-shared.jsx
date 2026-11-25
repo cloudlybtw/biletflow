@@ -5,6 +5,7 @@ import { useSession } from "../lib/session-context";
 import { logout } from "../lib/client";
 import Dropdown from "../components/Dropdown/Dropdown";
 import { languageOptions } from "../data/languages";
+import Logo from "../components/Logo/Logo";
 export function Link({ to, children, className = "", ...rest }) {
   return (
     <a {...rest} className={className} href={`/#${to}`}>
@@ -44,10 +45,7 @@ export function Topbar() {
         {translate("Skip to content")}
       </button>
       <a href="/" className="wordmark" aria-label="BiletFlow">
-        <span className="brand-icon" aria-hidden="true">
-          b<span>f</span>
-        </span>
-        BiletFlow<span className="brand-dot">.</span>
+        <Logo />
       </a>
       <nav className="ws-links" aria-label={translate("Workspace")}>
         <Link to="/events">{translate("Explore events")}</Link>

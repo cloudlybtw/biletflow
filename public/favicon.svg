@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <!-- BiletFlow mark: yellow tile tilted -8deg with "bf", same as the header logo -->
-  <g transform="rotate(-8 32 32)">
-    <rect x="8" y="7" width="48" height="50" rx="7" fill="#f2ef1d"/>
-    <text x="31" y="45" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="36" font-weight="700" letter-spacing="-5" fill="#000">bf</text>
-  </g>
-</svg>

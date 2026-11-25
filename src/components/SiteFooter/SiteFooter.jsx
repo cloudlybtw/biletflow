@@ -1,5 +1,6 @@
 import { useLocale } from "../../lib/locale";
 import "./SiteFooter.css";
+import Logo from "../Logo/Logo";
 const text = {
   en: {
     tagline: "Made for going out. Made for Kazakhstan.",
@@ -48,7 +49,7 @@ export default function SiteFooter() {
       <div className="site-footer-inner">
         <div className="footer-brand">
           <a className="wordmark" href="/">
-            BiletFlow<span className="brand-dot">.</span>
+            <Logo />
           </a>
           <p>{t.tagline}</p>
         </div>
