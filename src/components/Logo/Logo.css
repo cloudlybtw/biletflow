@@ -1,0 +1,23 @@
+.bf-logo {
+  display: inline-flex;
+  align-items: center;
+}
+.bf-logo img {
+  display: block;
+  height: 34px;
+  width: auto;
+}
+.bf-logo-dark {
+  display: none !important;
+}
+html[data-theme="dark"] .bf-logo-dark {
+  display: block !important;
+}
+html[data-theme="dark"] .bf-logo-light {
+  display: none !important;
+}
+@media (max-width: 600px) {
+  .bf-logo img {
+    height: 26px;
+  }
+}
