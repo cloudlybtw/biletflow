@@ -183,6 +183,13 @@ header.bf-top.ws-top {
   color: var(--fg);
   text-decoration: none;
 }
+/* The workspace bar is black even on light-theme pages, so always use the light-letter logo. */
+.ws-top .bf-logo-light {
+  display: none !important;
+}
+.ws-top .bf-logo-dark {
+  display: block !important;
+}
 .ws-links {
   display: flex;
   align-items: center;
